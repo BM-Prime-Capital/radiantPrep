@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -13,7 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ChildInformation, Grade, ParentUser, Subject } from '@/lib/types';
-import { generateSecureAccessCode, type SecureAccessCodeInput } from '@/ai/flows/secure-access-code-generation';
+import type { SecureAccessCodeInput } from '@/ai/flows/secure-access-code-generation';
+import { generateSecureAccessCodeAction } from '@/lib/actions';
 import { Loader2, Copy } from 'lucide-react';
 
 const grades: Grade[] = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -64,11 +66,7 @@ export default function RegisterPage() {
         subject: data.childSubject,
       };
       
-      // Call GenAI flow to generate secure access code
-      // This is an async server function, can be called directly if this component is a server component or via server action.
-      // For client component, we'd typically wrap this in a server action.
-      // For this example, assuming it can be called (or a server action wrapper exists).
-      // Let's make a server action for this.
+      // Call the imported Server Action
       const result = await generateSecureAccessCodeAction(accessCodeInput);
       const accessCode = result.accessCode;
 
@@ -110,15 +108,6 @@ export default function RegisterPage() {
     }
   };
   
-  // Server action defined in the same file for simplicity (can be moved to a separate actions.ts file)
-  // It needs to be marked with 'use server' if in a separate file or defined at the top-level of a Server Component.
-  // Here, we'll just call the imported AI function, assuming it's made available to the client via some mechanism (e.g., it's already a server action or called within one).
-  // For this specific case where `generateSecureAccessCode` is 'use server', it can be directly called.
-  async function generateSecureAccessCodeAction(input: SecureAccessCodeInput) {
-    'use server'; // If this function itself is a server action
-    return generateSecureAccessCode(input);
-  }
-
   const copyToClipboard = () => {
     if (generatedCode) {
       navigator.clipboard.writeText(generatedCode).then(() => {
