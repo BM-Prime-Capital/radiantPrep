@@ -1,12 +1,16 @@
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-}
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
 }
 
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
 enum UserRole {
   PARENT
   CHILD
@@ -28,7 +32,6 @@ enum GradeLevel {
   GRADE_8
 }
 
-// Correspond aux QuestionType dans src/lib/types.ts
 enum PrismaQuestionType {
   MULTIPLE_CHOICE
   TEXT
@@ -45,127 +48,124 @@ enum PrismaQuestionType {
   FRACTION
 }
 
+// Models
 model User {
+  id            String          @id @default(cuid())
+  email         String          @unique
+  passwordHash  String // Store hashed passwords, not plaintext
+  role          UserRole
+  parentProfile ParentProfile?
+  childProfile  ChildProfile?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model ParentProfile {
   id        String   @id @default(cuid())
-  email     String?  @unique // Email pour les parents, optionnel pour les enfants
-  password  String?  // Mot de passe hashé pour les parents
-  name      String
-  role      UserRole
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  // Add other parent-specific fields if needed
+}
 
-  // Champs spécifiques aux enfants
-  accessCode String?    @unique // Code d'accès pour l'enfant
-  grade      Grade?     @relation(fields: [gradeId], references: [id])
-  gradeId    String?
-  subject    Subject?   @relation(fields: [subjectId], references: [id]) // Sujet par défaut ou actuel
-  subjectId  String?
-  parent     User?      @relation("ParentChildren", fields: [parentId], references: [id])
-  parentId   String?
-  children   User[]     @relation("ParentChildren") // Relation pour un parent ayant plusieurs enfants
-
-  assessments Assessment[] // Évaluations passées par l'enfant
-
-  @@index([parentId])
+model ChildProfile {
+  id          String       @id @default(cuid())
+  user        User         @relation(fields: [userId], references: [id])
+  userId      String       @unique
+  childName   String
+  accessCode  String       @unique
+  grade       Grade        @relation(fields: [gradeId], references: [id])
+  gradeId     Int
+  subject     Subject      @relation(fields: [subjectId], references: [id]) // Default or current subject
+  subjectId   Int
+  assessments Assessment[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model Subject {
-  id   String      @id @default(cuid())
-  name SubjectName @unique
-
+  id        Int            @id @default(autoincrement())
+  name      SubjectName    @unique
   questions Question[]
-  users     User[] // Utilisateurs ayant ce sujet par défaut/actuel
-  assessments Assessment[]
+  children  ChildProfile[] // If a child can be associated with a primary subject
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 }
 
 model Grade {
-  id    String     @id @default(cuid())
-  level GradeLevel @unique // e.g., GRADE_1, GRADE_2
-
-  questions   Question[]
-  users       User[] // Utilisateurs à ce niveau
-  assessments Assessment[]
+  id        Int            @id @default(autoincrement())
+  level     GradeLevel     @unique
+  questions Question[]
+  children  ChildProfile[] // If a child is associated with a grade
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 }
 
 model Question {
+  id                  String                  @id @default(cuid())
+  questionText        String                  @db.Text // Explicitly Text for longer questions
+  passage             String?                 @db.Text // Explicitly Text for passages
+  imageURL            String?
+  dataAihint          String?
+  questionType        PrismaQuestionType      @map("type") // Field name in model is questionType, DB column "type"
+  category            String?
+  subject             Subject                 @relation(fields: [subjectId], references: [id])
+  subjectId           Int
+  grade               Grade                   @relation(fields: [gradeId], references: [id])
+  gradeId             Int
+  options             QuestionOption[]
+  correctAnswers      QuestionCorrectAnswer[]
+  assessmentAnswers   AssessmentAnswer[]
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+}
+
+model QuestionOption {
   id          String             @id @default(cuid())
-  text        String             @db.Text
-  type        PrismaQuestionType
-  passage     String?            @db.Text
-  imageUrl    String?
-  imageAiHint String?            // Pour la génération d'images si imageUrl est un placeholder
-  category    String?            // e.g., "Reading Comprehension"
+  optionText  String
+  isCorrect   Boolean? // Can be null if correctness is handled in QuestionCorrectAnswer or for non-MCQ
+  question    Question           @relation(fields: [questionId], references: [id])
+  questionId  String
+  assessments AssessmentAnswer[]
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
-
-  subject   Subject @relation(fields: [subjectId], references: [id])
-  subjectId String
-  grade     Grade   @relation(fields: [gradeId], references: [id])
-  gradeId   String
-
-  options                QuestionOption[]        // Pour MULTIPLE_CHOICE, IMAGE_CHOICE
-  correctAnswers         QuestionCorrectAnswer[] // Pour TEXT, FILL_IN_THE_BLANK, GRAMMAR
-  assessmentAnswers      AssessmentAnswer[]      // Réponses données à cette question
-
-  @@index([subjectId])
-  @@index([gradeId])
 }
 
-// Pour les questions à choix multiples
-model QuestionOption {
-  id        String   @id @default(cuid())
-  text      String
-  isCorrect Boolean  @default(false)
-  question  Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  questionId String
-
-  @@index([questionId])
-}
-
-// Pour stocker les réponses correctes pour les types TEXT, FILL_IN_THE_BLANK, etc.
-// answerValue peut être une chaîne JSON si plusieurs réponses sont possibles (ex: pour les blancs multiples)
 model QuestionCorrectAnswer {
-  id          String   @id @default(cuid())
-  answerValue String   @db.Text // Peut stocker une chaîne simple ou un JSON array de chaînes
-  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  questionId  String
-
-  @@index([questionId])
+  id             String   @id @default(cuid())
+  question       Question @relation(fields: [questionId], references: [id])
+  questionId     String
+  answerValue    Json // Can store string or array of strings for fill-in-the-blanks, text answers
+  explanation    String?  @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model Assessment {
-  id             String   @id @default(cuid())
+  id             String             @id @default(cuid())
+  child          ChildProfile       @relation(fields: [childId], references: [id])
+  childId        String
+  subjectName    SubjectName // Store the subject name at the time of assessment
+  gradeLevel     GradeLevel  // Store the grade level at the time of assessment
   score          Int
   totalQuestions Int
-  percentage     Float
-  feedbackMessage String? @db.Text
-  startedAt      DateTime @default(now())
-  completedAt    DateTime @updatedAt
-
-  childUser   User    @relation(fields: [childUserId], references: [id])
-  childUserId String
-  subject     Subject @relation(fields: [subjectId], references: [id])
-  subjectId   String
-  grade       Grade   @relation(fields: [gradeId], references: [id])
-  gradeId     String
-
-  answers AssessmentAnswer[]
-
-  @@index([childUserId])
-  @@index([subjectId])
-  @@index([gradeId])
+  startedAt      DateTime           @default(now())
+  completedAt    DateTime?
+  answers        AssessmentAnswer[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 }
 
 model AssessmentAnswer {
-  id         String   @id @default(cuid())
-  userAnswer String   @db.Text // Peut stocker une chaîne simple ou un JSON array pour les réponses multiples (ex: fill-in-the-blank)
-  isCorrect  Boolean
-
-  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  assessmentId String
-  question     Question   @relation(fields: [questionId], references: [id])
-  questionId   String
-
-  @@index([assessmentId])
-  @@index([questionId])
+  id               String            @id @default(cuid())
+  assessment       Assessment        @relation(fields: [assessmentId], references: [id])
+  assessmentId     String
+  question         Question          @relation(fields: [questionId], references: [id])
+  questionId       String
+  userAnswer       Json? // Flexible to store single string, array of strings (for fill-in-blanks), or option ID string
+  selectedOption   QuestionOption?   @relation(fields: [selectedOptionId], references: [id]) // For MCQ
+  selectedOptionId String?
+  isCorrect        Boolean
+  answeredAt       DateTime          @default(now())
 }
