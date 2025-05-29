@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,28 +14,28 @@ body {
 
 @layer base {
   :root {
-    --background-page: 210 20% 95%; /* #F0F8FF - Calm page background */
-    --foreground-page: 220 15% 25%; /* Default text on page */
+    --background-page: 210 40% 98%; /* Very light cool blue-gray */
+    --foreground-page: 220 15% 20%; /* Dark cool gray for body text */
 
     --background: 0 0% 100%; /* Component background: white */
-    --foreground: 220 12% 18%; /* Component text: dark desaturated blue */
+    --foreground: 220 15% 25%; /* Component text: dark desaturated blue */
     
     --card: 0 0% 100%;
-    --card-foreground: 220 12% 18%;
+    --card-foreground: 220 15% 25%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 220 12% 18%;
+    --popover-foreground: 220 15% 25%;
     
-    --primary: 210 70% 50%; /* #3399FF - Bright Blue */
+    --primary: 220 70% 55%; /* Deep, trustworthy blue */
     --primary-foreground: 0 0% 100%; /* White text on primary */
     
-    --secondary: 210 40% 96.1%; /* Light cool gray for secondary elements */
-    --secondary-foreground: 217 33% 34%; /* Text on secondary */
+    --secondary: 210 30% 94%; /* Light cool gray for secondary elements */
+    --secondary-foreground: 220 30% 30%; /* Text on secondary */
     
-    --muted: 210 30% 92%; /* Slightly darker cool gray for muted backgrounds */
-    --muted-foreground: 210 30% 50%; /* Muted text color */
+    --muted: 210 25% 90%; /* Slightly darker cool gray for muted backgrounds */
+    --muted-foreground: 210 25% 55%; /* Muted text color */
     
-    --accent: 180 60% 40%; /* #33CCCC - Teal/Cyan Accent */
+    --accent: 170 55% 45%; /* Muted Teal Accent */
     --accent-foreground: 0 0% 100%; /* White text on accent */
     
     --destructive: 0 84.2% 60.2%;
@@ -42,72 +43,72 @@ body {
     
     --border: 210 20% 88%; /* Cool gray border */
     --input: 0 0% 100%; /* Input background: white, rely on border */
-    --ring: 210 70% 60%; /* Lighter primary for focus rings */
+    --ring: 220 70% 65%; /* Lighter primary for focus rings */
     
-    --chart-1: 210 70% 50%; /* primary */
-    --chart-2: 180 60% 40%; /* accent */
-    --chart-3: 210 70% 70%; /* lighter primary */
-    --chart-4: 180 60% 60%; /* lighter accent */
-    --chart-5: 220 10% 50%; /* neutral gray */
+    --chart-1: 220 70% 55%; /* primary */
+    --chart-2: 170 55% 45%; /* accent */
+    --chart-3: 220 70% 75%; /* lighter primary */
+    --chart-4: 170 55% 65%; /* lighter accent */
+    --chart-5: 220 10% 60%; /* neutral gray */
     
     --radius: 0.75rem; /* Slightly larger radius for a modern feel */
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 210 70% 50%; /* Using app primary for sidebar primary */
+    --sidebar-background: 220 20% 97%; /* Slightly off-white for sidebar */
+    --sidebar-foreground: 220 15% 30%;
+    --sidebar-primary: 220 70% 55%; /* Using app primary for sidebar primary */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 20% 95%; /* Using page background for sidebar accent */
-    --sidebar-accent-foreground: 220 12% 18%;
-    --sidebar-border: 210 20% 88%;
-    --sidebar-ring: 210 70% 60%;
+    --sidebar-accent: 210 30% 92%; /* Light gray accent for sidebar items */
+    --sidebar-accent-foreground: 220 70% 45%; /* Darker blue for selected item text */
+    --sidebar-border: 210 20% 85%;
+    --sidebar-ring: 220 70% 65%;
   }
 
   .dark {
-    --background-page: 220 15% 10%; /* Dark cool gray page background */
-    --foreground-page: 210 20% 85%; /* Lighter text on dark page */
+    --background-page: 220 15% 12%; /* Dark cool gray page background */
+    --foreground-page: 210 30% 88%; /* Lighter text on dark page */
 
-    --background: 220 15% 14%; /* Component background: slightly lighter dark gray */
-    --foreground: 210 20% 90%; /* Component text: very light gray */
+    --background: 220 15% 18%; /* Component background: slightly lighter dark gray */
+    --foreground: 210 30% 92%; /* Component text: very light gray */
     
-    --card: 220 15% 14%;
-    --card-foreground: 210 20% 90%;
+    --card: 220 15% 18%;
+    --card-foreground: 210 30% 92%;
     
-    --popover: 220 15% 12%;
-    --popover-foreground: 210 20% 90%;
+    --popover: 220 15% 15%;
+    --popover-foreground: 210 30% 92%;
     
-    --primary: 210 70% 60%; /* Lighter primary for dark mode */
-    --primary-foreground: 210 70% 10%; /* Dark text on light primary */
+    --primary: 220 70% 65%; /* Lighter primary for dark mode */
+    --primary-foreground: 220 70% 10%; /* Dark text on light primary */
     
-    --secondary: 220 15% 20%; /* Darker cool gray for secondary elements */
-    --secondary-foreground: 210 20% 70%; 
+    --secondary: 220 15% 25%; /* Darker cool gray for secondary elements */
+    --secondary-foreground: 210 30% 75%; 
     
-    --muted: 220 15% 25%; /* Muted background for dark mode */
-    --muted-foreground: 210 20% 60%;
+    --muted: 220 15% 30%; /* Muted background for dark mode */
+    --muted-foreground: 210 30% 60%;
     
-    --accent: 180 60% 50%; /* Lighter accent for dark mode */
-    --accent-foreground: 180 60% 10%; /* Dark text on light accent */
+    --accent: 170 55% 55%; /* Lighter accent for dark mode */
+    --accent-foreground: 170 55% 10%; /* Dark text on light accent */
     
-    --destructive: 0 70% 50%;
+    --destructive: 0 70% 55%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 220 15% 30%; /* Border for dark mode */
-    --input: 220 15% 18%; /* Input background for dark mode */
-    --ring: 210 70% 70%; 
+    --border: 220 15% 35%; /* Border for dark mode */
+    --input: 220 15% 22%; /* Input background for dark mode */
+    --ring: 220 70% 75%; 
     
-    --chart-1: 210 70% 60%; 
-    --chart-2: 180 60% 50%; 
-    --chart-3: 210 70% 80%; 
-    --chart-4: 180 60% 70%; 
+    --chart-1: 220 70% 65%; 
+    --chart-2: 170 55% 55%; 
+    --chart-3: 220 70% 85%; 
+    --chart-4: 170 55% 75%; 
     --chart-5: 210 10% 70%;
 
     --sidebar-background: 220 15% 10%; /* Using dark page background */
-    --sidebar-foreground: 210 20% 85%;
-    --sidebar-primary: 210 70% 60%; /* Using dark primary */
-    --sidebar-primary-foreground: 210 70% 10%;
-    --sidebar-accent: 220 15% 20%; /* Using dark secondary for accent */
-    --sidebar-accent-foreground: 210 20% 80%;
+    --sidebar-foreground: 210 30% 88%;
+    --sidebar-primary: 220 70% 65%; /* Using dark primary */
+    --sidebar-primary-foreground: 220 70% 10%;
+    --sidebar-accent: 220 15% 22%; /* Using dark secondary for accent */
+    --sidebar-accent-foreground: 220 70% 75%; /* Lighter blue text on accent */
     --sidebar-border: 220 15% 30%;
-    --sidebar-ring: 210 70% 70%;
+    --sidebar-ring: 220 70% 75%;
   }
 }
 
@@ -120,12 +121,12 @@ body {
 
 /* Custom shadow for cards to make them a bit softer and more modern */
 .shadow-custom-light {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 4px 10px -2px rgba(30, 41, 59, 0.07), 0 2px 6px -2px rgba(30, 41, 59, 0.06);
 }
 .shadow-custom-dark {
-   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+   box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.25), 0 2px 6px -2px rgba(0, 0, 0, 0.2);
 }
 
 .dark .shadow-custom-light { /* Ensure dark mode overrides light shadow if class is used */
-   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+   box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.25), 0 2px 6px -2px rgba(0, 0, 0, 0.2);
 }
