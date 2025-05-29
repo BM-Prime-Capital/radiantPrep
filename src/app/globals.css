@@ -4,8 +4,8 @@
 
 body {
   /* Inter font is applied via layout.tsx className */
-  background-color: hsl(220 60% 99%); /* Fond de page global très clair, légèrement froid */
-  color: hsl(220 15% 25%); /* Texte de corps par défaut, bleu désaturé foncé */
+  background-color: hsl(var(--background-page));
+  color: hsl(var(--foreground-page));
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -13,8 +13,11 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 100%; /* Blanc pour les fonds de composants (cartes, entrées) */
-    --foreground: 220 12% 18%; /* Texte des composants, bleu désaturé très foncé */
+    --background-page: 210 20% 95%; /* #F0F8FF - Calm page background */
+    --foreground-page: 220 15% 25%; /* Default text on page */
+
+    --background: 0 0% 100%; /* Component background: white */
+    --foreground: 220 12% 18%; /* Component text: dark desaturated blue */
     
     --card: 0 0% 100%;
     --card-foreground: 220 12% 18%;
@@ -22,86 +25,89 @@ body {
     --popover: 0 0% 100%;
     --popover-foreground: 220 12% 18%;
     
-    --primary: 217 91% 60%; /* Bleu Google-like vibrant */
-    --primary-foreground: 0 0% 100%; /* Texte blanc sur primaire */
+    --primary: 210 70% 50%; /* #3399FF - Bright Blue */
+    --primary-foreground: 0 0% 100%; /* White text on primary */
     
-    --secondary: 210 40% 96.1%; /* Gris-bleu très clair (Material secondary container) */
-    --secondary-foreground: 217 33% 34%; /* Texte sur secondaire (Material on-secondary-container) */
+    --secondary: 210 40% 96.1%; /* Light cool gray for secondary elements */
+    --secondary-foreground: 217 33% 34%; /* Text on secondary */
     
-    --muted: 210 40% 93%; /* Gris-bleu plus clair pour éléments discrets et fonds de section légers */
-    --muted-foreground: 210 30% 50%; /* Texte gris pour fonds discrets */
+    --muted: 210 30% 92%; /* Slightly darker cool gray for muted backgrounds */
+    --muted-foreground: 210 30% 50%; /* Muted text color */
     
-    --accent: 142 71% 45%; /* Vert Google-like pour accent */
-    --accent-foreground: 0 0% 100%; /* Texte blanc sur accent */
+    --accent: 180 60% 40%; /* #33CCCC - Teal/Cyan Accent */
+    --accent-foreground: 0 0% 100%; /* White text on accent */
     
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 215 20% 89%; /* Bordure gris clair */
-    --input: 0 0% 100%; /* Fond d'input blanc, rely on border */
-    --ring: 217 91% 70%; /* Bleu primaire plus clair pour anneaux de focus */
+    --border: 210 20% 88%; /* Cool gray border */
+    --input: 0 0% 100%; /* Input background: white, rely on border */
+    --ring: 210 70% 60%; /* Lighter primary for focus rings */
     
-    --chart-1: 217 91% 60%; /* Bleu primaire */
-    --chart-2: 217 91% 75%; /* Bleu primaire plus clair */
-    --chart-3: 142 71% 45%; /* Vert accent */
-    --chart-4: 220 10% 50%; /* Gris neutre */
-    --chart-5: 142 71% 65%; /* Vert accent plus clair */
+    --chart-1: 210 70% 50%; /* primary */
+    --chart-2: 180 60% 40%; /* accent */
+    --chart-3: 210 70% 70%; /* lighter primary */
+    --chart-4: 180 60% 60%; /* lighter accent */
+    --chart-5: 220 10% 50%; /* neutral gray */
     
     --radius: 0.75rem; /* Slightly larger radius for a modern feel */
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-primary: 210 70% 50%; /* Using app primary for sidebar primary */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 95%; /* Using page background for sidebar accent */
+    --sidebar-accent-foreground: 220 12% 18%;
+    --sidebar-border: 210 20% 88%;
+    --sidebar-ring: 210 70% 60%;
   }
 
   .dark {
-    --background: 220 15% 10%; /* Fond de page plus sombre */
-    --foreground: 210 40% 95%; /* Texte principal plus clair */
+    --background-page: 220 15% 10%; /* Dark cool gray page background */
+    --foreground-page: 210 20% 85%; /* Lighter text on dark page */
+
+    --background: 220 15% 14%; /* Component background: slightly lighter dark gray */
+    --foreground: 210 20% 90%; /* Component text: very light gray */
     
-    --card: 220 15% 14%; /* Cartes légèrement plus claires que le fond */
-    --card-foreground: 210 40% 93%;
+    --card: 220 15% 14%;
+    --card-foreground: 210 20% 90%;
     
     --popover: 220 15% 12%;
-    --popover-foreground: 210 40% 93%;
+    --popover-foreground: 210 20% 90%;
     
-    --primary: 217 91% 70%; /* Bleu Google-like plus lumineux pour mode sombre */
-    --primary-foreground: 217 25% 15%; /* Texte foncé sur primaire en mode sombre */
+    --primary: 210 70% 60%; /* Lighter primary for dark mode */
+    --primary-foreground: 210 70% 10%; /* Dark text on light primary */
     
-    --secondary: 216 20% 18%; /* Gris-bleu plus foncé */
-    --secondary-foreground: 210 30% 80%; 
+    --secondary: 220 15% 20%; /* Darker cool gray for secondary elements */
+    --secondary-foreground: 210 20% 70%; 
     
-    --muted: 216 15% 22%; /* Muted un peu plus clair que le fond des cartes */
-    --muted-foreground: 210 25% 65%;
+    --muted: 220 15% 25%; /* Muted background for dark mode */
+    --muted-foreground: 210 20% 60%;
     
-    --accent: 142 61% 65%; /* Vert plus lumineux pour accent en mode sombre */
-    --accent-foreground: 142 25% 15%; 
+    --accent: 180 60% 50%; /* Lighter accent for dark mode */
+    --accent-foreground: 180 60% 10%; /* Dark text on light accent */
     
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 216 15% 28%; /* Bordure plus visible */
-    --input: 216 15% 18%; /* Fond d'input foncé */
-    --ring: 217 91% 75%; 
+    --border: 220 15% 30%; /* Border for dark mode */
+    --input: 220 15% 18%; /* Input background for dark mode */
+    --ring: 210 70% 70%; 
     
-    --chart-1: 217 91% 70%; 
-    --chart-2: 217 91% 80%; 
-    --chart-3: 142 71% 55%; 
-    --chart-4: 220 10% 70%; 
-    --chart-5: 142 71% 75%;
+    --chart-1: 210 70% 60%; 
+    --chart-2: 180 60% 50%; 
+    --chart-3: 210 70% 80%; 
+    --chart-4: 180 60% 70%; 
+    --chart-5: 210 10% 70%;
 
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 220 15% 10%; /* Using dark page background */
+    --sidebar-foreground: 210 20% 85%;
+    --sidebar-primary: 210 70% 60%; /* Using dark primary */
+    --sidebar-primary-foreground: 210 70% 10%;
+    --sidebar-accent: 220 15% 20%; /* Using dark secondary for accent */
+    --sidebar-accent-foreground: 210 20% 80%;
+    --sidebar-border: 220 15% 30%;
+    --sidebar-ring: 210 70% 70%;
   }
 }
 
@@ -123,8 +129,3 @@ body {
 .dark .shadow-custom-light { /* Ensure dark mode overrides light shadow if class is used */
    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
 }
-
-/* Applying the custom shadow to ShadCN cards */
-/* This requires changing the Card component itself if we want to replace default 'shadow-sm' */
-/* For now, if you want to use this shadow, apply 'shadow-custom-light' or 'dark:shadow-custom-dark' manually or through a new Card variant */
-
