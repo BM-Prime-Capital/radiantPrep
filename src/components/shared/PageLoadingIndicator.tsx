@@ -7,32 +7,27 @@ import { GlobalLoader } from './GlobalLoader';
 
 export function PageLoadingIndicator() {
   const pathname = usePathname();
-  const [isLoading, setIsLoading] = useState(false);
-  const previousPathnameRef = useRef(pathname);
+  const [isLoading, setIsLoading] = useState(true); // Start true for initial load
+  const previousPathnameRef = useRef(pathname); // Keep track of previous path
 
   useEffect(() => {
-    // Only show loader if the pathname has actually changed
+    // For navigations, ensure isLoading is set to true to re-trigger the loader display
     if (previousPathnameRef.current !== pathname) {
       setIsLoading(true);
     }
-    // Update the ref to the current pathname for the next comparison
+    // Update the ref to the current pathname for the next comparison cycle
     previousPathnameRef.current = pathname;
 
-    // This timer will hide the loader after a short duration.
-    // This ensures the loader is visible during the transition and then disappears.
+    // Timer to hide the loader after a short duration
+    // This applies to both initial load (because isLoading starts true) and navigations
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 750); // Duration can be adjusted
+    }, 750); // Duration can be adjusted based on preference
 
     return () => {
-      clearTimeout(timer);
+      clearTimeout(timer); // Clean up the timer if the component unmounts or pathname changes again quickly
     };
-  }, [pathname]);
-
-  // Ensure the loader is not shown on the very first page load/hydration.
-  useEffect(() => {
-    setIsLoading(false);
-  }, []);
+  }, [pathname]); // Re-run this effect when the pathname changes
 
   return <GlobalLoader isLoading={isLoading} appName="Radiant Test Prep" />;
 }
