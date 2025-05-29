@@ -1,33 +1,33 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Edit3, ShieldCheck, Users } from "lucide-react";
+import { CheckCircle, Edit3, ShieldCheck, Users, BookOpen, BarChart3 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] py-12">
-      <header className="text-center mb-12">
-        <h1 className="text-5xl font-bold tracking-tight text-primary sm:text-6xl">
-          Welcome to EduCode Access
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)] py-12">
+      <header className="text-center mb-16">
+        <h1 className="text-5xl font-bold tracking-tight text-primary sm:text-6xl lg:text-7xl">
+          Welcome to Radiant Test Prep
         </h1>
-        <p className="mt-6 text-lg leading-8 text-foreground/80 max-w-2xl mx-auto">
-          Radiant Prep's diagnostic testing program. Identify academic strengths and areas for growth with our tailored assessments for ELA and Math.
+        <p className="mt-8 text-lg leading-8 text-foreground/80 max-w-3xl mx-auto sm:text-xl">
+          Our diagnostic testing program helps identify academic strengths and areas for growth with tailored assessments in ELA and Math.
         </p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mb-12">
-        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mb-16">
+        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
           <CardHeader>
-            <CardTitle className="flex items-center text-2xl text-accent">
+            <CardTitle className="flex items-center text-2xl font-semibold text-accent">
               <Users className="mr-3 h-7 w-7" /> For Students
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-base">
               Take assessments, discover your strengths, and find areas to improve.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ul className="space-y-2 text-sm text-foreground/90">
+          <CardContent className="space-y-3">
+            <ul className="space-y-2 text-foreground/90">
               <li className="flex items-start">
                 <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 shrink-0" />
                 <span>Personalized diagnostic tests in ELA and Math.</span>
@@ -41,23 +41,23 @@ export default function HomePage() {
                 <span>Understand your learning profile better.</span>
               </li>
             </ul>
-            <Button asChild className="mt-6 w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Button asChild className="mt-6 w-full bg-accent hover:bg-accent/90 text-accent-foreground py-6 text-lg">
               <Link href="/auth/login">Child Login</Link>
             </Button>
           </CardContent>
         </Card>
 
-        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
           <CardHeader>
-            <CardTitle className="flex items-center text-2xl text-primary">
-              <Edit3 className="mr-3 h-7 w-7" /> For Parents & Teachers
+            <CardTitle className="flex items-center text-2xl font-semibold text-primary">
+              <Edit3 className="mr-3 h-7 w-7" /> For Parents & Educators
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-base">
               Register your child, get insights into their performance, and support their learning.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <ul className="space-y-2 text-sm text-foreground/90">
+          <CardContent className="space-y-3">
+            <ul className="space-y-2 text-foreground/90">
               <li className="flex items-start">
                 <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 shrink-0" />
                 <span>Simple registration process for your child.</span>
@@ -67,29 +67,29 @@ export default function HomePage() {
                 <span>Receive a unique, secure access code for your child.</span>
               </li>
               <li className="flex items-start">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 shrink-0" />
-                <span>Help tailor instruction and provide targeted support.</span>
+                <BarChart3 className="h-5 w-5 text-orange-500 mr-2 mt-0.5 shrink-0" />
+                <span>Track progress and identify key learning areas.</span>
               </li>
             </ul>
-            <Button asChild className="mt-6 w-full">
+            <Button asChild className="mt-6 w-full py-6 text-lg">
               <Link href="/auth/register">Parent Registration</Link>
             </Button>
           </CardContent>
         </Card>
       </div>
 
-      <section className="w-full max-w-4xl text-center mt-10">
-        <h2 className="text-3xl font-semibold text-primary mb-6">Our Subjects</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="bg-card p-6 rounded-lg shadow-md">
-            <Image src="https://placehold.co/600x400.png" alt="ELA Assessment" width={600} height={400} className="rounded-md mb-4" data-ai-hint="books library" />
-            <h3 className="text-xl font-medium text-accent mb-2">English Language Arts (ELA)</h3>
-            <p className="text-sm text-foreground/80">Evaluate reading comprehension, vocabulary, and writing skills.</p>
+      <section className="w-full max-w-5xl text-center mt-12">
+        <h2 className="text-4xl font-semibold text-primary mb-8">Our Subjects</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          <div className="bg-card p-8 rounded-xl shadow-lg">
+            <Image src="https://placehold.co/600x400.png" alt="ELA Assessment" width={600} height={400} className="rounded-lg mb-6" data-ai-hint="books library" />
+            <h3 className="text-2xl font-medium text-accent mb-3">English Language Arts (ELA)</h3>
+            <p className="text-base text-foreground/80">Evaluate reading comprehension, vocabulary, and writing skills essential for academic success.</p>
           </div>
-          <div className="bg-card p-6 rounded-lg shadow-md">
-            <Image src="https://placehold.co/600x400.png" alt="Math Assessment" width={600} height={400} className="rounded-md mb-4" data-ai-hint="math equations" />
-            <h3 className="text-xl font-medium text-accent mb-2">Mathematics</h3>
-            <p className="text-sm text-foreground/80">Assess numerical skills, problem-solving, and mathematical concepts.</p>
+          <div className="bg-card p-8 rounded-xl shadow-lg">
+            <Image src="https://placehold.co/600x400.png" alt="Math Assessment" width={600} height={400} className="rounded-lg mb-6" data-ai-hint="math equations" />
+            <h3 className="text-2xl font-medium text-accent mb-3">Mathematics</h3>
+            <p className="text-base text-foreground/80">Assess numerical fluency, problem-solving abilities, and core mathematical concepts.</p>
           </div>
         </div>
       </section>

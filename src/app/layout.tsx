@@ -8,8 +8,8 @@ import { Navbar } from '@/components/shared/Navbar';
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: 'EduCode Access - Radiant Prep',
-  description: 'Radiant Prep\'s Diagnostic Testing Program',
+  title: 'Radiant Test Prep - Diagnostic Testing',
+  description: 'Radiant Test Prep\'s Diagnostic Testing Program for academic excellence.',
 };
 
 export default function RootLayout({
@@ -26,8 +26,8 @@ export default function RootLayout({
             {children}
           </main>
           <footer className="bg-card border-t border-border py-6 text-center text-muted-foreground text-sm">
-            <p>&copy; {new Date().getFullYear()} Radiant Prep. All rights reserved.</p>
-            <p>EduCode Access - Empowering Learning Journeys</p>
+            <p>&copy; {new Date().getFullYear()} Radiant Test Prep. All rights reserved.</p>
+            <p>Empowering Learning Journeys</p>
           </footer>
           <Toaster />
         </AuthProvider>

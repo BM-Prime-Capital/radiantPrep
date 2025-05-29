@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BookOpenText, Home, LogIn, LogOut, UserPlus, ClipboardList, UserCircle, CheckCircle2 } from 'lucide-react';
+import { BookOpenText, Home, LogIn, LogOut, UserPlus, ClipboardList, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -40,7 +40,7 @@ export function Navbar() {
           <div className="flex items-center">
             <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/80 transition-colors">
               <BookOpenText className="h-8 w-8" />
-              <span className="font-semibold text-xl tracking-tight">EduCode Access</span>
+              <span className="font-semibold text-xl tracking-tight">Radiant Test Prep</span>
             </Link>
           </div>
           
