@@ -5,6 +5,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { Navbar } from '@/components/shared/Navbar';
+import { PageLoadingIndicator } from '@/components/shared/PageLoadingIndicator';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -22,6 +23,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased flex flex-col min-h-screen`}>
         <AuthProvider>
+          <PageLoadingIndicator />
           <Navbar />
           <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {children}
