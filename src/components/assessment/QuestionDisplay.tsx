@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Question } from '@/lib/types';
@@ -37,7 +38,7 @@ export function QuestionDisplay({ question, questionNumber, totalQuestions, onAn
           </RadioGroup>
         );
       case QuestionType.TEXT:
-      case QuestionType.GRAMMAR: // Treat grammar as text input for correction
+      case QuestionType.GRAMMAR: 
         return (
           <Input
             type="text"
@@ -80,7 +81,6 @@ export function QuestionDisplay({ question, questionNumber, totalQuestions, onAn
             ))}
           </div>
         );
-      // Placeholder for complex types
       case QuestionType.DRAWING:
       case QuestionType.PATTERN:
       case QuestionType.MATCHING:

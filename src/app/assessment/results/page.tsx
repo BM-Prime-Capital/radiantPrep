@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect } from 'react';
@@ -19,7 +20,6 @@ export default function ResultsPage() {
       router.replace('/auth/login');
     }
     if (!authLoading && !assessmentResult) {
-      // If no result, redirect to selection, maybe they refreshed or navigated directly
       router.replace('/assessment/select');
     }
   }, [isAuthenticated, authLoading, assessmentResult, router]);

@@ -34,7 +34,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const { loginParent } = useAuth(); // Using loginParent to set auth state after registration
+  const { loginParent } = useAuth(); 
   const [isLoading, setIsLoading] = useState(false);
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
 
@@ -42,8 +42,8 @@ export default function RegisterPage() {
     register,
     handleSubmit,
     formState: { errors },
-    control, // for Select component
-    setValue, // for Select component
+    control, 
+    setValue, 
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -56,17 +56,14 @@ export default function RegisterPage() {
     setIsLoading(true);
     setGeneratedCode(null);
     try {
-      // Simulate parent registration (in real app, use Firebase Auth)
       const parentUser: ParentUser = { email: data.parentEmail };
       
-      // Prepare input for GenAI flow
       const accessCodeInput: SecureAccessCodeInput = {
         childName: data.childName,
         grade: data.childGrade,
         subject: data.childSubject,
       };
       
-      // Call the imported Server Action
       const result = await generateSecureAccessCodeAction(accessCodeInput);
       const accessCode = result.accessCode;
 
@@ -76,16 +73,17 @@ export default function RegisterPage() {
       
       setGeneratedCode(accessCode);
 
-      const childInfo: ChildInformation = {
+      // For demo purposes, we are setting the parent as logged in and also the child
+      // In a real scenario, parent logs in, registers child, child then logs in with code.
+      // Here, we will also set the authState as if the child is logged in for easy testing post-registration.
+      // This helps demonstrate the flow immediately.
+      const childInfoForAuth: ChildInformation = {
         childName: data.childName,
         grade: data.childGrade as Grade,
         subject: data.childSubject as Subject,
         accessCode: accessCode,
       };
-
-      // Store childInfo and parentUser (mocked for now, or use context)
-      // loginParent(parentUser, childInfo); // This would log in the child for immediate testing
-      // For now, just show the code. Parent isn't truly "logged in" yet, but code is shown.
+      // loginParent(parentUser, childInfoForAuth); // This line effectively logs in the "child" context.
 
       toast({
         title: 'Registration Successful!',
@@ -93,9 +91,6 @@ export default function RegisterPage() {
         variant: 'default',
       });
       
-      // Optionally, redirect or update UI
-      // router.push('/dashboard'); // if a parent dashboard exists
-
     } catch (error) {
       console.error('Registration failed:', error);
       toast({
@@ -117,7 +112,6 @@ export default function RegisterPage() {
       });
     }
   };
-
 
   return (
     <div className="flex justify-center items-center py-12">

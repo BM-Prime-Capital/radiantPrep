@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
@@ -11,7 +12,6 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { ChevronLeft, ChevronRight, CheckSquare } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-
 
 export default function AssessmentPage() {
   const router = useRouter();
@@ -32,11 +32,11 @@ export default function AssessmentPage() {
       router.replace('/auth/login');
       return;
     }
-    if (role !== 'child') {
-       // Allow parents to preview for simplicity, but ideally, this should be child-only
-      // router.replace('/assessment/select');
-      // return;
-    }
+    // Allow parents to preview for simplicity, but ideally, this should be child-only.
+    // if (role !== 'child') {
+    //    router.replace('/assessment/select');
+    //    return;
+    // }
 
     if (subject && grade) {
       const fetchedQuestions = getQuestions(subject, grade);
@@ -80,10 +80,8 @@ export default function AssessmentPage() {
       if (userAnswer !== undefined) {
         if (Array.isArray(q.correctAnswer)) {
           if (Array.isArray(userAnswer)) {
-            // For fill-in-the-blank with multiple blanks
             isCorrect = q.correctAnswer.every((ca, i) => userAnswer[i]?.trim().toLowerCase() === ca.trim().toLowerCase());
           } else {
-            // For text questions with multiple possible correct answers
             isCorrect = q.correctAnswer.some(ca => userAnswer.toString().trim().toLowerCase() === ca.trim().toLowerCase());
           }
         } else if (q.correctAnswer) {
@@ -105,7 +103,7 @@ export default function AssessmentPage() {
       grade
     };
     
-    setAssessmentResult(result); // Store result in context/localStorage
+    setAssessmentResult(result);
     router.push('/assessment/results');
   };
   

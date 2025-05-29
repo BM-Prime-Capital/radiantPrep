@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -32,9 +33,6 @@ async function validateAccessCode(code: string): Promise<ChildInformation | null
       if (parsedState.role === 'child' && parsedState.user?.accessCode === code) {
         return parsedState.user as ChildInformation;
       }
-      // A more robust mock might involve checking a specific localStorage key set during registration.
-      // For this simple scaffold, we will assume if parent registered, the code is "known".
-      // Or, we could hardcode a demo child.
     }
   } catch (e) { /* ignore */ }
 

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -36,7 +37,6 @@ export default function SelectAssessmentPage() {
 
   const handleStartAssessment = () => {
     if (selectedSubject && selectedGrade) {
-      // Update child info in context if changed
       if (childUser && (childUser.subject !== selectedSubject || childUser.grade !== selectedGrade)) {
         updateChildInfo({ subject: selectedSubject, grade: selectedGrade });
       }

@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates a secure and unique access code for a child.
