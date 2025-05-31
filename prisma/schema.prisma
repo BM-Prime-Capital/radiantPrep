@@ -4,119 +4,11 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-1.1.x"] // Explicitly added binary target
 }
 
-model User {
-  id            String       @id @default(cuid())
-  email         String?      @unique // Optional for child, required for parent
-  passwordHash  String? // For parent accounts
-  role          UserRole
-  childName     String?
-  accessCode    String?      @unique
-  grade         GradeLevel?
-  subject       SubjectName?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  assessments   Assessment[]
-  parentId      String?
-  parent        User?        @relation("ParentChildren", fields: [parentId], references: [id])
-  children      User[]       @relation("ParentChildren")
-
-  @@index([accessCode])
-}
-
-model Subject {
-  id        String      @id @default(cuid())
-  name      SubjectName @unique
-  questions Question[]
-}
-
-model Grade {
-  id        String     @id @default(cuid())
-  level     GradeLevel @unique
-  questions Question[]
-}
-
-model Question {
-  id                  String                  @id @default(cuid())
-  questionText        String                  @db.Text
-  questionType        PrismaQuestionType      @map("type")
-  passage             String?                 @db.Text
-  imageUrl            String?
-  category            String?
-  blanksJson          String? // JSON string for fill_in_the_blank placeholders
-  columnsJson         String? // JSON string for matching/word_sort columns
-  dataAihint          String? // Hint for AI image generation
-  isDrawing           Boolean? // Placeholder for drawing interaction
-  drawingQuestion     Boolean? // Placeholder for drawing interaction
-
-  subjectId           String
-  subject             Subject                 @relation(fields: [subjectId], references: [id])
-
-  gradeId             String
-  grade               Grade                   @relation(fields: [gradeId], references: [id])
-
-  options             QuestionOption[]
-  correctAnswers      QuestionCorrectAnswer[]
-  assessmentAnswers AssessmentAnswer[]
-
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @updatedAt
-
-  @@index([subjectId])
-  @@index([gradeId])
-}
-
-model QuestionOption {
-  id         String   @id @default(cuid())
-  value      String
-  questionId String
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-
-  @@index([questionId])
-}
-
-// Stores correct answers. For multiple choice, there's one. For fill-in-the-blank with multiple blanks, answerValue could be a JSON array string.
-// Or, multiple records for multiple accepted text answers.
-model QuestionCorrectAnswer {
-  id            String   @id @default(cuid())
-  answerValue   String   @db.Text // Can be a single string or a JSON string array for multiple fill-ins
-  questionId    String
-  question      Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  isPrimary     Boolean  @default(true) // Useful if multiple correct answers are possible, to mark the "main" one
-
-  @@index([questionId])
-}
-
-model Assessment {
-  id              String             @id @default(cuid())
-  userId          String
-  user            User               @relation(fields: [userId], references: [id])
-  subjectName     SubjectName
-  gradeLevel      GradeLevel
-  score           Int
-  totalQuestions  Int
-  takenAt         DateTime           @default(now())
-  answers         AssessmentAnswer[]
-
-  @@index([userId])
-}
-
-model AssessmentAnswer {
-  id                String   @id @default(cuid())
-  assessmentId      String
-  assessment        Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
-  questionId        String
-  question          Question @relation(fields: [questionId], references: [id])
-  userAnswer        String   @db.Text // Could be a simple string or JSON string for multi-part answers
-  isCorrect         Boolean
-  submittedAt       DateTime @default(now())
-
-  @@index([assessmentId])
-  @@index([questionId])
-}
-
+// ENUMS
 enum UserRole {
   PARENT
   CHILD
@@ -152,4 +44,103 @@ enum PrismaQuestionType {
   GRAMMAR
   WORD_SORT
   FRACTION
+}
+
+// MODELS
+model User {
+  id           String    @id @default(cuid())
+  email        String?   @unique // Optional for child, required for parent
+  passwordHash String? // For parent login, if implemented
+  role         UserRole
+  childName    String? // If role is CHILD
+  accessCode   String?   @unique // If role is CHILD
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  grade          GradeLevel? // If role is CHILD
+  currentSubject SubjectName? // If role is CHILD
+
+  parentAssessments Assessment[] @relation("ParentAssessments") // Assessments initiated by this user (if parent)
+  childAssessments  Assessment[] @relation("ChildAssessments") // Assessments taken by this user (if child)
+}
+
+model Subject {
+  id        String      @id @default(cuid())
+  name      SubjectName @unique
+  questions Question[]
+}
+
+model Grade {
+  id        String     @id @default(cuid())
+  level     GradeLevel @unique
+  questions Question[]
+}
+
+model Question {
+  id                 String                @id @default(cuid())
+  questionType       PrismaQuestionType    @map("type") // Mapped from 'type' to avoid reserved keyword issues
+  questionText       String                @db.Text
+  passage            String?               @db.Text
+  imageUrl           String?
+  category           String?
+  blanksJson         String? // JSON string for fill-in-the-blank texts
+  columnsJson        String? // JSON string for matching columns
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  dataAihint         String?
+  isDrawing          Boolean?
+  drawingQuestion    Boolean?
+
+  subjectId          String
+  subject            Subject               @relation(fields: [subjectId], references: [id])
+  gradeId            String
+  grade              Grade                 @relation(fields: [gradeId], references: [id])
+  options            QuestionOption[]
+  correctAnswers     QuestionCorrectAnswer[]
+  assessmentAnswers  AssessmentAnswer[]
+}
+
+model QuestionOption {
+  id         String   @id @default(cuid())
+  value      String
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+}
+
+model QuestionCorrectAnswer {
+  id          String   @id @default(cuid())
+  answerValue String   @db.Text // Can be a single string or JSON array string for multiple blanks/answers
+  isPrimary   Boolean  @default(true) // Useful if one answer is preferred among multiple correct ones
+  questionId  String
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
+
+model Assessment {
+  id             String             @id @default(cuid())
+  userId         String // ID of the user who took/initiated the assessment
+  userRole       UserRole // Role of the user (parent or child)
+  subjectName    SubjectName
+  gradeLevel     GradeLevel
+  score          Int
+  totalQuestions Int
+  takenAt        DateTime           @default(now())
+
+  user             User @relation(name: "ParentAssessments", fields: [userId], references: [id])
+  childUser        User @relation(name: "ChildAssessments", fields: [userId], references: [id])
+
+
+  answers        AssessmentAnswer[]
+}
+
+model AssessmentAnswer {
+  id              String   @id @default(cuid())
+  assessmentId    String
+  assessment      Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  questionId      String   // Storing the original Question CUID
+  question        Question @relation(fields: [questionId], references: [id]) // Relation to the Question
+  userAnswer      String   @db.Text // Can be a single string or JSON array string for multiple inputs
+  isCorrect       Boolean
+  submittedAt     DateTime @default(now())
 }
