@@ -27,28 +27,44 @@ export default function AssessmentPage() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<(string | string[] | undefined)[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [errorLoadingQuestions, setErrorLoadingQuestions] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.replace('/auth/login');
       return;
     }
-    // Allow parents to preview for simplicity, but ideally, this should be child-only.
-    // if (role !== 'child') {
-    //    router.replace('/assessment/select');
-    //    return;
-    // }
 
-    if (subject && grade) {
-      const fetchedQuestions = getQuestions(subject, grade);
-      if (fetchedQuestions.length === 0) {
-        toast({ title: "Error", description: "No questions found for this subject/grade.", variant: "destructive" });
-        router.push('/assessment/select');
-        return;
+    async function fetchQuestions() {
+      if (subject && grade) {
+        try {
+          setIsLoading(true);
+          setErrorLoadingQuestions(null);
+          const fetchedQuestions = await getQuestions(subject, grade);
+          if (fetchedQuestions.length === 0) {
+            toast({ title: "No Questions", description: "No questions found for this subject/grade combination.", variant: "default" });
+            // Potentially redirect or show a message, for now, we allow staying on the page with no questions.
+            // router.push('/assessment/select');
+            setQuestions([]);
+          } else {
+            setQuestions(fetchedQuestions);
+            setAnswers(new Array(fetchedQuestions.length).fill(undefined));
+          }
+        } catch (err) {
+          console.error("Error fetching questions:", err);
+          toast({ title: "Error Loading Assessment", description: "Could not load questions. Please try again.", variant: "destructive" });
+          setErrorLoadingQuestions("Failed to load questions.");
+          setQuestions([]);
+        } finally {
+          setIsLoading(false);
+        }
+      } else {
+        setIsLoading(false); // No subject/grade, nothing to load
       }
-      setQuestions(fetchedQuestions);
-      setAnswers(new Array(fetchedQuestions.length).fill(undefined));
-      setIsLoading(false);
+    }
+
+    if (!authLoading) {
+        fetchQuestions();
     }
   }, [subject, grade, isAuthenticated, authLoading, router, toast, role]);
 
@@ -68,7 +84,7 @@ export default function AssessmentPage() {
 
   const goToPreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(prevIndex => prevIndex + 1);
+      setCurrentQuestionIndex(prevIndex => prevIndex - 1); // Corrected to prevIndex - 1
     }
   };
 
@@ -78,22 +94,31 @@ export default function AssessmentPage() {
       const userAnswer = answers[index];
       let isCorrect = false;
       
-      if (userAnswer !== undefined) {
-        if (Array.isArray(q.correctAnswer)) {
+      // Ensure q.correctAnswer is defined before using it
+      const questionCorrectAnswer = q.correctAnswer;
+
+      if (userAnswer !== undefined && questionCorrectAnswer !== undefined) {
+        if (Array.isArray(questionCorrectAnswer)) {
+          // If correct answer is an array (e.g. for FILL_IN_THE_BLANK)
           if (Array.isArray(userAnswer)) {
-            isCorrect = q.correctAnswer.every((ca, i) => userAnswer[i]?.trim().toLowerCase() === ca.trim().toLowerCase());
+            // User answer is also an array (e.g. for multiple inputs)
+            // This needs careful comparison logic, e.g., all elements match in order
+            isCorrect = userAnswer.length === questionCorrectAnswer.length && 
+                        userAnswer.every((ua, i) => ua?.trim().toLowerCase() === questionCorrectAnswer[i]?.trim().toLowerCase());
           } else {
-            isCorrect = q.correctAnswer.some(ca => userAnswer.toString().trim().toLowerCase() === ca.trim().toLowerCase());
+            // User answer is a single string, check if it's one of the correct answers
+            isCorrect = questionCorrectAnswer.some(ca => userAnswer.toString().trim().toLowerCase() === ca?.trim().toLowerCase());
           }
-        } else if (q.correctAnswer) {
-           isCorrect = userAnswer.toString().trim().toLowerCase() === q.correctAnswer.trim().toLowerCase();
+        } else {
+           // Correct answer is a single string
+           isCorrect = userAnswer.toString().trim().toLowerCase() === questionCorrectAnswer.toString().trim().toLowerCase();
         }
       }
 
       if (isCorrect) {
         score++;
       }
-      return { questionId: q.id, userAnswer: userAnswer || "Not Answered", correctAnswer: q.correctAnswer || "N/A", isCorrect };
+      return { questionId: q.id_prisma || q.id, userAnswer: userAnswer || "Not Answered", correctAnswer: questionCorrectAnswer || "N/A", isCorrect };
     });
 
     const result: AssessmentResult = {
@@ -114,8 +139,18 @@ export default function AssessmentPage() {
     return <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]"><p>Loading assessment...</p></div>;
   }
 
-  if (questions.length === 0) {
-    return <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]"><p>No questions available for this assessment.</p></div>;
+  if (errorLoadingQuestions) {
+    return <div className="flex flex-col justify-center items-center min-h-[calc(100vh-10rem)]">
+      <p className="text-destructive mb-4">{errorLoadingQuestions}</p>
+      <Button onClick={() => router.push('/assessment/select')}>Back to Selection</Button>
+    </div>;
+  }
+  
+  if (questions.length === 0 && !isLoading) {
+    return <div className="flex flex-col justify-center items-center min-h-[calc(100vh-10rem)]">
+      <p className="mb-4">No questions available for this assessment configuration.</p>
+      <Button onClick={() => router.push('/assessment/select')}>Choose Another Assessment</Button>
+      </div>;
   }
 
   const currentQuestion = questions[currentQuestionIndex];

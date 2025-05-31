@@ -19,9 +19,9 @@ export enum QuestionType {
 export type Subject = "ELA" | "Math";
 export type Grade = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
-export interface QuestionOption {
+export interface QuestionOption { // This type seems unused if options are string[] in Question
   text: string;
-  isCorrect?: boolean; // For multiple choice, if needed directly here
+  isCorrect?: boolean; 
 }
 
 export interface MatchingColumn {
@@ -30,28 +30,20 @@ export interface MatchingColumn {
 }
 
 export interface Question {
-  id: number;
+  id: number | string; // Changed to allow string for Prisma CUIDs, or number if mapped
+  id_prisma?: string; // Explicitly store Prisma's CUID if needed alongside a numeric ID
   type: QuestionType;
   question: string;
   passage?: string;
-  image?: string; // URL for an image related to the question
-  options?: string[]; // For MULTIPLE_CHOICE, IMAGE_CHOICE
-  correctAnswer?: string | string[]; // Single answer or array for multiple correct (e.g., text, fill-in-blank)
-  category?: string; // E.g., "Reading Comprehension"
-  
-  // Specific to QuestionType.FILL_IN_THE_BLANK or FILL_IN
-  blanks?: string[]; // Array of placeholder texts for blanks, e.g., ["A duck can fly with his wi__gs."]
-                      // The actual answer would be in correctAnswer as an array.
-
-  // Specific to QuestionType.MATCHING or WORD_SORT
-  columns?: MatchingColumn[]; // For matching questions
-
-  // Specific to QuestionType.DRAWING or PATTERN (might be used to describe the task if no image)
+  image?: string; 
+  options?: string[]; 
+  correctAnswer?: string | string[]; 
+  category?: string; 
+  blanks?: string[]; 
+  columns?: MatchingColumn[]; 
   isDrawing?: boolean; 
-  drawingQuestion?: boolean; // from math data
-
-  // Specific to QuestionType.COMPARISON for Math
-  comparisonValues?: string[];
+  drawingQuestion?: boolean;
+  dataAihint?: string; // Added from static data, used in QuestionDisplay
 }
 
 export interface ChildInformation {
@@ -75,10 +67,16 @@ export interface AuthState {
   isLoading: boolean;
 }
 
+export interface AssessmentResultAnswer {
+  questionId: number | string; // Allow string for Prisma CUIDs
+  userAnswer: string | string[]; 
+  correctAnswer: string | string[] | undefined; // Made undefined possible as per usage
+  isCorrect: boolean;
+}
 export interface AssessmentResult {
   score: number;
   totalQuestions: number;
-  answers: { questionId: number; userAnswer: string | string[]; correctAnswer: string | string[]; isCorrect: boolean }[];
+  answers: AssessmentResultAnswer[];
   subject: Subject;
   grade: Grade;
 }
