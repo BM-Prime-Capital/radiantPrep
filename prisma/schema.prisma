@@ -4,8 +4,8 @@ datasource db {
 }
 
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-1.1.x"] // Explicitly added binary target
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 // ENUMS
@@ -49,19 +49,18 @@ enum PrismaQuestionType {
 // MODELS
 model User {
   id           String    @id @default(cuid())
-  email        String?   @unique // Optional for child, required for parent
-  passwordHash String? // For parent login, if implemented
+  email        String?   @unique
+  passwordHash String?
   role         UserRole
-  childName    String? // If role is CHILD
-  accessCode   String?   @unique // If role is CHILD
+  childName    String?
+  accessCode   String?   @unique
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+  grade          GradeLevel?
+  currentSubject SubjectName?
 
-  grade          GradeLevel? // If role is CHILD
-  currentSubject SubjectName? // If role is CHILD
-
-  parentAssessments Assessment[] @relation("ParentAssessments") // Assessments initiated by this user (if parent)
-  childAssessments  Assessment[] @relation("ChildAssessments") // Assessments taken by this user (if child)
+  parentAssessments Assessment[] @relation("ParentAssessments")
+  childAssessments  Assessment[] @relation("ChildAssessments")
 }
 
 model Subject {
@@ -119,17 +118,17 @@ model QuestionCorrectAnswer {
 
 model Assessment {
   id             String             @id @default(cuid())
-  userId         String // ID of the user who took/initiated the assessment
-  userRole       UserRole // Role of the user (parent or child)
+  parentUserId   String  // Nouveau champ spécifique pour le parent
+  childUserId    String  // Nouveau champ spécifique pour l'enfant
+  userRole       UserRole
   subjectName    SubjectName
   gradeLevel     GradeLevel
   score          Int
   totalQuestions Int
   takenAt        DateTime           @default(now())
 
-  user             User @relation(name: "ParentAssessments", fields: [userId], references: [id])
-  childUser        User @relation(name: "ChildAssessments", fields: [userId], references: [id])
-
+  parentUser     User    @relation("ParentAssessments", fields: [parentUserId], references: [id])
+  childUser      User    @relation("ChildAssessments", fields: [childUserId], references: [id])
 
   answers        AssessmentAnswer[]
 }
