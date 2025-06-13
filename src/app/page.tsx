@@ -1,11 +1,26 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getServerSession, getSession } from '@/lib/session';
+import { redirect } from 'next/navigation';
 import { CheckCircle, Edit3, ShieldCheck, Users, BookOpen, BarChart3, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function HomePage() {
+export default async function HomePage() {
+    // Check authentication status
+  const session = await getServerSession();
+  
+  // If child is authenticated, redirect to their dashboard
+  if (session?.user?.role === 'CHILD') {
+    redirect('/child-dashboard');
+  }
+
+  // If parent is authenticated, redirect to parent dashboard
+  if (session?.user?.role === 'PARENT') {
+    redirect('/parent-dashboard');
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] py-12 bg-background-page text-foreground-page">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">

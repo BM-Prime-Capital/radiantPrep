@@ -46,15 +46,28 @@ export interface Question {
   dataAihint?: string; // Added from static data, used in QuestionDisplay
 }
 
+export type AssessmentResult = {
+  id?: string;
+  score: number;
+  totalQuestions: number;
+  answers: AssessmentResultAnswer[];
+  subject: Subject;
+  grade: Grade;
+  takenAt?: string;
+};
+
+
 export interface ChildInformation {
   childName: string;
   grade: Grade;
   subject: Subject;
   accessCode: string;
+  id: string;
 }
 
 export interface ParentUser {
   email: string;
+  id: string;
   // other parent details if needed
 }
 
@@ -73,10 +86,4 @@ export interface AssessmentResultAnswer {
   correctAnswer: string | string[] | undefined; // Made undefined possible as per usage
   isCorrect: boolean;
 }
-export interface AssessmentResult {
-  score: number;
-  totalQuestions: number;
-  answers: AssessmentResultAnswer[];
-  subject: Subject;
-  grade: Grade;
-}
+

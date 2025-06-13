@@ -52,57 +52,100 @@ export default function RegisterPage() {
     }
   });
 
-  const onSubmit: SubmitHandler<RegisterFormValues> = async (data) => {
-    setIsLoading(true);
-    setGeneratedCode(null);
-    try {
-      const parentUser: ParentUser = { email: data.parentEmail };
+  // const onSubmit: SubmitHandler<RegisterFormValues> = async (data) => {
+  //   setIsLoading(true);
+  //   setGeneratedCode(null);
+  //   try {
+  //     const parentUser: ParentUser = { email: data.parentEmail };
       
-      const accessCodeInput: SecureAccessCodeInput = {
-        childName: data.childName,
-        grade: data.childGrade,
-        subject: data.childSubject,
-      };
+  //     const accessCodeInput: SecureAccessCodeInput = {
+  //       childName: data.childName,
+  //       grade: data.childGrade,
+  //       subject: data.childSubject,
+  //     };
       
-      const result = await generateSecureAccessCodeAction(accessCodeInput);
-      const accessCode = result.accessCode;
+  //     const result = await generateSecureAccessCodeAction(accessCodeInput);
+  //     const accessCode = result.accessCode;
 
-      if (!accessCode) {
-        throw new Error('Failed to generate access code.');
-      }
+  //     if (!accessCode) {
+  //       throw new Error('Failed to generate access code.');
+  //     }
       
-      setGeneratedCode(accessCode);
+  //     setGeneratedCode(accessCode);
 
-      // For demo purposes, we are setting the parent as logged in and also the child
-      // In a real scenario, parent logs in, registers child, child then logs in with code.
-      // Here, we will also set the authState as if the child is logged in for easy testing post-registration.
-      // This helps demonstrate the flow immediately.
-      const childInfoForAuth: ChildInformation = {
-        childName: data.childName,
-        grade: data.childGrade as Grade,
-        subject: data.childSubject as Subject,
-        accessCode: accessCode,
-      };
-      // loginParent(parentUser, childInfoForAuth); // This line effectively logs in the "child" context.
+  //     // For demo purposes, we are setting the parent as logged in and also the child
+  //     // In a real scenario, parent logs in, registers child, child then logs in with code.
+  //     // Here, we will also set the authState as if the child is logged in for easy testing post-registration.
+  //     // This helps demonstrate the flow immediately.
+  //     const childInfoForAuth: ChildInformation = {
+  //       childName: data.childName,
+  //       grade: data.childGrade as Grade,
+  //       subject: data.childSubject as Subject,
+  //       accessCode: accessCode,
+  //     };
+  //     // loginParent(parentUser, childInfoForAuth); // This line effectively logs in the "child" context.
 
-      toast({
-        title: 'Registration Successful!',
-        description: `Access code for ${data.childName} has been generated.`,
-        variant: 'default',
-      });
+  //     toast({
+  //       title: 'Registration Successful!',
+  //       description: `Access code for ${data.childName} has been generated.`,
+  //       variant: 'default',
+  //     });
       
-    } catch (error) {
-      console.error('Registration failed:', error);
-      toast({
-        title: 'Registration Failed',
-        description: (error as Error).message || 'An unexpected error occurred. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //   } catch (error) {
+  //     console.error('Registration failed:', error);
+  //     toast({
+  //       title: 'Registration Failed',
+  //       description: (error as Error).message || 'An unexpected error occurred. Please try again.',
+  //       variant: 'destructive',
+  //     });
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
   
+  const onSubmit: SubmitHandler<RegisterFormValues> = async (data) => {
+      setIsLoading(true);
+      setGeneratedCode(null);
+      
+      try {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            parentEmail: data.parentEmail,
+            parentPassword: data.parentPassword,
+            childName: data.childName,
+            childGrade: data.childGrade,
+            childSubject: data.childSubject,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Registration failed');
+        }
+
+        const result = await response.json();
+        setGeneratedCode(result.child.accessCode);
+
+        toast({
+          title: 'Registration Successful!',
+          description: `Access code for ${data.childName} has been generated.`,
+          variant: 'default',
+        });
+      } catch (error) {
+        toast({
+          title: 'Registration Failed',
+          description: (error as Error).message || 'An unexpected error occurred.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
   const copyToClipboard = () => {
     if (generatedCode) {
       navigator.clipboard.writeText(generatedCode).then(() => {

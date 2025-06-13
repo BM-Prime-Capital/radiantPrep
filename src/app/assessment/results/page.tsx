@@ -10,10 +10,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Progress } from '@/components/ui/progress';
 import Link from 'next/link';
 import { CheckCircle, XCircle, Award, RotateCcw, Home } from 'lucide-react';
+import { ReportGenerator } from '@/components/assessment/ReportGenerator';
 
 export default function ResultsPage() {
   const { isAuthenticated, isLoading: authLoading, assessmentResult, user, role } = useAuth();
   const router = useRouter();
+  
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -28,9 +30,11 @@ export default function ResultsPage() {
     return <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]"><p>Loading results...</p></div>;
   }
 
-  const { score, totalQuestions, subject, grade, answers } = assessmentResult;
+  // const { score, totalQuestions, subject, grade, answers } = assessmentResult;
+  const { id, score, totalQuestions, subject, grade, answers, takenAt } = assessmentResult;
   const percentage = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
   const studentName = role === 'child' ? (user as any)?.childName : "Student";
+  const takenDate = takenAt ? new Date(takenAt) : new Date();
 
   let feedbackMessage = "";
   if (percentage >= 80) {
@@ -49,7 +53,9 @@ export default function ResultsPage() {
           <CardTitle className="text-4xl font-bold text-primary">Assessment Results</CardTitle>
           <CardDescription className="text-lg text-foreground/80">
             Here's how {studentName} performed on the {subject} - Grade {grade} assessment.
+            Completed on {takenDate.toLocaleDateString()} at {takenDate.toLocaleTimeString()}
           </CardDescription>
+
         </CardHeader>
         <CardContent className="space-y-8">
           <div className="text-center space-y-4 p-6 bg-muted rounded-lg">
@@ -96,6 +102,13 @@ export default function ResultsPage() {
           </Button>
         </CardFooter>
       </Card>
+      <div className="mt-12">
+        <ReportGenerator 
+          assessmentResult={assessmentResult} 
+          studentName={studentName} 
+        />
+      </div>
     </div>
+    
   );
 }

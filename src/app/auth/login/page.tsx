@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ChildInformation } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
+import { dbGradeToAppGrade } from '@/lib/gradeUtils';
 
 const loginSchema = z.object({
   accessCode: z.string().min(6, { message: 'Access code must be at least 6 characters.' }),
@@ -39,6 +40,7 @@ async function validateAccessCode(code: string): Promise<ChildInformation | null
   // Fallback to a hardcoded demo user if no localStorage match or for general testing
   if (code === 'DEMO123') {
     return {
+      id: 'demo-child-id',
       childName: 'Demo User',
       grade: 4, // Default grade
       subject: 'ELA', // Default subject
@@ -62,30 +64,76 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
 
+  // const onSubmit: SubmitHandler<LoginFormValues> = async (data) => {
+  //   setIsLoading(true);
+  //   try {
+  //     const childInfo = await validateAccessCode(data.accessCode);
+
+  //     if (childInfo) {
+  //       loginChild(childInfo);
+  //       toast({
+  //         title: 'Login Successful!',
+  //         description: `Welcome, ${childInfo.childName}!`,
+  //       });
+  //       router.push('/assessment/select');
+  //     } else {
+  //       toast({
+  //         title: 'Login Failed',
+  //         description: 'Invalid access code. Please check and try again.',
+  //         variant: 'destructive',
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error('Login error:', error);
+  //     toast({
+  //       title: 'Login Error',
+  //       description: 'An unexpected error occurred. Please try again.',
+  //       variant: 'destructive',
+  //     });
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const onSubmit: SubmitHandler<LoginFormValues> = async (data) => {
     setIsLoading(true);
     try {
-      const childInfo = await validateAccessCode(data.accessCode);
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ accessCode: data.accessCode }),
+        credentials: 'include',
+      });
 
-      if (childInfo) {
-        loginChild(childInfo);
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
+      const childInfo = await response.json();
+
+      if (childInfo.role === 'CHILD') {
+        loginChild({
+          id: childInfo.id,
+          childName: childInfo.childName,
+          grade: dbGradeToAppGrade(childInfo.grade),
+          subject: childInfo.currentSubject,
+          accessCode: childInfo.accessCode,
+        });
+
         toast({
           title: 'Login Successful!',
           description: `Welcome, ${childInfo.childName}!`,
         });
         router.push('/assessment/select');
       } else {
-        toast({
-          title: 'Login Failed',
-          description: 'Invalid access code. Please check and try again.',
-          variant: 'destructive',
-        });
+        throw new Error('Invalid user role');
       }
     } catch (error) {
-      console.error('Login error:', error);
       toast({
-        title: 'Login Error',
-        description: 'An unexpected error occurred. Please try again.',
+        title: 'Login Failed',
+        description: 'Invalid access code. Please check and try again.',
         variant: 'destructive',
       });
     } finally {

@@ -1,11 +1,9 @@
-
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Question, Subject, Grade, AssessmentResult } from '@/lib/types';
-import { getQuestions } from '@/lib/questions';
+import type { Question, Subject, Grade, AssessmentResult, ChildInformation, ParentUser } from '@/lib/types';
 import { QuestionDisplay } from '@/components/assessment/QuestionDisplay';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -28,6 +26,7 @@ export default function AssessmentPage() {
   const [answers, setAnswers] = useState<(string | string[] | undefined)[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorLoadingQuestions, setErrorLoadingQuestions] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -40,11 +39,55 @@ export default function AssessmentPage() {
         try {
           setIsLoading(true);
           setErrorLoadingQuestions(null);
-          const fetchedQuestions = await getQuestions(subject, grade);
+          const response = await fetch(
+            `/api/questions?subject=${subject}&grade=${grade}`,
+            {
+              credentials: 'include' // Add this line
+            }
+          );
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const dbQuestions = await response.json();
+          
+          const fetchedQuestions = dbQuestions.map((dbQuestion: any) => {
+            let appCorrectAnswer: string | string[] | undefined;
+            
+            if (dbQuestion.correctAnswers.length > 0) {
+              if (dbQuestion.questionType === 'FILL_IN_THE_BLANK' || 
+                  dbQuestion.correctAnswers.length > 1) {
+                appCorrectAnswer = dbQuestion.correctAnswers.map((ca: any) => ca.answerValue);
+              } else {
+                appCorrectAnswer = dbQuestion.correctAnswers[0].answerValue;
+              }
+            }
+
+            return {
+              id: dbQuestion.id,
+              id_prisma: dbQuestion.id,
+              type: dbQuestion.questionType,
+              question: dbQuestion.questionText,
+              passage: dbQuestion.passage ?? undefined,
+              image: dbQuestion.imageUrl ?? undefined,
+              options: dbQuestion.options.map((opt: any) => opt.value),
+              correctAnswer: appCorrectAnswer,
+              category: dbQuestion.category ?? undefined,
+              blanks: dbQuestion.blanksJson ? JSON.parse(dbQuestion.blanksJson) : undefined,
+              columns: dbQuestion.columnsJson ? JSON.parse(dbQuestion.columnsJson) : undefined,
+              dataAihint: dbQuestion.dataAihint ?? undefined,
+              isDrawing: dbQuestion.isDrawing ?? undefined,
+              drawingQuestion: dbQuestion.drawingQuestion ?? undefined,
+            };
+          });
+
           if (fetchedQuestions.length === 0) {
-            toast({ title: "No Questions", description: "No questions found for this subject/grade combination.", variant: "default" });
-            // Potentially redirect or show a message, for now, we allow staying on the page with no questions.
-            // router.push('/assessment/select');
+            toast({
+              title: "No Questions",
+              description: "No questions found for this subject/grade combination.",
+              variant: "default"
+            });
             setQuestions([]);
           } else {
             setQuestions(fetchedQuestions);
@@ -52,19 +95,23 @@ export default function AssessmentPage() {
           }
         } catch (err) {
           console.error("Error fetching questions:", err);
-          toast({ title: "Error Loading Assessment", description: "Could not load questions. Please try again.", variant: "destructive" });
+          toast({
+            title: "Error Loading Assessment",
+            description: "Could not load questions. Please try again.",
+            variant: "destructive"
+          });
           setErrorLoadingQuestions("Failed to load questions.");
           setQuestions([]);
         } finally {
           setIsLoading(false);
         }
       } else {
-        setIsLoading(false); // No subject/grade, nothing to load
+        setIsLoading(false);
       }
     }
 
-    if (!authLoading) {
-        fetchQuestions();
+    if (!authLoading && isAuthenticated) {
+      fetchQuestions();
     }
   }, [subject, grade, isAuthenticated, authLoading, router, toast, role]);
 
@@ -84,55 +131,131 @@ export default function AssessmentPage() {
 
   const goToPreviousQuestion = () => {
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(prevIndex => prevIndex - 1); // Corrected to prevIndex - 1
+      setCurrentQuestionIndex(prevIndex => prevIndex - 1);
     }
   };
 
-  const handleSubmitAssessment = () => {
-    let score = 0;
-    const detailedAnswers = questions.map((q, index) => {
-      const userAnswer = answers[index];
-      let isCorrect = false;
-      
-      // Ensure q.correctAnswer is defined before using it
-      const questionCorrectAnswer = q.correctAnswer;
+  const isAnswerCorrect = (question: Question, userAnswer: string | string[] | undefined) => {
+    if (userAnswer === undefined || question.correctAnswer === undefined) {
+      return false;
+    }
 
-      if (userAnswer !== undefined && questionCorrectAnswer !== undefined) {
-        if (Array.isArray(questionCorrectAnswer)) {
-          // If correct answer is an array (e.g. for FILL_IN_THE_BLANK)
-          if (Array.isArray(userAnswer)) {
-            // User answer is also an array (e.g. for multiple inputs)
-            // This needs careful comparison logic, e.g., all elements match in order
-            isCorrect = userAnswer.length === questionCorrectAnswer.length && 
-                        userAnswer.every((ua, i) => ua?.trim().toLowerCase() === questionCorrectAnswer[i]?.trim().toLowerCase());
-          } else {
-            // User answer is a single string, check if it's one of the correct answers
-            isCorrect = questionCorrectAnswer.some(ca => userAnswer.toString().trim().toLowerCase() === ca?.trim().toLowerCase());
-          }
-        } else {
-           // Correct answer is a single string
-           isCorrect = userAnswer.toString().trim().toLowerCase() === questionCorrectAnswer.toString().trim().toLowerCase();
+    const correctAnswer = question.correctAnswer;
+
+    if (Array.isArray(correctAnswer)) {
+      if (Array.isArray(userAnswer)) {
+        return userAnswer.length === correctAnswer.length && 
+               userAnswer.every((ua, i) => ua?.trim().toLowerCase() === correctAnswer[i]?.trim().toLowerCase());
+      }
+      return correctAnswer.some(ca => userAnswer.toString().trim().toLowerCase() === ca?.trim().toLowerCase());
+    }
+    
+    return userAnswer.toString().trim().toLowerCase() === correctAnswer.toString().trim().toLowerCase();
+  };
+
+  const handleSubmitAssessment = async () => {
+    setSubmitError(null);
+    try {
+
+      if (!user || !role) {
+        throw new Error('User information not available');
+      }
+
+      // For child users, ensure we have their ID
+      if (role === 'child') {
+
+        if (!user || typeof user !== 'object' || !('id' in user)) {
+          throw new Error('Invalid child user data');
         }
       }
 
-      if (isCorrect) {
-        score++;
+      const sessionCheck = await fetch('/api/auth/check-session', {
+        credentials: 'include'
+      });
+      
+      if (!sessionCheck.ok) {
+        throw new Error('Session validation failed');
       }
-      return { questionId: q.id_prisma || q.id, userAnswer: userAnswer || "Not Answered", correctAnswer: questionCorrectAnswer || "N/A", isCorrect };
-    });
 
-    const result: AssessmentResult = {
-      score,
-      totalQuestions: questions.length,
-      answers: detailedAnswers,
-      subject,
-      grade
-    };
-    
-    setAssessmentResult(result);
-    router.push('/assessment/results');
+      // Calculate score and prepare answers
+      const detailedAnswers = questions.map((question, index) => {
+        const userAnswer = answers[index];
+        const correct = isAnswerCorrect(question, userAnswer);
+        
+        return {
+          questionId: question.id_prisma || question.id,
+          userAnswer: userAnswer || "",
+          isCorrect: correct,
+        };
+      });
+
+      const score = detailedAnswers.filter(answer => answer.isCorrect).length;
+
+      // Prepare submission data - now ensures childUserId is always provided for children
+      const submissionData = {
+        subject,
+        grade,
+        score,
+        totalQuestions: questions.length,
+        answers: detailedAnswers,
+        childUserId: role === 'child' ? (user as ChildInformation).id : undefined,
+        parentUserId: role === 'parent' ? (user as ParentUser).id : undefined
+      };
+
+      // Submit to API
+      const response = await fetch('/api/assessments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(submissionData),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Session expired. Please login again.');
+        }
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save assessment');
+      }
+
+      const assessmentData = await response.json();
+      
+      // Set result and redirect
+      const result: AssessmentResult = {
+        id: assessmentData.id,
+        score,
+        totalQuestions: questions.length,
+        answers: detailedAnswers.map((answer, index) => ({
+          ...answer,
+          correctAnswer: questions[index].correctAnswer || "N/A",
+        })),
+        subject,
+        grade,
+        takenAt: new Date().toISOString(),
+      };
+      
+      setAssessmentResult(result);
+      router.push('/assessment/results');
+    } catch (error: any) {
+      setSubmitError(error.message || 'Failed to save assessment. Please try again.');
+      console.error('Assessment submission error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Could not save assessment results.",
+        variant: "destructive",
+      });
+
+      if (error.message.includes('Session') || error.message.includes('expired')) {
+        // Clear client-side auth state
+        localStorage.removeItem('authState');
+        // Force a hard refresh to clear any cached state
+        window.location.href = `/auth/login?returnUrl=${encodeURIComponent(window.location.pathname)}`;
+        return;
+      }
+      
+    }
   };
-  
+
   const progressValue = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
 
   if (isLoading || authLoading) {
@@ -140,23 +263,33 @@ export default function AssessmentPage() {
   }
 
   if (errorLoadingQuestions) {
-    return <div className="flex flex-col justify-center items-center min-h-[calc(100vh-10rem)]">
-      <p className="text-destructive mb-4">{errorLoadingQuestions}</p>
-      <Button onClick={() => router.push('/assessment/select')}>Back to Selection</Button>
-    </div>;
+    return (
+      <div className="flex flex-col justify-center items-center min-h-[calc(100vh-10rem)]">
+        <p className="text-destructive mb-4">{errorLoadingQuestions}</p>
+        <Button onClick={() => router.push('/assessment/select')}>Back to Selection</Button>
+      </div>
+    );
   }
   
   if (questions.length === 0 && !isLoading) {
-    return <div className="flex flex-col justify-center items-center min-h-[calc(100vh-10rem)]">
-      <p className="mb-4">No questions available for this assessment configuration.</p>
-      <Button onClick={() => router.push('/assessment/select')}>Choose Another Assessment</Button>
-      </div>;
+    return (
+      <div className="flex flex-col justify-center items-center min-h-[calc(100vh-10rem)]">
+        <p className="mb-4">No questions available for this assessment configuration.</p>
+        <Button onClick={() => router.push('/assessment/select')}>Choose Another Assessment</Button>
+      </div>
+    );
   }
 
   const currentQuestion = questions[currentQuestionIndex];
 
   return (
     <div className="max-w-3xl mx-auto py-8">
+      {submitError && (
+        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
+          {submitError}
+        </div>
+      )}
+      
       <Card className="mb-8 shadow-xl">
         <CardHeader>
           <CardTitle className="text-3xl text-center text-primary">
@@ -188,7 +321,7 @@ export default function AssessmentPage() {
           <ChevronLeft className="mr-2 h-5 w-5" /> Previous
         </Button>
         {currentQuestionIndex === questions.length - 1 ? (
-           <AlertDialog>
+          <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white">
                 <CheckSquare className="mr-2 h-5 w-5" /> Submit Assessment

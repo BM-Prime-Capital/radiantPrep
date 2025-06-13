@@ -68,7 +68,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     persistAuthState(newState);
   };
 
+  // const loginChild = (childInfo: ChildInformation) => {
+  //   const newState: AuthState = {
+  //     isAuthenticated: true,
+  //     user: childInfo,
+  //     role: 'child',
+  //     isLoading: false,
+  //   };
+  //   setAuthState(newState);
+  //   persistAuthState(newState);
+  // };
+
+
   const loginChild = (childInfo: ChildInformation) => {
+    if (!childInfo.id) {
+      throw new Error('Child information must include an ID');
+    }
+    
     const newState: AuthState = {
       isAuthenticated: true,
       user: childInfo,
@@ -79,13 +95,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     persistAuthState(newState);
   };
 
-  const logout = () => {
-    const newState: AuthState = {...initialState, isLoading: false};
-    setAuthState(newState);
-    setAssessmentResultState(null); // Clear assessment result on logout
-    localStorage.removeItem('authState');
-    localStorage.removeItem('assessmentResult');
-  };
+  const logout = useCallback(async () => {
+    try {
+      // Appel à l'API de logout
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'same-origin',
+      });
+    } catch (error) {
+      console.error('Logout API call failed:', error);
+    } finally {
+      // Nettoyage local quoi qu'il arrive
+      const newState: AuthState = {...initialState, isLoading: false};
+      setAuthState(newState);
+      setAssessmentResultState(null);
+      localStorage.removeItem('authState');
+      localStorage.removeItem('assessmentResult');
+    }
+  }, []);
   
   const updateChildInfo = (info: Partial<ChildInformation>) => {
     setAuthState(prevState => {

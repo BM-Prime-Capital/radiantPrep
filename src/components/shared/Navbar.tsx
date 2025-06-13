@@ -13,9 +13,13 @@ export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleLogout = () => {
-    logout();
-    router.push('/');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push('/');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   const navItems = [
