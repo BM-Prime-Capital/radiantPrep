@@ -1,10 +1,8 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
-  /* Inter font is applied via layout.tsx className */
   background-color: hsl(var(--background-page));
   color: hsl(var(--foreground-page));
   min-height: 100vh;
@@ -14,119 +12,184 @@ body {
 
 @layer base {
   :root {
-    --background-page: 210 40% 98%; /* Very light cool blue-gray */
-    --foreground-page: 220 15% 20%; /* Dark cool gray for body text */
-
-    --background: 0 0% 100%; /* Component background: white */
-    --foreground: 220 15% 25%; /* Component text: dark desaturated blue */
-    
+    --background-page: 0 0% 98%;
+    --foreground-page: 240 10% 20%;
+    --background: 0 0% 100%;
+    --foreground: 240 10% 25%;
     --card: 0 0% 100%;
-    --card-foreground: 220 15% 25%;
-    
+    --card-foreground: 240 10% 25%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 25%;
-    
-    --primary: 220 70% 55%; /* Deep, trustworthy blue */
-    --primary-foreground: 0 0% 100%; /* White text on primary */
-    
-    --secondary: 210 30% 94%; /* Light cool gray for secondary elements */
-    --secondary-foreground: 220 30% 30%; /* Text on secondary */
-    
-    --muted: 210 25% 90%; /* Slightly darker cool gray for muted backgrounds */
-    --muted-foreground: 210 25% 55%; /* Muted text color */
-    
-    --accent: 170 55% 45%; /* Muted Teal Accent */
-    --accent-foreground: 0 0% 100%; /* White text on accent */
-    
-    --destructive: 0 84.2% 60.2%;
+    --popover-foreground: 240 10% 25%;
+   /*--primary: 142 71% 40%;  Vert principal */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 142 60% 96%;
+    --secondary-foreground: 142 71% 40%;
+    --muted: 142 20% 96%;
+    --muted-foreground: 142 15% 45%;
+    /*--accent: 142 60% 60%;*/
+    /*--accent-foreground: 142 71% 40%;*/
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    
-    --border: 210 20% 88%; /* Cool gray border */
-    --input: 0 0% 100%; /* Input background: white, rely on border */
-    --ring: 220 70% 65%; /* Lighter primary for focus rings */
-    
-    --chart-1: 220 70% 55%; /* primary */
-    --chart-2: 170 55% 45%; /* accent */
-    --chart-3: 220 70% 75%; /* lighter primary */
-    --chart-4: 170 55% 65%; /* lighter accent */
-    --chart-5: 220 10% 60%; /* neutral gray */
-    
-    --radius: 0.75rem; /* Slightly larger radius for a modern feel */
+    --border: 142 20% 85%;
+    --input: 0 0% 100%;
+    --ring: 142 60% 60%;
+    --radius: 0.5rem;
 
-    --sidebar-background: 220 20% 97%; /* Slightly off-white for sidebar */
-    --sidebar-foreground: 220 15% 30%;
-    --sidebar-primary: 220 70% 55%; /* Using app primary for sidebar primary */
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 30% 92%; /* Light gray accent for sidebar items */
-    --sidebar-accent-foreground: 220 70% 45%; /* Darker blue for selected item text */
-    --sidebar-border: 210 20% 85%;
-    --sidebar-ring: 220 70% 65%;
+    --primary: 217 91% 60%; /* Bleu au lieu de vert */
+  --accent: 217 86% 70%; /* Bleu plus clair */
+  --accent-foreground: 217 91% 60%; /* Texte bleu */
   }
 
   .dark {
-    --background-page: 220 15% 12%; /* Dark cool gray page background */
-    --foreground-page: 210 30% 88%; /* Lighter text on dark page */
-
-    --background: 220 15% 18%; /* Component background: slightly lighter dark gray */
-    --foreground: 210 30% 92%; /* Component text: very light gray */
-    
-    --card: 220 15% 18%;
-    --card-foreground: 210 30% 92%;
-    
-    --popover: 220 15% 15%;
-    --popover-foreground: 210 30% 92%;
-    
-    --primary: 220 70% 65%; /* Lighter primary for dark mode */
-    --primary-foreground: 220 70% 10%; /* Dark text on light primary */
-    
-    --secondary: 220 15% 25%; /* Darker cool gray for secondary elements */
-    --secondary-foreground: 210 30% 75%; 
-    
-    --muted: 220 15% 30%; /* Muted background for dark mode */
-    --muted-foreground: 210 30% 60%;
-    
-    --accent: 170 55% 55%; /* Lighter accent for dark mode */
-    --accent-foreground: 170 55% 10%; /* Dark text on light accent */
-    
+    --background-page: 240 10% 10%;
+    --foreground-page: 0 0% 95%;
+    --background: 240 10% 12%;
+    --foreground: 0 0% 95%;
+    --card: 240 10% 14%;
+    --card-foreground: 0 0% 95%;
+    --popover: 240 10% 12%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 142 71% 55%;
+    --primary-foreground: 240 10% 10%;
+    --secondary: 240 10% 18%;
+    --secondary-foreground: 142 60% 65%;
+    --muted: 240 10% 20%;
+    --muted-foreground: 142 15% 65%;
+    --accent: 142 60% 65%;
+    --accent-foreground: 240 10% 10%;
     --destructive: 0 70% 55%;
     --destructive-foreground: 0 0% 98%;
-    
-    --border: 220 15% 35%; /* Border for dark mode */
-    --input: 220 15% 22%; /* Input background for dark mode */
-    --ring: 220 70% 75%; 
-    
-    --chart-1: 220 70% 65%; 
-    --chart-2: 170 55% 55%; 
-    --chart-3: 220 70% 85%; 
-    --chart-4: 170 55% 75%; 
-    --chart-5: 210 10% 70%;
-
-    --sidebar-background: 220 15% 10%; /* Using dark page background */
-    --sidebar-foreground: 210 30% 88%;
-    --sidebar-primary: 220 70% 65%; /* Using dark primary */
-    --sidebar-primary-foreground: 220 70% 10%;
-    --sidebar-accent: 220 15% 22%; /* Using dark secondary for accent */
-    --sidebar-accent-foreground: 220 70% 75%; /* Lighter blue text on accent */
-    --sidebar-border: 220 15% 30%;
-    --sidebar-ring: 220 70% 75%;
+    --border: 240 10% 22%;
+    --input: 240 10% 16%;
+    --ring: 142 60% 70%;
   }
 }
-
 @layer base {
   * {
     @apply border-border;
   }
-  /* body styling is above */
+  body {
+    @apply min-h-screen;
+  }
 }
 
-/* Custom shadow for cards to make them a bit softer and more modern */
-.shadow-custom-light {
-  box-shadow: 0 4px 10px -2px rgba(30, 41, 59, 0.07), 0 2px 6px -2px rgba(30, 41, 59, 0.06);
-}
-.shadow-custom-dark {
-   box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.25), 0 2px 6px -2px rgba(0, 0, 0, 0.2);
+/* Enhanced shadow effects */
+.shadow-soft {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 
-.dark .shadow-custom-light { /* Ensure dark mode overrides light shadow if class is used */
-   box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.25), 0 2px 6px -2px rgba(0, 0, 0, 0.2);
+.shadow-medium {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-hard {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Gradient animation */
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 8s ease infinite;
+}
+
+
+/* Animation personnalisée pour le texte */
+.text-fade-up {
+  animation: fadeUp 0.8s ease-out forwards;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Effet de vague pour le fond */
+.bg-wave {
+  background: url('/images/wave-pattern.svg') repeat-x;
+  animation: wave 60s linear infinite;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out forwards;
+}
+
+.animate-delay-100 {
+  animation-delay: 0.1s;
+}
+
+.animate-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animate-delay-300 {
+  animation-delay: 0.3s;
+}
+
+@keyframes wave {
+  0% { background-position: 0 0; }
+  100% { background-position: 1000px 0; }
+}
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Logo styles */
+.logo {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  transition: all 0.3s ease;
+}
+
+.logo:hover {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+}
+
+/* Custom fade-in animation */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+/* Button hover effects */
+.btn-hover-effect {
+  transition: all 0.3s ease;
+  transform: translateY(0);
+}
+
+.btn-hover-effect:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Card hover effects */
+.card-hover-effect {
+  transition: all 0.3s ease;
+  transform: translateY(0);
+}
+
+.card-hover-effect:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }

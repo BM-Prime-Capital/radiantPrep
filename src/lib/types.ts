@@ -63,6 +63,7 @@ export interface ChildInformation {
   subject: Subject;
   accessCode: string;
   id: string;
+  currentSubject?: Subject;
 }
 
 export interface ParentUser {

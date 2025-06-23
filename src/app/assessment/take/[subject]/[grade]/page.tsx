@@ -8,9 +8,11 @@ import { QuestionDisplay } from '@/components/assessment/QuestionDisplay';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight, CheckSquare } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckSquare, BookOpen, Calculator, Trophy, Clock, Award } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { motion } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
 
 export default function AssessmentPage() {
   const router = useRouter();
@@ -28,7 +30,7 @@ export default function AssessmentPage() {
   const [errorLoadingQuestions, setErrorLoadingQuestions] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  useEffect(() => {
+   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.replace('/auth/login');
       return;
@@ -256,96 +258,201 @@ export default function AssessmentPage() {
     }
   };
 
+
   const progressValue = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
 
   if (isLoading || authLoading) {
-    return <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]"><p>Loading assessment...</p></div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] gap-4">
+        <motion.div
+          animate={{ rotate: 360, scale: [1, 1.1, 1] }}
+          transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+          className="relative w-16 h-16"
+        >
+          <BookOpen className="w-full h-full text-blue-600" />
+        </motion.div>
+        <p className="text-lg font-medium text-gray-600">Preparing your assessment...</p>
+      </div>
+    );
   }
 
   if (errorLoadingQuestions) {
     return (
-      <div className="flex flex-col justify-center items-center min-h-[calc(100vh-10rem)]">
-        <p className="text-destructive mb-4">{errorLoadingQuestions}</p>
-        <Button onClick={() => router.push('/assessment/select')}>Back to Selection</Button>
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] gap-6 p-4">
+        <div className="bg-red-100 p-6 rounded-full">
+          <BookOpen className="h-12 w-12 text-red-600" />
+        </div>
+        <h3 className="text-2xl font-bold text-gray-800">Assessment Error</h3>
+        <p className="text-red-600 mb-6 text-center max-w-md">{errorLoadingQuestions}</p>
+        <Button 
+          onClick={() => router.push('/assessment/select')} 
+          className="gap-2"
+          variant="outline"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Back to Selection
+        </Button>
       </div>
     );
   }
   
   if (questions.length === 0 && !isLoading) {
     return (
-      <div className="flex flex-col justify-center items-center min-h-[calc(100vh-10rem)]">
-        <p className="mb-4">No questions available for this assessment configuration.</p>
-        <Button onClick={() => router.push('/assessment/select')}>Choose Another Assessment</Button>
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] gap-6 p-4">
+        <div className="bg-blue-100 p-6 rounded-full">
+          <BookOpen className="h-12 w-12 text-blue-600" />
+        </div>
+        <h3 className="text-2xl font-bold text-gray-800">No Questions Available</h3>
+        <p className="text-gray-600 mb-6 text-center max-w-md">
+          We couldn't find any questions for {subject} Grade {grade}.
+        </p>
+        <Button 
+          onClick={() => router.push('/assessment/select')} 
+          className="gap-2"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Choose Another Assessment
+        </Button>
       </div>
     );
   }
 
   const currentQuestion = questions[currentQuestionIndex];
+  const subjectIcon = subject === 'ELA' ? <BookOpen className="h-5 w-5" /> : <Calculator className="h-5 w-5" />;
 
   return (
-    <div className="max-w-3xl mx-auto py-8">
+    <div className="max-w-4xl mx-auto px-4 py-8">
       {submitError && (
-        <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
-          {submitError}
-        </div>
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-4 bg-red-100 text-red-700 rounded-lg border border-red-200 flex items-start gap-3"
+        >
+          <div className="mt-0.5">
+            <Award className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="font-medium">Submission Error</p>
+            <p className="text-sm">{submitError}</p>
+          </div>
+        </motion.div>
       )}
       
-      <Card className="mb-8 shadow-xl">
-        <CardHeader>
-          <CardTitle className="text-3xl text-center text-primary">
-            {subject} Assessment - Grade {grade}
-          </CardTitle>
-          <CardDescription className="text-center text-muted-foreground">
-            Student: {role === 'child' ? (user as any)?.childName : "Preview Mode"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Progress value={progressValue} className="w-full mb-6 h-3" />
-          <QuestionDisplay
-            question={currentQuestion}
-            questionNumber={currentQuestionIndex + 1}
-            totalQuestions={questions.length}
-            onAnswerChange={handleAnswerChange}
-            currentAnswer={answers[currentQuestionIndex]}
-          />
-        </CardContent>
-      </Card>
+      {/* Assessment Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
+      >
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+              {subjectIcon}
+              <span>{subject} Assessment</span>
+            </h1>
+            <div className="flex items-center gap-4 mt-2">
+              <Badge variant="secondary" className="gap-1">
+                <Trophy className="h-4 w-4 text-yellow-500" />
+                Grade {grade}
+              </Badge>
+              <Badge variant="outline" className="gap-1">
+                <Clock className="h-4 w-4 text-blue-500" />
+                Question {currentQuestionIndex + 1} of {questions.length}
+              </Badge>
+            </div>
+          </div>
+          {role === 'child' && (
+            <div className="text-right">
+              <p className="text-sm text-gray-500">Student</p>
+              <p className="font-medium">{(user as ChildInformation)?.childName}</p>
+            </div>
+          )}
+        </div>
+        
+        {/* <Progress 
+          value={progressValue} 
+          className="w-full h-3 bg-gray-100" 
+          indicatorClassName="bg-gradient-to-r from-blue-600 to-indigo-600"
+        /> */}
+        <Progress 
+  value={progressValue} 
+  className="w-full h-3 bg-gray-100 [&>div]:bg-gradient-to-r [&>div]:from-blue-600 [&>div]:to-indigo-600"
+/>
+      </motion.div>
 
-      <div className="flex justify-between items-center mt-8">
-        <Button
-          onClick={goToPreviousQuestion}
-          disabled={currentQuestionIndex === 0}
-          variant="outline"
-          size="lg"
-        >
-          <ChevronLeft className="mr-2 h-5 w-5" /> Previous
-        </Button>
+      {/* Question Display */}
+      <motion.div
+        key={currentQuestionIndex}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      >
+        <QuestionDisplay
+          question={currentQuestion}
+          questionNumber={currentQuestionIndex + 1}
+          totalQuestions={questions.length}
+          onAnswerChange={handleAnswerChange}
+          currentAnswer={answers[currentQuestionIndex]}
+        />
+      </motion.div>
+
+      {/* Navigation Buttons */}
+      <div className="flex justify-between items-center mt-8 gap-4">
+        <motion.div whileHover={{ scale: 1.03 }}>
+          <Button
+            onClick={goToPreviousQuestion}
+            disabled={currentQuestionIndex === 0}
+            variant="outline"
+            size="lg"
+            className="gap-2 min-w-[150px]"
+          >
+            <ChevronLeft className="h-5 w-5" />
+            Previous
+          </Button>
+        </motion.div>
+        
         {currentQuestionIndex === questions.length - 1 ? (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white">
-                <CheckSquare className="mr-2 h-5 w-5" /> Submit Assessment
-              </Button>
+              <motion.div whileHover={{ scale: 1.03 }}>
+                <Button 
+                  size="lg" 
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white gap-2 min-w-[180px] shadow-lg"
+                >
+                  <CheckSquare className="h-5 w-5" />
+                  Submit Assessment
+                </Button>
+              </motion.div>
             </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent className="rounded-lg max-w-sm">
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure you want to submit?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Once submitted, you cannot change your answers. Please review your answers before submitting.
+                <AlertDialogTitle className="text-xl">Ready to submit?</AlertDialogTitle>
+                <AlertDialogDescription className="text-base">
+                  You've answered {questions.length} questions. Make sure you've reviewed all your answers.
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Review Answers</AlertDialogCancel>
-                <AlertDialogAction onClick={handleSubmitAssessment} className="bg-green-600 hover:bg-green-700">
-                  Yes, Submit Now
+              <AlertDialogFooter className="gap-3">
+                <AlertDialogCancel className="mt-0">Review Answers</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={handleSubmitAssessment} 
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                >
+                  Confirm Submission
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
         ) : (
-          <Button onClick={goToNextQuestion} size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground">
-            Next <ChevronRight className="ml-2 h-5 w-5" />
-          </Button>
+          <motion.div whileHover={{ scale: 1.03 }}>
+            <Button 
+              onClick={goToNextQuestion} 
+              size="lg" 
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white gap-2 min-w-[150px] shadow-lg"
+            >
+              Next
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </motion.div>
         )}
       </div>
     </div>

@@ -4,6 +4,7 @@ import { getSession } from '@/lib/session'
 
 export const config = {
   matcher: [
+    '/profile/:path*',
     '/assessment/:path*',
     '/api/assessment/:path*'
   ]

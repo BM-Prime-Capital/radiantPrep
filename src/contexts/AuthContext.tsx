@@ -111,6 +111,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAssessmentResultState(null);
       localStorage.removeItem('authState');
       localStorage.removeItem('assessmentResult');
+
+      // Redirection vers la page d'accueil
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
     }
   }, []);
   
