@@ -17,68 +17,60 @@ export function ReportGenerator({ assessmentResult, studentName }: ReportGenerat
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
-  const downloadPDF = async () => {
-    if (!reportRef.current) return;
+const downloadPDF = async () => {
+  if (!reportRef.current) return;
+  setIsGenerating(true);
 
-    setIsGenerating(true);
-    
-    try {
-      // Créer un élément clone pour la capture
-      const clone = reportRef.current.cloneNode(true) as HTMLElement;
-      clone.style.visibility = 'visible';
-      clone.style.position = 'absolute';
-      clone.style.left = '-9999px';
-      clone.style.top = '0';
-      document.body.appendChild(clone);
+  try {
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
 
-      // Attendre que les éléments soient rendus
-      await new Promise(resolve => setTimeout(resolve, 500));
+    const pages = reportRef.current.querySelectorAll('.page'); // Assurez-vous que chaque page a la classe 'page'
 
-      const canvas = await html2canvas(clone, {
+    for (let i = 0; i < pages.length; i++) {
+      const page = pages[i];
+      const canvas = await html2canvas(page, {
         scale: 2,
         logging: true,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#FFFFFF',
-        scrollX: 0,
-        scrollY: 0,
-        ignoreElements: (element) => {
-          // Ignorer les éléments inutiles
-          return false;
-        }
       });
 
-      document.body.removeChild(clone);
-
-      const imgData = canvas.toDataURL('image/png', 1.0);
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-
+      const imgData = canvas.toDataURL('image/png');
       const imgWidth = 210; // Largeur A4 en mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
+      if (i > 0) {
+        pdf.addPage();
+      }
       pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-      pdf.save(`COMPLEMETRICS_Report_${studentName}_${assessmentResult.subject}_Grade${assessmentResult.grade}.pdf`);
-      
-      toast({
-        title: "Report Downloaded",
-        description: "The report has been successfully downloaded as PDF.",
-        variant: "default",
-      });
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast({
-        title: "Error",
-        description: "Failed to generate PDF report. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGenerating(false);
     }
-  };
+
+    pdf.save(`COMPLEMETRICS_Report_${studentName}_${assessmentResult.subject}_Grade${assessmentResult.grade}.pdf`);
+
+    toast({
+      title: "Report Downloaded",
+      description: "The report has been successfully downloaded as PDF.",
+      variant: "default",
+    });
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    toast({
+      title: "Error",
+      description: "Failed to generate PDF report. Please try again.",
+      variant: "destructive",
+    });
+  } finally {
+    setIsGenerating(false);
+  }
+};
+
+
+
 
   return (
     <>
