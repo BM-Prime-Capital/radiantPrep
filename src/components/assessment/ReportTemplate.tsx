@@ -1,29 +1,105 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import type { AssessmentResult } from '@/lib/types';
+import { skillCategorizer } from '@/lib/skillCategorizer';
 
 interface ReportTemplateProps {
   assessmentResult: AssessmentResult;
   studentName: string;
+  questions?: any[]; // Optional questions array for skill categorization
 }
 
 export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplateProps>(
-  ({ assessmentResult, studentName }, ref) => {
-    const correctAnswers = assessmentResult.answers
-      .filter(ans => ans.isCorrect)
-      .map((ans, i) => ({
-        number: i + 1,
-        description: ans.topic || `Question ${i + 1}`
-      }));
+    ({ assessmentResult, studentName, questions = [] }, ref) => {
+    const [skillCategories, setSkillCategories] = useState<{
+      correct: string[];
+      incorrect: string[];
+    }>({ correct: [], incorrect: [] });
+    
+    const [isAnalyzing, setIsAnalyzing] = useState(true);
 
-    const incorrectAnswers = assessmentResult.answers
-      .filter(ans => !ans.isCorrect)
-      .map((ans, i) => ({
-        number: i + 1,
-        description: ans.topic || `Question ${i + 1}`
-      }));
+    useEffect(() => {
+      if (!assessmentResult || !assessmentResult.answers) return;
+      const analyzeSkills = async () => {
+        if (questions.length === 0) {
+          // Fallback: use predefined skills based on performance
+          const correctCount = assessmentResult.answers.filter(ans => ans.isCorrect).length;
+          const incorrectCount = assessmentResult.totalQuestions - correctCount;
+          
+          const fallbackSkills = {
+            ELA: [
+              "Reading comprehension; detail",
+              "Short open response; comprehension",
+              "Short open response; detail recall",
+              "Reading comprehension; main idea",
+              "Vocabulary; descriptions",
+              "Short open response; author's purpose",
+              "Short open response; inferences",
+              "Vocabulary; antonyms",
+              "Vocabulary; synonyms (MC)",
+              "Sentence correction; vocabulary & tense",
+              "Vocabulary; word association",
+              "Word type recognition",
+              "Vocabulary; singular/plural",
+              "Vocabulary; prefix & suffix"
+            ],
+            Math: [
+              "Word problem; multiplication",
+              "Word problem; fractional division",
+              "Word problem; determining area",
+              "Greatest Common Factor",
+              "Algebraic translation; verbal to abstract",
+              "Probability",
+              "Equations; one-step",
+              "Unit conversion; customary capacity",
+              "Word problem; division",
+              "Word Problem; Calculating Average",
+              "Word problem; real-world context",
+              "Word problem; multiply mixed numbers",
+              "Angle classifications",
+              "Prime factorization",
+              "Mixed number operations",
+              "Computation; decimal multiplication",
+              "Calculating percentage",
+              "Evaluating expressions",
+              "Proportional Reasoning",
+              "Fractional division"
+            ]
+          };
+          
+          const subjectSkills = fallbackSkills[assessmentResult.subject] || [];
+          setSkillCategories({
+            correct: subjectSkills.slice(0, correctCount),
+            incorrect: subjectSkills.slice(correctCount, correctCount + incorrectCount)
+          });
+          setIsAnalyzing(false);
+          return;
+        }
 
+        try {
+          const result = await skillCategorizer.categorizeAssessmentAnswers(
+            assessmentResult.answers,
+            questions,
+            assessmentResult.subject
+          );
+          setSkillCategories(result);
+        } catch (error) {
+          console.error('Error analyzing skills:', error);
+          // Use fallback on error
+          const correctCount = assessmentResult.answers.filter(ans => ans.isCorrect).length;
+          setSkillCategories({
+            correct: [`${assessmentResult.subject} Skills (${correctCount} correct)`],
+            incorrect: [`${assessmentResult.subject} Skills (${assessmentResult.totalQuestions - correctCount} incorrect)`]
+          });
+        } finally {
+          setIsAnalyzing(false);
+        }
+      };
+
+      analyzeSkills();
+    }, [assessmentResult]);
+ 
     const percentage = Math.round((assessmentResult.score / assessmentResult.totalQuestions) * 100);
     const takenDate = new Date(assessmentResult.takenAt ?? '');
 
@@ -34,451 +110,312 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
     };
 
     const scoreData = {
-      student: 2.5, // Axe Title value
-      average: 4 // Average Score value
+      student: 2.5,
+      average: 4
     };
 
-    // 3D Bar Chart pour Score Comparison (à gauche)
+    // 3D Bar Chart pour Score Comparison
+
     const ScoreComparisonBarChart = () => (
       <div className="relative w-full h-48">
-        <svg width="280" height="190" viewBox="0 0 280 190" className="overflow-visible">
+        <svg width="300" height="200" viewBox="0 0 300 200" className="overflow-visible">
           {/* Axes */}
-          <line x1="40" y1="20" x2="40" y2="150" stroke="black" strokeWidth="1" />
-          <line x1="40" y1="150" x2="220" y2="150" stroke="black" strokeWidth="1" />
+          <line x1="50" y1="30" x2="50" y2="160" stroke="black" strokeWidth="2" />
+          <line x1="50" y1="160" x2="250" y2="160" stroke="black" strokeWidth="2" />
 
-          {/* Graduations Y */}
+          {/* Y-axis labels */}
           {[0, 1, 2, 3, 4, 5].map((val, i) => (
             <g key={i}>
-              <line x1="35" y1={150 - val * 25} x2="40" y2={150 - val * 25} stroke="black" strokeWidth="1" />
-              <text x="30" y={154 - val * 25} textAnchor="end" fontFamily="Arial" fontSize="10">
+              <line x1="45" y1={160 - val * 25} x2="50" y2={160 - val * 25} stroke="black" strokeWidth="1" />
+              <text x="40" y={164 - val * 25} textAnchor="end" fontFamily="Arial" fontSize="12" fill="black">
                 {val}
               </text>
             </g>
           ))}
 
-          {/* Barre Student's Score (teal/cyan) - 3D Effect */}
+          {/* Student's bar (teal/cyan) */}
           <g>
-            {/* Face avant */}
-            <rect x="80" y={150 - scoreData.student * 25} width="30" height={scoreData.student * 25} fill="#20B2AA" stroke="black" strokeWidth="0.5" />
-            {/* Face droite */}
-            <polygon points={`110,${150 - scoreData.student * 25} 120,${140 - scoreData.student * 25} 120,150 110,150`} fill="#1A9B9A" stroke="black" strokeWidth="0.5" />
-            {/* Face dessus */}
-            <polygon points={`80,${150 - scoreData.student * 25} 90,${140 - scoreData.student * 25} 120,${140 - scoreData.student * 25} 110,${150 - scoreData.student * 25}`} fill="#2DC5C5" stroke="black" strokeWidth="0.5" />
+            {/* Front face */}
+            <rect x="90" y={160 - scoreData.student * 25} width="40" height={scoreData.student * 25} 
+                  fill="#20B2AA" stroke="black" strokeWidth="1" />
+            {/* Right face (darker) */}
+            <polygon points={`130,${160 - scoreData.student * 25} 145,${145 - scoreData.student * 25} 145,160 130,160`} 
+                     fill="#1A9B9A" stroke="black" strokeWidth="1" />
+            {/* Top face (lighter) */}
+            <polygon points={`90,${160 - scoreData.student * 25} 105,${145 - scoreData.student * 25} 145,${145 - scoreData.student * 25} 130,${160 - scoreData.student * 25}`} 
+                     fill="#2DC5C5" stroke="black" strokeWidth="1" />
           </g>
 
-          {/* Barre Average Score (rouge) - 3D Effect */}
+          {/* Average bar (red) */}
           <g>
-            {/* Face avant */}
-            <rect x="140" y={150 - scoreData.average * 25} width="30" height={scoreData.average * 25} fill="#FE0000" stroke="black" strokeWidth="0.5" />
-            {/* Face droite */}
-            <polygon points={`170,${150 - scoreData.average * 25} 180,${140 - scoreData.average * 25} 180,150 170,150`} fill="#B71C1C" stroke="black" strokeWidth="0.5" />
-            {/* Face dessus */}
-            <polygon points={`140,${150 - scoreData.average * 25} 150,${140 - scoreData.average * 25} 180,${140 - scoreData.average * 25} 170,${150 - scoreData.average * 25}`} fill="#FF4444" stroke="black" strokeWidth="0.5" />
+            {/* Front face */}
+            <rect x="170" y={160 - scoreData.average * 25} width="40" height={scoreData.average * 25} 
+                  fill="#DC143C" stroke="black" strokeWidth="1" />
+            {/* Right face (darker) */}
+            <polygon points={`210,${160 - scoreData.average * 25} 225,${145 - scoreData.average * 25} 225,160 210,160`} 
+                     fill="#B71C1C" stroke="black" strokeWidth="1" />
+            {/* Top face (lighter) */}
+            <polygon points={`170,${160 - scoreData.average * 25} 185,${145 - scoreData.average * 25} 225,${145 - scoreData.average * 25} 210,${160 - scoreData.average * 25}`} 
+                     fill="#FF4444" stroke="black" strokeWidth="1" />
           </g>
 
-          {/* Labels */}
-          <text x="95" y="165" textAnchor="middle" fontFamily="Arial" fontSize="11" fontWeight="bold">MATH</text>
+          {/* X-axis label */}
+          <text x="150" y="180" textAnchor="middle" fontFamily="Arial" fontSize="14" fontWeight="bold" fill="black">MATH</text>
 
-          {/* Légende */}
-          <rect x="50" y="175" width="12" height="8" fill="#20B2AA" />
-          <text x="65" y="182" fontFamily="Arial" fontSize="10">Student's Score</text>
+          {/* Legend */}
+          <rect x="70" y="185" width="15" height="10" fill="#20B2AA" />
+          <text x="90" y="194" fontFamily="Arial" fontSize="11" fill="black">Student's Score</text>
+          <rect x="180" y="185" width="15" height="10" fill="#DC143C" />
+          <text x="200" y="194" fontFamily="Arial" fontSize="11" fill="black">Average Score</text>
 
-          <rect x="150" y="175" width="12" height="8" fill="#DC143C" />
-          <text x="165" y="182" fontFamily="Arial" fontSize="10">Average Score</text>
-
-          {/* Axe Title */}
-          <text x="20" y="90" fontFamily="Arial" fontSize="11" fontWeight="bold" transform="rotate(-90, 20, 90)">Axe Title</text>
+          {/* Y-axis title */}
+          <text x="25" y="100" fontFamily="Arial" fontSize="12" fontWeight="bold" fill="black" 
+                transform="rotate(-90, 25, 100)" textAnchor="middle">Score</text>
         </svg>
       </div>
     );
 
-    // Pie Chart pour Time Distribution (à droite)
+
+
+    // Pie Chart pour Time Distribution
     const TimeDistributionPieChart = () => {
-        const radius = 50;
-        const center = { x: 50, y: 70 };
-        const total = timeData.utilized + timeData.unutilized;
-        const utilizedAngle = (timeData.utilized / total) * 360;
+      const radius = 50;
+      const center = { x: 50, y: 70 };
+      const total = timeData.utilized + timeData.unutilized;
+      const utilizedAngle = (timeData.utilized / total) * 360;
 
-        return (
-            <div className="w-full h-48">
-            <svg width="160" height="190" viewBox="0 0 160 190" className="mx-auto">
-                {/* Section Utilized (bleu) */}
-                <path
-                d={`
-                    M ${center.x},${center.y}
-                    L ${center.x},${center.y - radius}
-                    A ${radius},${radius} 0 ${utilizedAngle > 180 ? 1 : 0},1
-                    ${center.x + radius * Math.sin(utilizedAngle * Math.PI / 180)},${center.y - radius * Math.cos(utilizedAngle * Math.PI / 180)}
-                    Z
-                `}
-                fill="#3233FF"
-                stroke="white"
-                strokeWidth="2"
-                />
+      return (
+        <div className="w-full h-48">
+          <svg width="160" height="190" viewBox="0 0 160 190" className="mx-auto">
+            <path
+              d={`
+                M ${center.x},${center.y}
+                L ${center.x},${center.y - radius}
+                A ${radius},${radius} 0 ${utilizedAngle > 180 ? 1 : 0},1
+                ${center.x + radius * Math.sin(utilizedAngle * Math.PI / 180)},${center.y - radius * Math.cos(utilizedAngle * Math.PI / 180)}
+                Z
+              `}
+              fill="#3233FF"
+              stroke="white"
+              strokeWidth="2"
+            />
 
-                {/* Section Unutilized (orange) */}
-                <path
-                d={`
-                    M ${center.x},${center.y}
-                    L ${center.x + radius * Math.sin(utilizedAngle * Math.PI / 180)},${center.y - radius * Math.cos(utilizedAngle * Math.PI / 180)}
-                    A ${radius},${radius} 0 ${(360 - utilizedAngle) > 180 ? 1 : 0},1
-                    ${center.x},${center.y - radius}
-                    Z
-                `}
-                fill="#FF5E18"
-                stroke="white"
-                strokeWidth="2"
-                />
+            <path
+              d={`
+                M ${center.x},${center.y}
+                L ${center.x + radius * Math.sin(utilizedAngle * Math.PI / 180)},${center.y - radius * Math.cos(utilizedAngle * Math.PI / 180)}
+                A ${radius},${radius} 0 ${(360 - utilizedAngle) > 180 ? 1 : 0},1
+                ${center.x},${center.y - radius}
+                Z
+              `}
+              fill="#FF5E18"
+              stroke="white"
+              strokeWidth="2"
+            />
 
-                {/* Légende - repositionnée pour mieux s'adapter */}
-                <g transform="translate(0, 140)">
-                <rect x="0" y="0" width="12" height="8" fill="#4169E1" />
-                <text x="20" y="7" fontFamily="Arial" fontSize="10" fontWeight="bold">
-                    UTILIZED: {timeData.utilized}min
-                </text>
-
-                <rect x="0" y="15" width="12" height="8" fill="#FF6B35" />
-                <text x="20" y="22" fontFamily="Arial" fontSize="10" fontWeight="bold">
-                    UNUTILIZED: {timeData.unutilized}min
-                </text>
-                </g>
-            </svg>
-            </div>
-        );
-        };
+            <g transform="translate(0, 140)">
+              <rect x="0" y="0" width="12" height="8" fill="#4169E1" />
+              <text x="20" y="7" fontFamily="Arial" fontSize="10" fontWeight="bold">
+                UTILIZED: {timeData.utilized}min
+              </text>
+              <rect x="0" y="15" width="12" height="8" fill="#FF6B35" />
+              <text x="20" y="22" fontFamily="Arial" fontSize="10" fontWeight="bold">
+                UNUTILIZED: {timeData.unutilized}min
+              </text>
+            </g>
+          </svg>
+        </div>
+      );
+    };
 
     return (
       <div className="relative">
         <div ref={ref} className="w-[794px] bg-white text-black font-sans leading-tight text-sm" style={{
-          height: 'calc(1122.52px * 2)', // Hauteur pour deux pages A4
+          height: '1122.52px', // Une seule page maintenant
           position: 'relative'
         }}>
-          {/* Première page */}
-          <div className="page w-full h-[1122.52px] flex flex-col">
-            {/* Contenu principal (tout sauf le footer) */}
-            <div className="flex-1 mt-6">
-              {/* Header avec couleurs */}
-              <div className="flex justify-between items-start mb-4 px-6 pt-6">
-                <div className="flex-1">
-                  <div className="flex items-start">
-                    <div>
-                      <h1 className="text-4xl font-black tracking-wider mb-9 mt-3">
-                        <span style={{ color: '#DF01CC' }}>COMPLE</span>
-                        <span style={{ color: '#00A238' }}>METRICS</span>
-                        <span className="text-lg align-top">®</span>
-                      </h1>
-                      <div style={{
-                        background: '#dc2626',
-                        color: 'white',
-                        paddingLeft: '0.5rem',
-                        paddingRight: '0.5rem',
-                        paddingTop: 0,
-                        paddingBottom: 0,
-                        fontSize: '0.75rem',
-                        fontWeight: 'bold',
-                        display: 'inline-block',
-                        lineHeight: 1.2,
-                        verticalAlign: 'top',
-                        height: '24px',
-                        marginBottom: '0.5rem'
-                      }}>
-                        Complete Academic Metrics. Accurate, Insightful, Proof in Data.
-                      </div>
-                    </div>
+          {/* Header avec l'image */}
+          <div className="w-full" style={{ lineHeight: 0 }}>
+            <img
+              src="/radiant-head.jpg"
+              alt="Radiant Prep Header"
+              className="w-full h-auto"
+              style={{ display: 'block' }}
+            />
+          </div>
 
-                    <img
-                      src="/newlogo.png"
-                      alt="Radiant Prep Logo"
-                      className="h-32 w-32 object-contain ml-10"
-                      style={{ marginTop: '-0.5rem' }}
-                    />
-                  </div>
-
-                  <div className="mt-2">
-                    <div className="flex items-center">
-                      <div style={{
-                        backgroundColor: 'white',
-                        color: 'black',
-                        padding: '0 0.5rem',
-                        marginLeft: '0.25rem',
-                        fontSize: '1rem',
-                        fontWeight: 'bold',
-                        display: 'inline-flex',
-                        alignItems: 'flex-start',
-                        height: '24px',
-                        lineHeight: '.75',
-                        verticalAlign: 'top',
-                      }}>
-                        K-12
-                      </div>
-                      <div className="flex items-center mx-2">
-                        {['S', 'C', 'O', 'R', 'E'].map((letter, i) => (
-                          <span
-                            key={i}
-                            style={{
-                              width: '24px',
-                              height: '24px',
-                              border: '2px solid black',
-                              borderRadius: '50%',
-                              display: 'inline-flex',
-                              alignItems: 'flex-start',
-                              justifyContent: 'center',
-                              fontSize: '0.75rem',
-                              fontWeight: 'bold',
-                              margin: '0 0.125rem',
-                              lineHeight: '.75',
-                              verticalAlign: 'top',
-                              paddingTop: '-15px'
-                            }}
-                          >
-                            {letter}
-                          </span>
-                        ))}
-                      </div>
-                      <div style={{
-                        backgroundColor: 'white',
-                        color: 'black',
-                        padding: '0 0.5rem',
-                        marginLeft: '0.25rem',
-                        fontSize: '1rem',
-                        fontWeight: 'bold',
-                        display: 'inline-flex',
-                        alignItems: 'flex-start',
-                        height: '24px',
-                        lineHeight: '.75',
-                        verticalAlign: 'top',
-                      }}>
-                        REPORT
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-right text-xs leading-tight">
-                  <div className="font-bold">Radiant Prep, LLC</div>
-                  <div>42-20 Broadway</div>
-                  <div>Astoria, NY 11103</div>
-                  <div className="mt-2">Learn@radiantprep.com</div>
-                  <div>(347) 531-0888</div>
-                  <div className="mt-1">www.RadiantPrep.com</div>
-                </div>
+          {/* Scholar Info avec Grade - Espace réduit */}
+        <div className="px-6 mb-2 mt-5">
+          <div className="flex justify-between items-center">
+            <div className="flex-1 flex items-center">
+              <div style={{
+                backgroundColor: 'black',
+                color: 'white',
+                padding: '0rem 0.5rem',
+                fontSize: '1.3rem',
+                fontWeight: 'bold',
+                display: 'inline-flex',
+                alignItems: 'flex-start', // Changé de flex-start à center
+                height: '32px', // Augmenté de 24px à 32px
+                lineHeight: '.9', // Changé de .75 à 1
+                boxSizing: 'border-box',
+              }}>
+                SCHOLAR&nbsp;:
               </div>
-
-              {/* Scholar Info avec Grade */}
-              <div className="px-6 mb-4">
-                <div className="flex justify-between items-center">
-                  <div className="flex-1 flex items-center">
-                    <div style={{
-                      backgroundColor: 'black',
-                      color: 'white',
-                      padding: '0 0.5rem',
-                      fontSize: '1rem',
-                      fontWeight: 'bold',
-                      display: 'inline-flex',
-                      alignItems: 'flex-start',
-                      height: '24px',
-                      lineHeight: '.75',
-                      verticalAlign: 'top',
-                    }}>
-                      SCHOLAR&nbsp;
-                    </div>
-                    <div style={{
-                      backgroundColor: 'white',
-                      color: 'black',
-                      padding: '0 0.5rem',
-                      marginLeft: '0.25rem',
-                      fontSize: '1rem',
-                      fontWeight: 'bold',
-                      display: 'inline-flex',
-                      alignItems: 'flex-start',
-                      height: '24px',
-                      lineHeight: '.75',
-                      verticalAlign: 'top',
-                    }}>
-                      {studentName}
-                    </div>
-                  </div>
-                  <div className="flex">
-                    <div style={{
-                      backgroundColor: 'black',
-                      color: 'white',
-                      padding: '0 0.5rem',
-                      fontSize: '1rem',
-                      fontWeight: 'bold',
-                      display: 'inline-flex',
-                      alignItems: 'flex-start',
-                      height: '24px',
-                      lineHeight: '.75',
-                      verticalAlign: 'top',
-                    }}>
-                      <span className="mr-2">Grade&nbsp;:</span>
-                    </div>
-                    <div style={{
-                      backgroundColor: 'white',
-                      color: 'black',
-                      padding: '0 0.5rem',
-                      marginLeft: '0.25rem',
-                      fontSize: '1rem',
-                      fontWeight: 'bold',
-                      display: 'inline-flex',
-                      alignItems: 'flex-start',
-                      height: '24px',
-                      lineHeight: '.75',
-                      verticalAlign: 'top',
-                    }}>
-                      {assessmentResult.grade}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gray-200 p-3 mt-2 text-sm">
-                  <div><strong>Assessment:</strong> Radiant PACED™ Assessments- Grade {assessmentResult.grade} {assessmentResult.subject.toUpperCase()}</div>
-                  <div><strong>Date Administered:</strong> {takenDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
-                </div>
-              </div>
-
-              {/* Section principale avec graphiques et score - DISPOSITION CORRIGÉE */}
-              <div className="px-6 mb-6">
-                <div className="flex justify-between items-start">
-                  {/* 3D Bar Chart à GAUCHE */}
-                  <div className="w-1/3">
-                    <ScoreComparisonBarChart />
-                  </div>
-
-                  {/* Score au MILIEU */}
-                  <div className="w-1/3 text-center px-4">
-                    <div className="mt-4">
-                      <div className="text-lg font-bold mb-2">SCORE:</div>
-                      <div className="text-6xl font-bold">{percentage}%</div>
-
-                      <div className="mt-4 text-sm space-y-1">
-                        <div>Custom Scale: 1.9</div>
-                        <div>Set Scale: 3.4</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Time Distribution à DROITE */}
-                  <div className="w-1/3">
-                    <div className="border border-gray-400 p-4 h-full flex flex-col">
-                      <h3 className="font-bold text-lg text-center mb-2 font-sans">Time Distribution</h3>
-                      <div className="flex-1">
-                        <TimeDistributionPieChart />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Sections Correct/Incorrect */}
-              <div className="px-6 mb-6">
-                <div className="flex">
-                  {/* Section Correct */}
-                  <div className="w-1/2 bg-black text-white p-4">
-                    <div className="flex items-center justify-start mb-4">
-                      <span className="text-white font-bold text-lg mr-2">#</span>
-                      <span className="text-green-400 font-bold text-3xl">Correct</span>
-                    </div>
-
-                    <div className="space-y-1 text-sm">
-                      {[
-                        "1 Word problem; multiplication",
-                        "5 Word problem; determining area",
-                        "8 Algebraic translation; verbal to abstract",
-                        "20 Equations; one-step",
-                        "11, 21 Word problem; division",
-                        "23 World problem; real-world context",
-                        "24 Angle classifications"
-                      ].map((item, i) => (
-                        <div key={i}>{item}</div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Section Incorrect */}
-                  <div className="w-1/2 bg-black text-white p-4">
-                    <div className="flex items-center justify-start mb-4">
-                      <span className="text-white font-bold text-lg mr-2">#</span>
-                      <span className="text-red-400 font-bold text-3xl">Incorrect</span>
-                    </div>
-
-                    <div className="space-y-1 text-sm">
-                      {[
-                        "2 Word problem; fractional division",
-                        "3, 17 Greatest Common Factor",
-                        "4 Probability",
-                        "6 Unit conversion; customary capacity",
-                        "7 Word Problem; Calculating Average",
-                        "9 Word problem; multiply mixed numbers",
-                        "10 Prime factorization",
-                        "12 Mixed number operations",
-                        "13 World problem; real-world context",
-                        "14 Computation; decimal multiplication",
-                        "15 Calculating percentage",
-                        "16 Evaluating expressions",
-                        "18 Proportional Reasoning",
-                        "19 Fractional division",
-                        "22 Algebraic translation; verbal to abstract"
-                      ].map((item, i) => (
-                        <div key={i}>{item}</div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+              <div style={{
+                backgroundColor: 'white',
+                color: 'black',
+                padding: '0rem 0.5rem',
+                marginLeft: '0.25rem',
+                fontSize: '1.3rem',
+                fontWeight: 'bold',
+                display: 'inline-flex',
+                alignItems: 'flex-start', // Changé de flex-start à center
+                height: '32px', // Augmenté de 24px à 32px
+                lineHeight: '.9', // Changé de .75 à 1
+                boxSizing: 'border-box',
+              }}>
+                {studentName}
               </div>
             </div>
-            {/* Indicateur de page 1 */}
-            <div className="mt-auto">
-              <div className="bg-white text-black text-center py-2 text-xs">
-                Page 1 of 2
+            <div className="flex">
+              <div style={{
+                backgroundColor: 'black',
+                color: 'white',
+                padding: '0rem 0.5rem',
+                fontSize: '1.3rem',
+                fontWeight: 'bold',
+                display: 'inline-flex',
+                alignItems: 'flex-start', // Changé de flex-start à center
+                height: '32px', // Augmenté de 24px à 32px
+                lineHeight: '.9', // Changé de .75 à 1
+                boxSizing: 'border-box',
+              }}>
+                <span className="mr-2">Grade&nbsp;:</span>
+              </div>
+              <div style={{
+                backgroundColor: 'white',
+                color: 'black',
+                padding: '0rem 0.5rem',
+                marginLeft: '0.25rem',
+                fontSize: '1.3rem',
+                fontWeight: 'bold',
+                display: 'inline-flex',
+                alignItems: 'flex-start', // Changé de flex-start à center
+                height: '32px', // Augmenté de 24px à 32px
+                lineHeight: '.9',
+                boxSizing: 'border-box',
+              }}>
+                {assessmentResult.grade}
               </div>
             </div>
           </div>
 
-          {/* Deuxième page */}
-          <div className="page w-full h-[1122.52px] flex flex-col">
-            {/* Analysis Section */}
-            <div className="flex-1 mt-6 px-6">
-                <div className="flex h-full">
-                    <div className="w-full">
-                    <table className="w-full border-collapse border border-black">
-                        <thead>
-                        <tr>
-                            <th className="w-2/3 p-2 bg-yellow-400 border border-black text-sm font-bold">
-                            GENERAL ANALYSIS / FOCUS AREAS
-                            </th>
-                            <th className="w-1/3 p-2 bg-yellow-400 border border-black text-sm font-bold">
-                            PROJECTED PREP LENGTH
-                            </th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td className="w-2/3 p-4 border border-black text-sm">
-                            Data suggests that <strong style={{ color: '#0000FF' }}>{studentName}</strong> requires significant intervention in <strong style={{ color: '#0000FF' }}>{assessmentResult.subject}</strong>.
-                            As she is currently lagging behind peers, focus areas include: solidifying foundation skills and operational fluency with decimals, fractions and mixed numbers, as well as work with real-world problems.
-                            </td>
-                            <td className="w-1/3 p-4 border border-black text-sm">
-                            Varies based on service options
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                    </div>
-                </div>
-            </div>
+          <div className="bg-gray-200 p-2 mt-5 text-sm">
+            <div><strong>Assessment:</strong> Radiant PACED™ Assessments- Grade {assessmentResult.grade} {assessmentResult.subject.toUpperCase()}</div>
+            <div><strong>Date Administered:</strong> {takenDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
+          </div>
+        </div>
 
+          {/* Graphiques et score - Version compacte */}
+          <div className="px-6 mb-4">
+            <div className="flex justify-between items-start">
+              <div className="w-1/3">
+                <ScoreComparisonBarChart />
+              </div>
+
+              <div className="w-1/3 text-center px-2"> {/* Réduction du padding */}
+                <div className="mt-2"> {/* Réduction de la marge */}
+                  <div className="text-lg font-bold mb-1">SCORE:</div> {/* Réduction de la marge */}
+                  <div className="text-5xl font-bold">{percentage}%</div> {/* Taille réduite */}
+                  <div className="mt-2 text-xs space-y-0"> {/* Taille et espace réduits */}
+                    <div>Custom Scale: 1.9</div>
+                    <div>Set Scale: 3.4</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-1/3">
+                <div className="border border-gray-400 p-2 h-full flex flex-col"> {/* Réduction du padding */}
+                  <h3 className="font-bold text-base text-center mb-1 font-sans">Time Distribution</h3> {/* Taille réduite */}
+                  <div className="flex-1">
+                    <TimeDistributionPieChart />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sections Correct/Incorrect */}
+    
+
+          <div className="px-6 mb-4 text-center font-calibri"> {/* Ajout de font-calibri */}
+            <div className="flex justify-center mb-4">
+              <img src="/Screenshot 2025-06-27 at 22.36.34.png" alt="Correct & Incorrect" />
+            </div>
+            {isAnalyzing ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="text-gray-500">Analyzing skills with AI...</div>
+              </div>
+            ) : (
+              <div className="flex">
+                {/* Colonne Correct */}
+                <div className="w-1/2">
+                  <div className="space-y-0 text-sm ml-[60px] text-justify">
+                    {skillCategories.correct.map((skill, i) => (
+                      <div key={i} className="font-calibri">{skill}</div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Colonne Incorrect */}
+                <div className="w-1/2">
+                  <div className="space-y-0 text-sm pl-[100px] text-justify">
+                    {skillCategories.incorrect.map((skill, i) => (
+                      <div key={i} className="font-calibri">{skill}</div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            
+          </div>
+
+          <div className="px-6">
+            <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-black text-[#f7ff3c]">
+                    <th className="w-2/3 align-middle text-center border-r border-black">
+                      <span className="text-sm font-bold">
+                        GENERAL ANALYSIS / FOCUS AREAS:
+                      </span>
+                    </th>
+                    <th className="w-1/3 align-middle text-center">
+                      <span className="text-sm font-bold text-white">
+                        PROJECTED PREP LENGTH:
+                      </span>
+                    </th>
+                  </tr>
+                </thead>
+              <tbody>
+                <tr>
+                  <td className="p-2 text-sm border-r border-black">
+                    Our data indicates <span className="text-blue-600 font-semibold">{studentName}</span> requires critical intervention in <span className="text-blue-600 font-semibold">{assessmentResult.subject}</span>. His results is dramatically behind typical peer metrics. Sefket's does not yet have a foundation in literacy. An intensive and foundational approach is an appropriate start for helping Sefket.
+                  </td>
+                  <td className="p-2 text-sm">
+                    Varies based on service options
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            
             {/* Footer */}
-            <div className="flex flex-col">
-                <div className="bg-black text-white text-center py-2 text-xs">
-                    <div>Copyright © by Radiant Prep, LLC. All Rights Reserved. CONFIDENTIAL - May NOT be reproduced in any form.</div>
-                </div>
-                {/* <div className="bg-white text-black text-center py-2 text-xs">
-                    <div>Page 2 of 2</div>
-                </div> */}
+            <div className="bg-black text-white text-center py-1 text-xs mt-2">
+              Copyright © by Radiant Prep, LLC. All Rights Reserved. CONFIDENTIAL - May NOT be reproduced in any form.
             </div>
-
           </div>
+
         </div>
       </div>
     );

@@ -68,18 +68,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     persistAuthState(newState);
   };
 
-  // const loginChild = (childInfo: ChildInformation) => {
-  //   const newState: AuthState = {
-  //     isAuthenticated: true,
-  //     user: childInfo,
-  //     role: 'child',
-  //     isLoading: false,
-  //   };
-  //   setAuthState(newState);
-  //   persistAuthState(newState);
-  // };
-
-
   const loginChild = (childInfo: ChildInformation) => {
     if (!childInfo.id) {
       throw new Error('Child information must include an ID');

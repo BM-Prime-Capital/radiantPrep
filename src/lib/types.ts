@@ -56,6 +56,11 @@ export type AssessmentResult = {
   takenAt?: string;
 };
 
+export interface CanvasSize {
+  width: number;
+  height: number;
+}
+
 
 export interface ChildInformation {
   childName: string;

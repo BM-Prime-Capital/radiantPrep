@@ -5,6 +5,11 @@ import type { SubjectName, GradeLevel } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// Fonction de normalisation des réponses
+const normalizeAnswer = (value: string): string => {
+  return value.trim().toLowerCase();
+};
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const subject = searchParams.get('subject');
@@ -38,7 +43,22 @@ export async function GET(request: Request) {
       },
     });
 
-    return NextResponse.json(questions);
+    // Normaliser les réponses correctes et options
+    const normalizedQuestions = questions.map(question => ({
+      ...question,
+      options: question.options.map(option => ({
+        ...option,
+        value: normalizeAnswer(option.value)
+      })),
+      correctAnswers: question.correctAnswers.map(answer => ({
+        ...answer,
+        answerValue: normalizeAnswer(answer.answerValue)
+      }))
+    }));
+
+    console.log('Normalized Questions:', normalizedQuestions);
+
+    return NextResponse.json(normalizedQuestions);
   } catch (error) {
     console.error('Error fetching questions:', error);
     return NextResponse.json(

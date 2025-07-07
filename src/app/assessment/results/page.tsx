@@ -1,14 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import type { AssessmentResult } from '@/lib/types';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import Link from 'next/link';
-import { CheckCircle2, XCircle, Trophy, RotateCcw, Home, BookOpen, Calculator, Star, Award, ChevronRight } from 'lucide-react';
+import { CheckCircle2, XCircle, Trophy, BookOpen, Calculator, Star, Award } from 'lucide-react';
 import { ReportGenerator } from '@/components/assessment/ReportGenerator';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
@@ -58,7 +55,7 @@ export default function ResultsPage() {
   const { score, totalQuestions, subject, grade, answers, takenAt } = assessmentResult;
   const percentage = Math.round((score / totalQuestions) * 100);
   const studentName = role === 'child' ? (user as any)?.childName : "Student";
-  const takenDate = new Date(takenAt);
+  const takenDate = assessmentResult.takenAt ? new Date(assessmentResult.takenAt) : new Date();
   const subjectIcon = subject === 'ELA' ? <BookOpen className="h-5 w-5" /> : <Calculator className="h-5 w-5" />;
 
   const performanceLevel = percentage >= 80 ? "excellent" : percentage >= 60 ? "good" : "needs-improvement";
@@ -288,7 +285,13 @@ export default function ResultsPage() {
           </Card>
         </motion.div>
       </div>
-
+      {/* <StudyCoach assessmentResult={assessmentResult} studentName={studentName} /> */}
+      {/* <AITutor assessmentResult={assessmentResult} studentName={studentName} /> */}
+      {/* <AIAgent 
+        assessmentResult={assessmentResult || undefined}
+        isOpen={isAIOpen}
+        onToggle={() => setIsAIOpen(!isAIOpen)}
+      /> */}
     </div>
   );
 }

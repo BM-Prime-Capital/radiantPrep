@@ -41,10 +41,10 @@ const SubjectCard = ({ subject, selected, onClick }: { subject: Subject; selecte
             {theme.icon}
           </div>
           <h3 className={`text-xl font-bold text-center ${theme.text} mb-2`}>
-            {subject === 'ELA' ? 'Literary Galaxy' : 'Math Universe'}
+            {subject === 'ELA' ? 'ELA Diagnostic' : 'Math Diagnostic'}
           </h3>
           <p className="text-sm text-gray-600 text-center">
-            {subject === 'ELA' ? 'Master language arts' : 'Conquer numbers'}
+            {subject === 'ELA' ? 'English Language Arts' : 'Mathematics'}
           </p>
           
           {selected && (

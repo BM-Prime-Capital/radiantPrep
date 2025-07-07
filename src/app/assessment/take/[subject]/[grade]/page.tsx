@@ -10,7 +10,6 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { ChevronLeft, ChevronRight, CheckSquare, BookOpen, Calculator, Trophy, Clock, Award } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 
@@ -123,7 +122,11 @@ export default function AssessmentPage() {
       newAnswers[currentQuestionIndex] = answer;
       return newAnswers;
     });
+    console.log(`🧠 Answer saved for Q${currentQuestionIndex}:`, answer);
+
   }, [currentQuestionIndex]);
+  
+  
 
   const goToNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
@@ -137,127 +140,159 @@ export default function AssessmentPage() {
     }
   };
 
-  const isAnswerCorrect = (question: Question, userAnswer: string | string[] | undefined) => {
-    if (userAnswer === undefined || question.correctAnswer === undefined) {
+const isAnswerCorrect = (question: Question, userAnswer: string | string[] | undefined) => {
+  if (question.type === 'DRAWING') {
+    if (!userAnswer || !Array.isArray(userAnswer)) return false;
+
+    try {
+      const parsed = JSON.parse(question.correctAnswer as string);
+      const correctCircles = parsed.circles ?? [];
+      const tolerance = 20; // pixels
+
+      if (correctCircles.length !== userAnswer.length) return false;
+
+      return correctCircles.every((correctCircle: any, i: number) => {
+        const userCircle = userAnswer[i] as any;
+        return (
+          Math.abs(correctCircle.x - userCircle.x) <= tolerance &&
+          Math.abs(correctCircle.y - userCircle.y) <= tolerance &&
+          Math.abs(correctCircle.radius - userCircle.radius) <= tolerance &&
+          correctCircle.type === userCircle.type
+        );
+      });
+    } catch (err) {
+      console.error("Correct answer parse error:", err);
       return false;
     }
+  }
 
-    const correctAnswer = question.correctAnswer;
+  // Fallback for all other types
+  if (userAnswer === undefined || question.correctAnswer === undefined) return false;
 
-    if (Array.isArray(correctAnswer)) {
-      if (Array.isArray(userAnswer)) {
-        return userAnswer.length === correctAnswer.length && 
-               userAnswer.every((ua, i) => ua?.trim().toLowerCase() === correctAnswer[i]?.trim().toLowerCase());
-      }
-      return correctAnswer.some(ca => userAnswer.toString().trim().toLowerCase() === ca?.trim().toLowerCase());
+  const normalize = (value: string | string[]): string[] => {
+    if (Array.isArray(value)) {
+      return value.map(v => (v || '').toString().trim().toLowerCase());
     }
-    
-    return userAnswer.toString().trim().toLowerCase() === correctAnswer.toString().trim().toLowerCase();
+    return [(value || '').toString().trim().toLowerCase()];
   };
 
-  const handleSubmitAssessment = async () => {
-    setSubmitError(null);
-    try {
+  const correctAnswers = normalize(question.correctAnswer);
+  const userAnswers = normalize(userAnswer);
 
-      if (!user || !role) {
-        throw new Error('User information not available');
-      }
+  if (correctAnswers.length !== userAnswers.length) return false;
 
-      // For child users, ensure we have their ID
-      if (role === 'child') {
+  return correctAnswers.every((ca, i) => ca === userAnswers[i]);
+};
 
-        if (!user || typeof user !== 'object' || !('id' in user)) {
-          throw new Error('Invalid child user data');
-        }
-      }
 
-      const sessionCheck = await fetch('/api/auth/check-session', {
-        credentials: 'include'
-      });
-      
-      if (!sessionCheck.ok) {
-        throw new Error('Session validation failed');
-      }
-
-      // Calculate score and prepare answers
-      const detailedAnswers = questions.map((question, index) => {
-        const userAnswer = answers[index];
-        const correct = isAnswerCorrect(question, userAnswer);
-        
-        return {
-          questionId: question.id_prisma || question.id,
-          userAnswer: userAnswer || "",
-          isCorrect: correct,
-        };
-      });
-
-      const score = detailedAnswers.filter(answer => answer.isCorrect).length;
-
-      // Prepare submission data - now ensures childUserId is always provided for children
-      const submissionData = {
-        subject,
-        grade,
-        score,
-        totalQuestions: questions.length,
-        answers: detailedAnswers,
-        childUserId: role === 'child' ? (user as ChildInformation).id : undefined,
-        parentUserId: role === 'parent' ? (user as ParentUser).id : undefined
-      };
-
-      // Submit to API
-      const response = await fetch('/api/assessments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(submissionData),
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Session expired. Please login again.');
-        }
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save assessment');
-      }
-
-      const assessmentData = await response.json();
-      
-      // Set result and redirect
-      const result: AssessmentResult = {
-        id: assessmentData.id,
-        score,
-        totalQuestions: questions.length,
-        answers: detailedAnswers.map((answer, index) => ({
-          ...answer,
-          correctAnswer: questions[index].correctAnswer || "N/A",
-        })),
-        subject,
-        grade,
-        takenAt: new Date().toISOString(),
-      };
-      
-      setAssessmentResult(result);
-      router.push('/assessment/results');
-    } catch (error: any) {
-      setSubmitError(error.message || 'Failed to save assessment. Please try again.');
-      console.error('Assessment submission error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Could not save assessment results.",
-        variant: "destructive",
-      });
-
-      if (error.message.includes('Session') || error.message.includes('expired')) {
-        // Clear client-side auth state
-        localStorage.removeItem('authState');
-        // Force a hard refresh to clear any cached state
-        window.location.href = `/auth/login?returnUrl=${encodeURIComponent(window.location.pathname)}`;
-        return;
-      }
-      
+const handleSubmitAssessment = async () => {
+  setSubmitError(null);
+  try {
+    if (!user || !role) {
+      throw new Error('User information not available');
     }
-  };
 
+    // For child users, ensure we have their ID
+    if (role === 'child') {
+      if (!user || typeof user !== 'object' || !('id' in user)) {
+        throw new Error('Invalid child user data');
+      }
+    }
+
+    const sessionCheck = await fetch('/api/auth/check-session', {
+      credentials: 'include'
+    });
+
+    if (!sessionCheck.ok) {
+      throw new Error('Session validation failed');
+    }
+
+    // Calculate score and prepare answers
+    const detailedAnswers = questions.map((question, index) => {
+      const userAnswer = answers[index] ?? ""; // Provide default empty string if undefined
+
+      // Ensure userAnswer is treated as a string or array of strings
+      const normalizedUserAnswer = Array.isArray(userAnswer)
+  ? userAnswer.map(a => typeof a === 'string' ? a.trim().toLowerCase() : a)
+  : typeof userAnswer === 'string' ? userAnswer.trim().toLowerCase() : userAnswer;
+
+
+      const correct = isAnswerCorrect(question, userAnswer);
+
+      return {
+        questionId: question.id_prisma || question.id,
+        userAnswer: normalizedUserAnswer,
+        isCorrect: correct,
+      };
+    });
+
+    console.log("📦 Submitting answers:", detailedAnswers);
+
+
+    const score = detailedAnswers.filter(answer => answer.isCorrect).length;
+
+    // Prepare submission data - now ensures childUserId is always provided for children
+    const submissionData = {
+      subject,
+      grade,
+      score,
+      totalQuestions: questions.length,
+      answers: detailedAnswers,
+      childUserId: role === 'child' ? (user as ChildInformation).id : undefined,
+      parentUserId: role === 'parent' ? (user as ParentUser).id : undefined
+    };
+
+    // Submit to API
+    const response = await fetch('/api/assessments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(submissionData),
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Session expired. Please login again.');
+      }
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to save assessment');
+    }
+
+    const assessmentData = await response.json();
+
+    // Set result and redirect
+    const result: AssessmentResult = {
+      id: assessmentData.id,
+      score,
+      totalQuestions: questions.length,
+      answers: detailedAnswers.map((answer, index) => ({
+        ...answer,
+        correctAnswer: questions[index].correctAnswer || "N/A",
+      })),
+      subject,
+      grade,
+      takenAt: new Date().toISOString(),
+    };
+
+    setAssessmentResult(result);
+    router.push('/assessment/results');
+  } catch (error: any) {
+    setSubmitError(error.message || 'Failed to save assessment. Please try again.');
+    console.error('Assessment submission error:', error);
+    toast({
+      title: "Error",
+      description: error.message || "Could not save assessment results.",
+      variant: "destructive",
+    });
+    if (error.message.includes('Session') || error.message.includes('expired')) {
+      // Clear client-side auth state
+      localStorage.removeItem('authState');
+      // Force a hard refresh to clear any cached state
+      window.location.href = `/auth/login?returnUrl=${encodeURIComponent(window.location.pathname)}`;
+      return;
+    }
+  }
+};
 
   const progressValue = questions.length > 0 ? ((currentQuestionIndex + 1) / questions.length) * 100 : 0;
 
@@ -368,16 +403,11 @@ export default function AssessmentPage() {
             </div>
           )}
         </div>
-        
-        {/* <Progress 
-          value={progressValue} 
-          className="w-full h-3 bg-gray-100" 
-          indicatorClassName="bg-gradient-to-r from-blue-600 to-indigo-600"
-        /> */}
+
         <Progress 
-  value={progressValue} 
-  className="w-full h-3 bg-gray-100 [&>div]:bg-gradient-to-r [&>div]:from-blue-600 [&>div]:to-indigo-600"
-/>
+          value={progressValue} 
+          className="w-full h-3 bg-gray-100 [&>div]:bg-gradient-to-r [&>div]:from-blue-600 [&>div]:to-indigo-600"
+        />
       </motion.div>
 
       {/* Question Display */}

@@ -32,7 +32,7 @@ export function Navbar({ isHomePage, isAuthenticated }: NavbarProps) {
           <Link href="/" className="flex items-center space-x-2">
             <div className="w-12 h-12 relative">
               <Image
-                src="/newlogo.png"
+                src={isAuthenticated ? "/logo-white.png" : "/newlogo.png"}
                 alt="Radiant Prep Logo"
                 fill
                 className="object-contain"

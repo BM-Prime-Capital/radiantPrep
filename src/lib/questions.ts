@@ -69,7 +69,7 @@ export async function getQuestions(subject: Subject, grade: Grade): Promise<Ques
         type: mapDBQuestionTypeToApp(dbQuestion.questionType),
         question: dbQuestion.questionText,
         passage: dbQuestion.passage ?? undefined,
-        image: dbQuestion.imageUrl ?? undefined,
+        image: dbQuestion.imageUrl ? `/images/${dbQuestion.imageUrl}` : undefined,
         options: dbQuestion.options.map(opt => opt.value),
         correctAnswer: appCorrectAnswer,
         category: dbQuestion.category ?? undefined,
