@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Pencil, MousePointer, Info, Target, Shuffle, Palette } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { DrawingCanvas } from './DrawingCanvas';
+import { useToast } from '@/hooks/use-toast';
 
 interface QuestionDisplayProps {
   question: Question;
@@ -20,17 +21,16 @@ interface QuestionDisplayProps {
 }
 
 export function QuestionDisplay({ question, questionNumber, totalQuestions, onAnswerChange, currentAnswer }: QuestionDisplayProps) {
-  //  const handleImageCapture = (dataUrl: string) => {
-  //   const audio = new Audio('/sounds/capture.wav'); // place capture.mp3 dans public/sounds/
-  //     audio.play();
-  //     console.log("🖼️ Image capturée :", dataUrl);
-  //   };
+  const { toast } = useToast();
 
   const handleImageCapture = async (dataUrl: string) => {
-    const audio = new Audio('/sounds/capture.wav');
-    audio.play();
-
     try {
+      // Son de capture
+      const audio = new Audio('/sounds/capture.wav');
+      audio.play().catch(() => {
+        // Ignorer les erreurs audio
+      });
+
       const response = await fetch('/api/save-capture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -40,12 +40,37 @@ export function QuestionDisplay({ question, questionNumber, totalQuestions, onAn
         }),
       });
 
+      if (!response.ok) {
+        throw new Error('Erreur lors de la sauvegarde');
+      }
+
       const result = await response.json();
       console.log('Image sauvegardée :', result.path);
-      // Maintenant vous pouvez envoyer `result.path` à votre IA
+      
+      toast({
+        title: "Image capturée !",
+        description: "Votre réponse a été sauvegardée avec succès.",
+        variant: "default"
+      });
+
     } catch (error) {
-      console.error('Erreur :', error);
+      console.error('Erreur lors de la capture :', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de sauvegarder l'image.",
+        variant: "destructive"
+      });
     }
+  };
+
+  const handleDrawingChange = (data: any) => {
+    console.log(`🎨 Drawing data for question ${question.id}:`, data);
+    onAnswerChange(data);
+  };
+
+  const handleSelectionChange = (data: any) => {
+    console.log(`🎯 Selection data for question ${question.id}:`, data);
+    onAnswerChange(data);
   };
 
   const renderQuestionContent = () => {
@@ -124,26 +149,23 @@ export function QuestionDisplay({ question, questionNumber, totalQuestions, onAn
             bg: "from-blue-50 to-indigo-50",
             border: "border-blue-200",
             icon: <Palette className="h-6 w-6 text-blue-600" />,
-            label: "Interactive Drawing Tools"
+            label: "Outils de Dessin Interactifs"
           },
           matching: {
             bg: "from-purple-50 to-pink-50",
             border: "border-purple-200",
             icon: <Shuffle className="h-6 w-6 text-purple-600" />,
-            label: "Interactive Matching Tools"
+            label: "Outils de Correspondance Interactifs"
           },
           pattern: {
             bg: "from-green-50 to-emerald-50",
             border: "border-green-200",
             icon: <Target className="h-6 w-6 text-green-600" />,
-            label: "Interactive Pattern Recognition"
+            label: "Reconnaissance de Motifs Interactifs"
           }
         };
 
-
         const colors = instructionColors[drawingMode];
-
-        console.log("📝 Question text to analyze:", question.question);
 
         return (
           <div className="space-y-6">
@@ -153,36 +175,34 @@ export function QuestionDisplay({ question, questionNumber, totalQuestions, onAn
               className={`bg-gradient-to-r ${colors.bg} ${colors.border} rounded-lg p-6`}
             >
               <div className="flex items-start gap-4">
-                <div className={`${colors.border} p-2 rounded-lg`}>{colors.icon}</div>
+                <div className={`${colors.border} p-2 rounded-lg bg-white`}>{colors.icon}</div>
                 <div className="flex-1">
                   <h4 className="font-semibold mb-2 flex items-center gap-2">
-                    {/* <Palette className="h-4 w-4" /> */}
                     {colors.label}
                   </h4>
                   <div className="text-sm text-foreground/80 space-y-1 ml-2">
                     {drawingMode === "encircle" && (
                       <>
-                        <p>• Click to add a circle or an oval on the image</p>
-                        <p>• Use the arrow tool to move or resize shapes</p>
-                        <p>• Use the top icons to select, delete, undo or redo</p>
+                        <p>• Cliquez pour ajouter un cercle ou une ovale sur l'image</p>
+                        <p>• Utilisez l'outil flèche pour déplacer ou redimensionner les formes</p>
+                        <p>• Utilisez les icônes du haut pour sélectionner, supprimer, annuler ou refaire</p>
                       </>
                     )}
                     {drawingMode === "matching" && (
                       <>
-                        <p>• Click and drag to draw an arrow between two points</p>
-                        <p>• Use different colors to connect related elements</p>
-                        <p>• Use the top icons to remove, undo or redo connections</p>
+                        <p>• Cliquez et glissez pour dessiner une flèche entre deux points</p>
+                        <p>• Utilisez différentes couleurs pour connecter les éléments liés</p>
+                        <p>• Utilisez les icônes du haut pour supprimer, annuler ou refaire les connexions</p>
                       </>
                     )}
                     {drawingMode === "pattern" && (
                       <>
-                        <p>• Click to place a shape (circle, triangle, or square)</p>
-                        <p>• Use the top icons to change the shape type</p>
-                        <p>• Drag to reposition, or use tools to delete or undo</p>
+                        <p>• Cliquez pour placer une forme (cercle, triangle ou carré)</p>
+                        <p>• Utilisez les icônes du haut pour changer le type de forme</p>
+                        <p>• Glissez pour repositionner, ou utilisez les outils pour supprimer ou annuler</p>
                       </>
                     )}
                   </div>
-
                 </div>
               </div>
             </motion.div>
@@ -194,15 +214,11 @@ export function QuestionDisplay({ question, questionNumber, totalQuestions, onAn
                 questionText={question.question} 
                 mode={drawingMode}
                 canvasSize={{ width: 800, height: 400 }}
-                onSelectionChange={(selections) => {
-                  if (drawingMode === 'encircle') onAnswerChange(selections);
-                }}
-                onDrawingChange={(drawingData) => {
-                  if (drawingMode !== 'encircle') onAnswerChange(drawingData);
-                }}
+                onSelectionChange={handleSelectionChange}
+                onDrawingChange={handleDrawingChange}
                 onCaptureImage={handleImageCapture}
                 initialSelections={Array.isArray(currentAnswer) ? currentAnswer : []}
-                initialDrawing={typeof currentAnswer === 'string' ? currentAnswer : ''}
+                initialDrawing={Array.isArray(currentAnswer) ? currentAnswer : []}
               />
             ) : (
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
@@ -213,7 +229,7 @@ export function QuestionDisplay({ question, questionNumber, totalQuestions, onAn
 
             <div className={`rounded-lg p-4 ${colors.border} bg-opacity-20`}>
               <div className="flex items-center gap-3">
-                <div className={`p-1.5 rounded-full ${colors.border}`}>
+                <div className={`p-1.5 rounded-full ${colors.border} bg-white`}>
                   {colors.icon}
                 </div>
                 <div>
@@ -221,7 +237,7 @@ export function QuestionDisplay({ question, questionNumber, totalQuestions, onAn
                   <p className="text-xs text-muted-foreground">
                     {currentAnswer 
                       ? 'Vos annotations sont sauvegardées.' 
-                      : 'Utilisez les outils ci-dessus pour interagir avec l’image.'}
+                      : 'Utilisez les outils ci-dessus pour interagir avec l\'image.'}
                   </p>
                 </div>
               </div>
@@ -236,34 +252,34 @@ export function QuestionDisplay({ question, questionNumber, totalQuestions, onAn
         return (
           <div className="p-4 border border-dashed rounded-md bg-muted">
             <p className="text-muted-foreground text-center">
-              Interactive question type ({question.type.replace("_", " ").toLowerCase()}) placeholder.
+              Type de question interactive ({question.type.replace("_", " ").toLowerCase()}) en cours de développement.
               <br />
-              Please use text input for your answer if applicable.
+              Veuillez utiliser la saisie de texte pour votre réponse si applicable.
             </p>
             <Input
               type="text"
               value={currentAnswer as string || ''}
               onChange={(e) => onAnswerChange(e.target.value)}
-              placeholder="Type your answer for this question"
+              placeholder="Tapez votre réponse pour cette question"
               className="text-base mt-2"
             />
           </div>
         );
       default:
-        return <p>Unsupported question type.</p>;
+        return <p>Type de question non supporté.</p>;
     }
   };
 
   return (
     <Card className="w-full shadow-lg">
       <CardHeader>
-        <CardTitle className="text-2xl text-primary">Question {questionNumber} of {totalQuestions}</CardTitle>
+        <CardTitle className="text-2xl text-primary">Question {questionNumber} sur {totalQuestions}</CardTitle>
         {question.category && <CardDescription className="text-accent">{question.category}</CardDescription>}
       </CardHeader>
       <CardContent className="space-y-6">
         {question.passage && (
           <div className="p-4 bg-muted rounded-md border max-h-60 overflow-y-auto">
-            <h4 className="font-semibold mb-2 text-lg">Passage:</h4>
+            <h4 className="font-semibold mb-2 text-lg">Passage :</h4>
             <p className="text-foreground/90 whitespace-pre-line text-sm">{question.passage}</p>
           </div>
         )}

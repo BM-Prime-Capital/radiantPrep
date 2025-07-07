@@ -7,45 +7,44 @@ const prisma = new PrismaClient();
 
 function evaluateInteractiveAnswer(
   type: PrismaQuestionType,
-  userAnswerRaw: string,
+  userAnswerRaw: any,
   correctAnswerRaw: string
 ): boolean {
   try {
+    console.log(`🔍 Évaluation de la question ${type}:`, { userAnswerRaw, correctAnswerRaw });
+
     // 1. Validation des entrées
     if (!userAnswerRaw || !correctAnswerRaw) {
-      console.warn("Missing answer data");
+      console.warn("Données de réponse manquantes");
       return false;
     }
 
-    // 2. Parsing de la réponse utilisateur
-    let userAnswer;
-    try {
-      userAnswer = JSON.parse(userAnswerRaw);
-      // Cas où la réponse serait une chaîne JSON encodée doublement
-      if (typeof userAnswer === 'string') {
+    // 2. Traitement de la réponse utilisateur
+    let userAnswer = userAnswerRaw;
+    if (typeof userAnswer === 'string') {
+      try {
         userAnswer = JSON.parse(userAnswer);
+      } catch (err) {
+        console.warn("Format de réponse utilisateur invalide:", userAnswerRaw);
+        return false;
       }
-    } catch (err) {
-      console.warn("Invalid user answer format:", userAnswerRaw);
-      return false;
     }
 
     // 3. Parsing de la réponse correcte
     let correctAnswer;
     try {
       correctAnswer = JSON.parse(correctAnswerRaw);
-      // Cas où la correction serait une chaîne JSON encodée doublement
       if (typeof correctAnswer === 'string') {
         correctAnswer = JSON.parse(correctAnswer);
       }
     } catch (err) {
-      console.warn("Invalid correct answer format:", correctAnswerRaw);
+      console.warn("Format de réponse correcte invalide:", correctAnswerRaw);
       return false;
     }
 
     // 4. Validation des types après parsing
-    if (!Array.isArray(userAnswer) || !Array.isArray(correctAnswer)) {
-      console.warn("Answers should be arrays");
+    if (!Array.isArray(userAnswer)) {
+      console.warn("La réponse utilisateur doit être un tableau");
       return false;
     }
 
@@ -58,64 +57,117 @@ function evaluateInteractiveAnswer(
       case 'PATTERN':
         return evaluatePatternAnswer(userAnswer, correctAnswer);
       default:
-        console.warn("Unsupported question type:", type);
+        console.warn("Type de question non supporté:", type);
         return false;
     }
   } catch (err) {
-    console.error("Evaluation error:", err);
+    console.error("Erreur d'évaluation:", err);
     return false;
   }
 }
 
+function evaluateDrawingAnswer(user: any[], correct: any): boolean {
+  console.log(`🎨 Évaluation DRAWING:`, { user, correct });
+  
+  // Si correct est un objet avec une propriété circles
+  let correctCircles = correct;
+  if (correct && typeof correct === 'object' && correct.circles) {
+    correctCircles = correct.circles;
+  }
+  
+  if (!Array.isArray(correctCircles)) {
+    console.warn("Format de réponse correcte invalide pour DRAWING");
+    return false;
+  }
 
-function evaluateDrawingAnswer(user: any[], correct: any[]): boolean {
-  if (user.length !== correct.length) return false;
+  if (user.length !== correctCircles.length) {
+    console.log(`Nombre de cercles différent: utilisateur=${user.length}, correct=${correctCircles.length}`);
+    return false;
+  }
+
+  const positionTolerance = 30; // Augmenté pour plus de flexibilité
+  const radiusTolerance = 20;
 
   return user.every((u, i) => {
-    const c = correct[i];
+    const c = correctCircles[i];
     if (!u || !c) return false;
-
-    // Tolérance de 20px pour la position et 15px pour le rayon
-    const positionTolerance = 20;
-    const radiusTolerance = 15;
 
     const positionMatch =
       Math.abs(u.x - c.x) < positionTolerance &&
       Math.abs(u.y - c.y) < positionTolerance;
 
     const radiusMatch =
-      (u.radius === undefined || c.radius === undefined)
-        ? true
-        : Math.abs(u.radius - c.radius) < radiusTolerance;
+      (u.radius === undefined || c.radius === undefined) ||
+      Math.abs(u.radius - c.radius) < radiusTolerance;
 
-    return positionMatch && radiusMatch;
+    const typeMatch = !c.type || u.type === c.type;
+
+    console.log(`Cercle ${i}: position=${positionMatch}, rayon=${radiusMatch}, type=${typeMatch}`);
+    
+    return positionMatch && radiusMatch && typeMatch;
   });
 }
 
 function evaluateMatchingAnswer(user: any[], correct: any[]): boolean {
-  if (user.length !== correct.length) return false;
+  console.log(`🔗 Évaluation MATCHING:`, { user, correct });
+  
+  if (!Array.isArray(correct)) {
+    console.warn("Format de réponse correcte invalide pour MATCHING");
+    return false;
+  }
+
+  if (user.length !== correct.length) {
+    console.log(`Nombre de lignes différent: utilisateur=${user.length}, correct=${correct.length}`);
+    return false;
+  }
+
+  const tolerance = 30; // Tolérance pour les points des lignes
 
   return user.every((u, i) => {
     const c = correct[i];
     if (!u?.points || !c?.points) return false;
 
-    // Tolérance de 20px pour les points des lignes
-    const tolerance = 20;
-    return (
+    // Vérifier que les deux lignes ont au moins 4 points (début et fin)
+    if (u.points.length < 4 || c.points.length < 4) return false;
+
+    const match = (
       Math.abs(u.points[0] - c.points[0]) < tolerance &&
       Math.abs(u.points[1] - c.points[1]) < tolerance &&
       Math.abs(u.points[2] - c.points[2]) < tolerance &&
       Math.abs(u.points[3] - c.points[3]) < tolerance
     );
+
+    console.log(`Ligne ${i}: ${match ? 'correcte' : 'incorrecte'}`);
+    return match;
   });
 }
 
 function evaluatePatternAnswer(user: any[], correct: any[]): boolean {
-  if (user.length !== correct.length) return false;
+  console.log(`🔺 Évaluation PATTERN:`, { user, correct });
+  
+  if (!Array.isArray(correct)) {
+    console.warn("Format de réponse correcte invalide pour PATTERN");
+    return false;
+  }
+
+  if (user.length !== correct.length) {
+    console.log(`Nombre de formes différent: utilisateur=${user.length}, correct=${correct.length}`);
+    return false;
+  }
+
+  const positionTolerance = 25;
 
   return user.every((u, i) => {
     const c = correct[i];
-    return u?.type === c?.type;
+    if (!u || !c) return false;
+
+    const typeMatch = u.type === c.type;
+    const positionMatch = 
+      Math.abs(u.x - c.x) < positionTolerance &&
+      Math.abs(u.y - c.y) < positionTolerance;
+
+    console.log(`Forme ${i}: type=${typeMatch}, position=${positionMatch}`);
+    return typeMatch && positionMatch;
   });
 }
 
@@ -124,7 +176,7 @@ export async function POST(request: Request) {
     const session = await getSession(request);
     if (!session?.userId) {
       return NextResponse.json(
-        { error: 'Session expired. Please login again.' },
+        { error: 'Session expirée. Veuillez vous reconnecter.' },
         {
           status: 401,
           headers: {
@@ -134,6 +186,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // Prolonger la session
     await prisma.session.update({
       where: { id: session.id },
       data: { expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7) },
@@ -143,7 +196,7 @@ export async function POST(request: Request) {
 
     if (!childUserId && !parentUserId) {
       return NextResponse.json(
-        { error: 'Either childUserId or parentUserId is required' },
+        { error: 'childUserId ou parentUserId est requis' },
         { status: 400 }
       );
     }
@@ -157,18 +210,21 @@ export async function POST(request: Request) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Utilisateur non trouvé' }, { status: 404 });
     }
 
     if (isChildSubmission && user.role !== 'CHILD') {
-      return NextResponse.json({ error: 'Submitted user is not a child account' }, { status: 400 });
+      return NextResponse.json({ error: 'L\'utilisateur soumis n\'est pas un compte enfant' }, { status: 400 });
     }
 
     if (!isChildSubmission && user.role !== 'PARENT') {
-      return NextResponse.json({ error: 'Submitted user is not a parent account' }, { status: 400 });
+      return NextResponse.json({ error: 'L\'utilisateur soumis n\'est pas un compte parent' }, { status: 400 });
     }
 
     const parentId = isChildSubmission ? user.parentId : submittingUserId;
+
+    // Recalcul du score pour les questions interactives
+    let recalculatedScore = 0;
 
     const formattedAnswers = await Promise.all(
       answers.map(async (answer: any) => {
@@ -177,30 +233,44 @@ export async function POST(request: Request) {
           include: { correctAnswers: true },
         });
 
-        if (!question) return null;
+        if (!question) {
+          console.warn(`Question ${answer.questionId} non trouvée`);
+          return null;
+        }
 
         const correctAnswer = question.correctAnswers[0]?.answerValue ?? "";
 
-        const isCorrect = ['DRAWING', 'MATCHING', 'PATTERN'].includes(question.questionType)
-          ? evaluateInteractiveAnswer(question.questionType, JSON.stringify(answer.userAnswer), correctAnswer)
-          : answer.isCorrect;
+        let isCorrect = answer.isCorrect;
 
-        console.log(`Evaluating question ${answer.questionId}:`, {
-          type: question.questionType,
-          userAnswer: answer.userAnswer,
-          correctAnswer,
-          isCorrect,
-        });
+        // Réévaluation pour les questions interactives
+        if (['DRAWING', 'MATCHING', 'PATTERN'].includes(question.questionType)) {
+          isCorrect = evaluateInteractiveAnswer(
+            question.questionType, 
+            answer.userAnswer, 
+            correctAnswer
+          );
+          console.log(`✅ Question ${answer.questionId} réévaluée: ${isCorrect}`);
+        }
+
+        if (isCorrect) {
+          recalculatedScore++;
+        }
 
         return {
           questionId: answer.questionId,
           userAnswer: Array.isArray(answer.userAnswer)
+            ? JSON.stringify(answer.userAnswer)
+            : typeof answer.userAnswer === 'object'
             ? JSON.stringify(answer.userAnswer)
             : answer.userAnswer,
           isCorrect,
         };
       })
     );
+
+    const validAnswers = formattedAnswers.filter(Boolean);
+
+    console.log(`📊 Score final: ${recalculatedScore}/${totalQuestions} (original: ${score})`);
 
     const assessment = await prisma.assessment.create({
       data: {
@@ -209,10 +279,10 @@ export async function POST(request: Request) {
         userRole: isChildSubmission ? 'CHILD' : 'PARENT',
         subjectName: subject,
         gradeLevel: `GRADE_${grade}` as GradeLevel,
-        score,
+        score: recalculatedScore, // Utiliser le score recalculé
         totalQuestions,
         answers: {
-          create: formattedAnswers.filter(Boolean),
+          create: validAnswers,
         },
       },
       include: {
@@ -222,9 +292,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(assessment);
   } catch (error: any) {
-    console.error('Error creating assessment:', error);
+    console.error('Erreur lors de la création de l\'évaluation:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create assessment' },
+      { error: error.message || 'Échec de la création de l\'évaluation' },
       { status: 500 }
     );
   }

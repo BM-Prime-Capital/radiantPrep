@@ -1,5 +1,3 @@
-// ✅ DrawingCanvas.tsx complet avec capture d'image et support des trois modes
-
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -28,25 +26,22 @@ import {
   Brain,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 const arrowColors = ['#f87171', '#60a5fa', '#34d399', '#fbbf24', '#a78bfa', '#ec4899'];
-
-
-
-// Types
 
 type Mode = 'encircle' | 'matching' | 'pattern';
 
 interface DrawingCanvasProps {
   imageUrl: string;
   questionId: string;
-  questionText?: string; // Optional, used for analysis
+  questionText?: string;
   mode: Mode;
   onSelectionChange?: (data: any) => void;
   onDrawingChange?: (data: any) => void;
   onCaptureImage?: (dataUrl: string) => void;
   initialSelections?: any[];
-  initialDrawing?: any;
+  initialDrawing?: any[];
   canvasSize?: { width: number; height: number };
 }
 
@@ -59,12 +54,13 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   onDrawingChange,
   onCaptureImage,
   initialSelections = [],
-  initialDrawing = '',
+  initialDrawing = [],
   canvasSize,
 }) => {
   const [image] = useImage(imageUrl);
   const stageRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const [canvasWidth, setCanvasWidth] = useState(canvasSize?.width || 800);
   const [canvasHeight, setCanvasHeight] = useState(canvasSize?.height || 400);
@@ -83,18 +79,17 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
   const [history, setHistory] = useState<any[]>([]);
   const [future, setFuture] = useState<any[]>([]);
 
+  const [analysis, setAnalysis] = useState<{
+    score?: number;
+    feedback?: string;
+    loading?: boolean;
+    details?: any;
+  }>({});
+
   const pushToHistory = () => {
     setHistory(prev => [...prev, { circles, lines, shapes }]);
     setFuture([]);
   };
-
-  const [analysis, setAnalysis] = useState<{
-  score?: number;
-  feedback?: string;
-  loading?: boolean;
-}>({});
-
-
 
   const captureCanvas = () => {
     if (stageRef.current) {
@@ -109,8 +104,8 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
       if (containerRef.current) {
         const width = containerRef.current.offsetWidth;
         const ratio = image?.height && image?.width ? image.height / image.width : 0.75;
-        setCanvasWidth(width);
-        setCanvasHeight(width * ratio);
+        setCanvasWidth(Math.min(width, 800));
+        setCanvasHeight(Math.min(width * ratio, 600));
       }
     };
     resize();
@@ -118,89 +113,75 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     return () => window.removeEventListener('resize', resize);
   }, [image, canvasSize]);
 
-
-  // const handleAnalyze = async () => {
-  //   if (!stageRef.current) return;
-
-  //   setAnalysis({ loading: true });
-    
-  //   try {
-  //     const dataUrl = stageRef.current.toDataURL();
-  //     const base64Data = dataUrl.split(',')[1];
-
-  //     const response = await fetch('/api/analyze-drawing', {
-  //       method: 'POST',
-  //       headers: { 
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({
-  //         imageData: base64Data,
-  //         questionType: mode
-  //       })
-  //     });
-
-  //     if (!response.ok) {
-  //       throw new Error(`HTTP error! status: ${response.status}`);
-  //     }
-
-  //     const result = await response.json();
-  //     setAnalysis({
-  //       score: result.score,
-  //       feedback: result.feedback
-  //     });
-
-  //   } catch (error) {
-  //     console.error("Erreur d'analyse:", error);
-  //     setAnalysis({
-  //       feedback: error instanceof Error ? error.message : "Échec de l'analyse"
-  //     });
-  //   } finally {
-  //     setAnalysis(prev => ({ ...prev, loading: false }));
-  //   }
-  // };
-
-const handleAnalyze = async () => {
-  if (!stageRef.current || !questionId || !questionText) return;
-
-  setAnalysis({ loading: true });
-  
-  try {
-    // 1. Capture du canvas
-    const dataUrl = stageRef.current.toDataURL();
-    
-    // 2. Envoi à l'API avec le texte de la question
-    const response = await fetch('/api/analyze-drawing', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        imageData: dataUrl,
-        questionId,
-        questionText // Ajout du texte de la question
-      })
-    });
-
-    const result = await response.json();
-    
-    if (result.success) {
-      setAnalysis({
-        feedback: result.feedback,
-        details: result.details,
-        imagePath: result.imagePath
+  const handleAnalyze = async () => {
+    if (!stageRef.current || !questionId || !questionText) {
+      toast({
+        title: "Erreur",
+        description: "Impossible d'analyser sans question ou canvas",
+        variant: "destructive"
       });
-    } else {
-      throw new Error(result.error || 'Échec de l\'analyse');
+      return;
     }
 
-  } catch (error) {
-    setAnalysis({
-      feedback: error instanceof Error ? error.message : "Échec de l'analyse",
-      details: null
-    });
-  } finally {
-    setAnalysis(prev => ({ ...prev, loading: false }));
-  }
-};
+    setAnalysis({ loading: true });
+    
+    try {
+      const dataUrl = stageRef.current.toDataURL();
+      
+      // Préparer les données de dessin de l'utilisateur
+      const userDrawing = mode === 'encircle' ? circles : 
+                         mode === 'matching' ? lines : shapes;
+      
+      const response = await fetch('/api/analyze-drawing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageData: dataUrl,
+          questionId,
+          questionText,
+          userDrawing,
+          correctAnswer: null // Sera récupéré côté serveur si nécessaire
+        })
+      });
 
+      if (!response.ok) {
+        throw new Error('Erreur du serveur');
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setAnalysis({
+          feedback: result.feedback,
+          score: result.score,
+          details: result.details,
+        });
+        
+        toast({
+          title: "Analyse terminée !",
+          description: `Score: ${result.score}/100`,
+          variant: "default"
+        });
+      } else {
+        throw new Error(result.error || 'Échec de l\'analyse');
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Échec de l'analyse";
+      setAnalysis({
+        feedback: errorMessage,
+        details: null
+      });
+      
+      toast({
+        title: "Erreur d'analyse",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setAnalysis(prev => ({ ...prev, loading: false }));
+    }
+  };
 
   const handleClick = (e: any) => {
     const stage = e.target.getStage();
@@ -214,7 +195,7 @@ const handleAnalyze = async () => {
         : { x: pointer.x, y: pointer.y, radius: 30, type: 'circle' };
       const updated = [...circles, newCircle];
       setCircles(updated);
-      onSelectionChange?.(updated.map(c => ({ x: c.x, y: c.y, radius: c.radius || c.radiusX, type: c.type })));
+      onSelectionChange?.(updated);
     }
 
     if (mode === 'pattern') {
@@ -257,8 +238,7 @@ const handleAnalyze = async () => {
     if (mode === 'encircle') {
       const updated = circles.filter((_, i) => i !== selectedIndex);
       setCircles(updated);
-      console.log("🌀 Sending circles to parent:", updated);
-      onSelectionChange?.(updated.map(c => ({ x: c.x, y: c.y, radius: c.radius || c.radiusX, type: c.type })));
+      onSelectionChange?.(updated);
     } else if (mode === 'matching') {
       const updated = lines.filter((_, i) => i !== selectedIndex);
       setLines(updated);
@@ -286,7 +266,6 @@ const handleAnalyze = async () => {
     if (!last) return;
     setFuture(prev => [...prev, { circles, lines, shapes }]);
     setCircles(last.circles);
-    console.log("🌀 Sending circles to parent:", last.circles);
     setLines(last.lines);
     setShapes(last.shapes);
     onSelectionChange?.(last.circles);
@@ -309,29 +288,20 @@ const handleAnalyze = async () => {
   return (
     <div className="w-full space-y-4" ref={containerRef}>
       {/* Toolbar */}
-      <div className="flex gap-2 flex-wrap items-center px-2">
+      <div className="flex gap-2 flex-wrap items-center px-2 py-3 bg-gray-50 rounded-lg">
         {mode === 'encircle' && (
           <>
             <button onClick={() => setTool('draw')} title="Dessiner un cercle"
-              className={cn('p-1 rounded hover:bg-gray-100', tool === 'draw' && 'bg-blue-200 text-blue-800')}>
+              className={cn('p-2 rounded hover:bg-gray-200 transition-colors', tool === 'draw' && 'bg-blue-200 text-blue-800')}>
               <CircleIcon className="w-5 h-5" />
             </button>
             <button onClick={() => setTool('select')} title="Sélectionner"
-              className={cn('p-1 rounded hover:bg-gray-100', tool === 'select' && 'bg-blue-200 text-blue-800')}>
+              className={cn('p-2 rounded hover:bg-gray-200 transition-colors', tool === 'select' && 'bg-blue-200 text-blue-800')}>
               <Move className="w-5 h-5" />
             </button>
             <button onClick={() => setIsOval(!isOval)} title="Ovale"
-              className={cn('p-1 rounded hover:bg-gray-100', isOval && 'bg-blue-200 text-blue-800')}>
+              className={cn('p-2 rounded hover:bg-gray-200 transition-colors', isOval && 'bg-blue-200 text-blue-800')}>
               <Ellipsis className="w-5 h-5" />
-            </button>
-            <button 
-              onClick={() => {
-                captureCanvas();
-              }} 
-              title="Capturer l'image" 
-              className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded ml-auto"
-            >
-              <Camera className="w-5 h-5" />
             </button>
           </>
         )}
@@ -339,63 +309,63 @@ const handleAnalyze = async () => {
         {mode === 'pattern' && (
           <>
             <button onClick={() => setShapeType('circle')} title="Cercle"
-              className={cn('p-1 rounded hover:bg-gray-100', shapeType === 'circle' && 'bg-blue-200 text-blue-800')}>
+              className={cn('p-2 rounded hover:bg-gray-200 transition-colors', shapeType === 'circle' && 'bg-blue-200 text-blue-800')}>
               <CircleIcon className="w-5 h-5" />
             </button>
             <button onClick={() => setShapeType('triangle')} title="Triangle"
-              className={cn('p-1 rounded hover:bg-gray-100', shapeType === 'triangle' && 'bg-blue-200 text-blue-800')}>
+              className={cn('p-2 rounded hover:bg-gray-200 transition-colors', shapeType === 'triangle' && 'bg-blue-200 text-blue-800')}>
               <Triangle className="w-5 h-5" />
             </button>
             <button onClick={() => setShapeType('square')} title="Carré"
-              className={cn('p-1 rounded hover:bg-gray-100', shapeType === 'square' && 'bg-blue-200 text-blue-800')}>
+              className={cn('p-2 rounded hover:bg-gray-200 transition-colors', shapeType === 'square' && 'bg-blue-200 text-blue-800')}>
               <Square className="w-5 h-5" />
             </button>
           </>
         )}
 
         {/* Actions */}
-        <button onClick={handleDeleteSelected} title="Supprimer" className="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded">
-          <Trash2 className="w-5 h-5" />
-        </button>
-        <button onClick={handleClearAll} title="Réinitialiser" className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded">
-          <RotateCw className="w-5 h-5" />
-        </button>
-        <button onClick={undo} disabled={history.length === 0} title="Annuler"
-          className="p-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded disabled:opacity-50">
-          <Undo2 className="w-5 h-5" />
-        </button>
-        <button onClick={redo} disabled={future.length === 0} title="Rétablir"
-          className="p-2 bg-green-100 hover:bg-green-200 text-green-700 rounded disabled:opacity-50">
-          <Redo2 className="w-5 h-5" />
-        </button>
+        <div className="flex gap-2 ml-auto">
+          <button onClick={handleDeleteSelected} title="Supprimer la sélection" 
+            className="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded transition-colors"
+            disabled={selectedIndex === null}>
+            <Trash2 className="w-5 h-5" />
+          </button>
+          <button onClick={handleClearAll} title="Tout effacer" 
+            className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded transition-colors">
+            <RotateCw className="w-5 h-5" />
+          </button>
+          <button onClick={undo} disabled={history.length === 0} title="Annuler"
+            className="p-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 rounded disabled:opacity-50 transition-colors">
+            <Undo2 className="w-5 h-5" />
+          </button>
+          <button onClick={redo} disabled={future.length === 0} title="Rétablir"
+            className="p-2 bg-green-100 hover:bg-green-200 text-green-700 rounded disabled:opacity-50 transition-colors">
+            <Redo2 className="w-5 h-5" />
+          </button>
+          <button onClick={captureCanvas} title="Capturer l'image" 
+            className="p-2 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded transition-colors">
+            <Camera className="w-5 h-5" />
+          </button>
           <button 
-    onClick={handleAnalyze}
-    disabled={analysis.loading}
-    className={cn(
-      "p-2 rounded ml-auto",
-      analysis.loading ? "bg-gray-200" : "bg-purple-100 hover:bg-purple-200 text-purple-800"
-    )}
-    title="Analyser avec Google Vision"
-  >
-    {analysis.loading ? (
-      <span className="flex items-center">
-        <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" fill="none" strokeWidth="4" className="opacity-25" />
-          <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" className="opacity-75" />
-        </svg>
-        Analyse...
-      </span>
-    ) : (
-      <>
-        <Brain className="inline mr-1 h-4 w-4" />
-        Analyser
-      </>
-    )}
-  </button>
+            onClick={handleAnalyze}
+            disabled={analysis.loading}
+            className={cn(
+              "p-2 rounded transition-colors",
+              analysis.loading ? "bg-gray-200 cursor-not-allowed" : "bg-purple-100 hover:bg-purple-200 text-purple-800"
+            )}
+            title="Analyser avec l'IA"
+          >
+            {analysis.loading ? (
+              <div className="w-5 h-5 animate-spin border-2 border-purple-600 border-t-transparent rounded-full" />
+            ) : (
+              <Brain className="w-5 h-5" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Canvas */}
-      <div className="overflow-auto border rounded-md">
+      <div className="overflow-auto border-2 border-gray-200 rounded-lg bg-white">
         <Stage
           width={canvasWidth}
           height={canvasHeight}
@@ -403,7 +373,6 @@ const handleAnalyze = async () => {
           onClick={handleClick}
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
-          style={{ background: '#f9fafb' }}
         >
           <Layer>
             {image && <KonvaImage image={image} width={canvasWidth} height={canvasHeight} />}
@@ -417,57 +386,35 @@ const handleAnalyze = async () => {
                       y={circle.y}
                       radiusX={circle.radiusX}
                       radiusY={circle.radiusY}
-                      stroke="red"
-                      strokeWidth={2}
+                      stroke={selectedIndex === index ? "blue" : "red"}
+                      strokeWidth={selectedIndex === index ? 3 : 2}
                       draggable={tool === 'select'}
                       onClick={() => tool === 'select' && setSelectedIndex(index)}
                       onDragEnd={(e) => {
-                        setCircles(prev => {
-                          const updated = [...prev];
-                          updated[index].x = e.target.x();
-                          updated[index].y = e.target.y();
-                          return updated;
-                        });
+                        const updated = [...circles];
+                        updated[index].x = e.target.x();
+                        updated[index].y = e.target.y();
+                        setCircles(updated);
+                        onSelectionChange?.(updated);
                       }}
                     />
                   ) : (
-                    <>
-                      <Circle
-                        x={circle.x}
-                        y={circle.y}
-                        radius={circle.radius}
-                        stroke="red"
-                        strokeWidth={2}
-                        draggable={tool === 'select'}
-                        onClick={() => tool === 'select' && setSelectedIndex(index)}
-                        onDragEnd={(e) => {
-                          setCircles(prev => {
-                            const updated = [...prev];
-                            updated[index].x = e.target.x();
-                            updated[index].y = e.target.y();
-                            return updated;
-                          });
-                        }}
-                      />
-                      {tool === 'select' && selectedIndex === index && (
-                        <Circle
-                          x={circle.x + circle.radius}
-                          y={circle.y}
-                          radius={5}
-                          fill="red"
-                          draggable
-                          onDragMove={(e) => {
-                            const dx = e.target.x() - circle.x;
-                            setCircles(prev => {
-                              const updated = [...prev];
-                              updated[index].radius = Math.max(10, dx);
-                              return updated;
-                            });
-                          }}
-                        />
-                      )}
-                    </>
-
+                    <Circle
+                      x={circle.x}
+                      y={circle.y}
+                      radius={circle.radius}
+                      stroke={selectedIndex === index ? "blue" : "red"}
+                      strokeWidth={selectedIndex === index ? 3 : 2}
+                      draggable={tool === 'select'}
+                      onClick={() => tool === 'select' && setSelectedIndex(index)}
+                      onDragEnd={(e) => {
+                        const updated = [...circles];
+                        updated[index].x = e.target.x();
+                        updated[index].y = e.target.y();
+                        setCircles(updated);
+                        onSelectionChange?.(updated);
+                      }}
+                    />
                   )}
                 </React.Fragment>
               ))}
@@ -477,9 +424,9 @@ const handleAnalyze = async () => {
                 <Arrow
                   key={index}
                   points={line.points}
-                  stroke={line.color}
-                  fill={line.color}
-                  strokeWidth={3}
+                  stroke={selectedIndex === index ? "blue" : line.color}
+                  fill={selectedIndex === index ? "blue" : line.color}
+                  strokeWidth={selectedIndex === index ? 4 : 3}
                   pointerLength={10}
                   pointerWidth={10}
                   tension={0.5}
@@ -488,13 +435,12 @@ const handleAnalyze = async () => {
                   onDragEnd={(e) => {
                     const dx = e.target.x();
                     const dy = e.target.y();
-                    setLines(prev => {
-                      const updated = [...prev];
-                        updated[index].points = updated[index].points.map((val: number, i: number) =>
-                        i % 2 === 0 ? val + dx : val + dy
-                        );
-                      return updated;
-                    });
+                    const updated = [...lines];
+                    updated[index].points = updated[index].points.map((val: number, i: number) =>
+                      i % 2 === 0 ? val + dx : val + dy
+                    );
+                    setLines(updated);
+                    onDrawingChange?.(updated);
                   }}
                 />
               ))}
@@ -516,17 +462,16 @@ const handleAnalyze = async () => {
                   key: index,
                   x: shape.x,
                   y: shape.y,
-                  stroke: 'black',
-                  strokeWidth: 1,
+                  stroke: selectedIndex === index ? 'blue' : 'black',
+                  strokeWidth: selectedIndex === index ? 3 : 1,
                   draggable: true,
                   onClick: () => setSelectedIndex(index),
                   onDragEnd: (e: any) => {
-                    setShapes(prev => {
-                      const updated = [...prev];
-                      updated[index].x = e.target.x();
-                      updated[index].y = e.target.y();
-                      return updated;
-                    });
+                    const updated = [...shapes];
+                    updated[index].x = e.target.x();
+                    updated[index].y = e.target.y();
+                    setShapes(updated);
+                    onDrawingChange?.(updated);
                   }
                 };
                 if (shape.type === 'triangle') {
@@ -540,20 +485,35 @@ const handleAnalyze = async () => {
           </Layer>
         </Stage>
       </div>
+
       {/* Résultats d'analyse */}
-{analysis.feedback && (
-  <div className={`mt-4 p-3 rounded-lg border ${
-    (analysis.score || 0) > 70 
-      ? "bg-green-50 border-green-200" 
-      : "bg-orange-50 border-orange-200"
-  }`}>
-    <div className="flex items-center gap-2">
-      <span className="font-medium">Résultat :</span>
-      <span>{analysis.score}/100</span>
-    </div>
-    <p className="mt-1 text-sm">{analysis.feedback}</p>
-  </div>
-)}
+      {analysis.feedback && (
+        <div className={cn(
+          "mt-4 p-4 rounded-lg border transition-all",
+          (analysis.score || 0) > 70 
+            ? "bg-green-50 border-green-200" 
+            : "bg-orange-50 border-orange-200"
+        )}>
+          <div className="flex items-center gap-2 mb-2">
+            <Brain className="h-5 w-5 text-purple-600" />
+            <span className="font-medium">Analyse IA :</span>
+            {analysis.score && <span className="px-2 py-1 bg-white rounded text-sm font-bold">{analysis.score}/100</span>}
+          </div>
+          <p className="text-sm">{analysis.feedback}</p>
+          {analysis.details?.visionAnalysis && (
+            <div className="mt-2 text-xs text-gray-600">
+              Objets détectés: {analysis.details.visionAnalysis.objectsDetected} | 
+              Texte détecté: {analysis.details.visionAnalysis.textDetected}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* État actuel */}
+      <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+        Mode: {mode} | Éléments: {mode === 'encircle' ? circles.length : mode === 'matching' ? lines.length : shapes.length}
+        {selectedIndex !== null && ` | Sélectionné: ${selectedIndex + 1}`}
+      </div>
     </div>
   );
 };
