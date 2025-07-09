@@ -1,9 +1,11 @@
 import { ImageAnnotatorClient } from '@google-cloud/vision';
+import path from 'path';
 
-// Configuration du client Google Vision
+const keyPath = path.join(process.cwd(), process.env.GOOGLE_APPLICATION_CREDENTIALS || '');
+console.log('[GOOGLE KEY PATH]:', keyPath);
+
 const vision = new ImageAnnotatorClient({
-  // Les credentials seront automatiquement détectés depuis les variables d'environnement
-  // ou depuis le fichier de service account
+  keyFilename: keyPath
 });
 
 export interface VisionAnalysisResult {
@@ -16,11 +18,6 @@ export interface VisionAnalysisResult {
       width: number;
       height: number;
     };
-  }>;
-  annotations: Array<{
-    type: 'circle' | 'line' | 'shape';
-    confidence: number;
-    coordinates: number[];
   }>;
   textDetections: Array<{
     text: string;
@@ -35,26 +32,10 @@ export interface VisionAnalysisResult {
 }
 
 export class VisionAnalyzer {
-  /**
-   * Analyse une image avec Google Vision API
-   */
-  static async analyzeImage(imageBuffer: Buffer): Promise<VisionAnalysisResult> {
+  static async analyzeImage(imageBuffer: Buffer, imageWidth = 800, imageHeight = 400): Promise<VisionAnalysisResult> {
     try {
-      // Détection d'objets
-      const [objectsResult] = await vision.objectLocalization({
-        image: { content: imageBuffer },
-      });
-
-      // Détection de texte
-      const [textResult] = await vision.textDetection({
-        image: { content: imageBuffer },
-      });
-
-      // Détection de formes géométriques (utilise l'analyse d'image générale)
-      const [labelResult] = await vision.labelDetection({
-        image: { content: imageBuffer },
-        maxResults: 20,
-      });
+      const [objectsResult] = await vision.objectLocalization({ image: { content: imageBuffer } });
+      const [textResult] = await vision.textDetection({ image: { content: imageBuffer } });
 
       const objects = objectsResult.localizedObjectAnnotations?.map(obj => {
         const vertices = obj.boundingPoly?.normalizedVertices || [];
@@ -67,10 +48,10 @@ export class VisionAnalyzer {
           name: obj.name || 'unknown',
           confidence: obj.score || 0,
           boundingBox: {
-            x: minX * 800, // Conversion en pixels (assumant 800px de largeur)
-            y: minY * 400, // Conversion en pixels (assumant 400px de hauteur)
-            width: (maxX - minX) * 800,
-            height: (maxY - minY) * 400,
+            x: minX * imageWidth,
+            y: minY * imageHeight,
+            width: (maxX - minX) * imageWidth,
+            height: (maxY - minY) * imageHeight,
           },
         };
       }) || [];
@@ -84,7 +65,7 @@ export class VisionAnalyzer {
 
         return {
           text: text.description || '',
-          confidence: 0.9, // Google Vision ne fournit pas de score pour le texte
+          confidence: 0.9,
           boundingBox: {
             x: minX,
             y: minY,
@@ -94,56 +75,13 @@ export class VisionAnalyzer {
         };
       }) || [];
 
-      // Analyse des annotations dessinées (cercles, lignes, etc.)
-      const annotations = await this.detectDrawnAnnotations(imageBuffer, labelResult.labelAnnotations || []);
-
-      return {
-        objects,
-        annotations,
-        textDetections,
-      };
+      return { objects, textDetections };
     } catch (error) {
       console.error('Erreur lors de l\'analyse Vision API:', error);
       throw new Error('Échec de l\'analyse d\'image');
     }
   }
 
-  /**
-   * Détecte les annotations dessinées (cercles, lignes) dans l'image
-   */
-  private static async detectDrawnAnnotations(imageBuffer: Buffer, labels: any[]): Promise<VisionAnalysisResult['annotations']> {
-    const annotations: VisionAnalysisResult['annotations'] = [];
-
-    // Recherche d'indices de formes géométriques dans les labels
-    const shapeLabels = labels.filter(label => 
-      ['circle', 'oval', 'line', 'arrow', 'rectangle', 'triangle', 'shape'].some(shape => 
-        label.description?.toLowerCase().includes(shape)
-      )
-    );
-
-    shapeLabels.forEach(label => {
-      const description = label.description?.toLowerCase() || '';
-      let type: 'circle' | 'line' | 'shape' = 'shape';
-
-      if (description.includes('circle') || description.includes('oval')) {
-        type = 'circle';
-      } else if (description.includes('line') || description.includes('arrow')) {
-        type = 'line';
-      }
-
-      annotations.push({
-        type,
-        confidence: label.score || 0,
-        coordinates: [], // Les coordonnées exactes nécessiteraient une analyse plus poussée
-      });
-    });
-
-    return annotations;
-  }
-
-  /**
-   * Compare les objets détectés avec les réponses attendues
-   */
   static compareWithExpectedAnswer(
     visionResult: VisionAnalysisResult,
     userDrawing: any[],
@@ -160,63 +98,117 @@ export class VisionAnalyzer {
     };
 
     try {
-      // Analyse basée sur le type de question
       if (questionText.toLowerCase().includes('circle') || questionText.toLowerCase().includes('encercl')) {
-        score = this.evaluateCirclingTask(visionResult, userDrawing, correctAnswer);
-        feedback = this.generateCirclingFeedback(score, visionResult.objects);
+        const result = this.evaluateCirclingTask(visionResult, userDrawing, correctAnswer);
+        score = result.score;
+        feedback = result.feedback;
+        details.circledObjects = result.circledObjects;
       } else if (questionText.toLowerCase().includes('match') || questionText.toLowerCase().includes('connect')) {
         score = this.evaluateMatchingTask(visionResult, userDrawing, correctAnswer);
         feedback = this.generateMatchingFeedback(score, visionResult.objects);
-      } else if (questionText.toLowerCase().includes('pattern')) {
-        score = this.evaluatePatternTask(visionResult, userDrawing, correctAnswer);
-        feedback = this.generatePatternFeedback(score, visionResult.objects);
       } else {
-        // Analyse générale
         score = this.evaluateGeneralTask(visionResult, userDrawing);
         feedback = this.generateGeneralFeedback(score, visionResult.objects);
       }
 
-      // Ajustement du score basé sur la précision de la détection
       const detectionQuality = this.assessDetectionQuality(visionResult);
       score = Math.round(score * detectionQuality);
-
       details.detectionQuality = detectionQuality;
       details.rawScore = score;
 
     } catch (error) {
       console.error('Erreur lors de la comparaison:', error);
-      score = 50; // Score par défaut en cas d'erreur
+      score = 50;
       feedback = 'Analyse partiellement réussie. Votre travail a été enregistré.';
     }
 
     return { score: Math.max(0, Math.min(100, score)), feedback, details };
   }
 
-  private static evaluateCirclingTask(visionResult: VisionAnalysisResult, userDrawing: any[], correctAnswer: any): number {
+  private static evaluateCirclingTask(
+    visionResult: VisionAnalysisResult,
+    userDrawing: any[],
+    correctAnswer: any
+  ): { score: number; feedback: string; circledObjects: string[] } {
     const detectedObjects = visionResult.objects;
     const userCircles = userDrawing.filter(item => item.type === 'circle' || item.radius);
 
-    if (userCircles.length === 0) return 0;
+    if (userCircles.length === 0) {
+      return {
+        score: 0,
+        feedback: 'Aucun cercle détecté. Veuillez encercler les objets demandés.',
+        circledObjects: []
+      };
+    }
 
-    let correctCircles = 0;
-    const tolerance = 50; // Tolérance en pixels
+    const isPointInsideCircle = (px: number, py: number, cx: number, cy: number, r: number) => {
+      const dx = px - cx;
+      const dy = py - cy;
+      return dx * dx + dy * dy <= r * r;
+    };
+
+    const circledObjects: string[] = [];
+    const tolerance = 50;
 
     userCircles.forEach(circle => {
-      // Vérifier si le cercle englobe un objet détecté
-      const englobesObject = detectedObjects.some(obj => {
-        const objCenterX = obj.boundingBox.x + obj.boundingBox.width / 2;
-        const objCenterY = obj.boundingBox.y + obj.boundingBox.height / 2;
-        const distance = Math.sqrt(
-          Math.pow(circle.x - objCenterX, 2) + Math.pow(circle.y - objCenterY, 2)
+      console.log('[🔵 CERCLE UTILISATEUR]', circle);
+
+      const matchedObject = detectedObjects.find(obj => {
+        const bb = obj.boundingBox;
+
+        // Points à tester
+        const pointsToCheck = [
+          // Centre
+          [bb.x + bb.width / 2, bb.y + bb.height / 2],
+          // Coins
+          [bb.x, bb.y],
+          [bb.x + bb.width, bb.y],
+          [bb.x, bb.y + bb.height],
+          [bb.x + bb.width, bb.y + bb.height],
+        ];
+
+        const fits = pointsToCheck.some(([px, py]) =>
+          isPointInsideCircle(px, py, circle.x, circle.y, circle.radius + tolerance)
         );
-        return distance <= (circle.radius || 30) + tolerance;
+
+        console.log(`[📦 OBJET TESTÉ] ${obj.name} | fits: ${fits}`);
+        return fits;
       });
 
-      if (englobesObject) correctCircles++;
+      if (matchedObject) {
+        circledObjects.push(matchedObject.name);
+      }
     });
 
-    return Math.round((correctCircles / Math.max(userCircles.length, 1)) * 100);
+    let score = 0;
+    if (correctAnswer) {
+      const correctMatches = circledObjects.filter(objName =>
+        correctAnswer.toLowerCase().includes(objName.toLowerCase())
+      ).length;
+      score = Math.round((correctMatches / Math.max(circledObjects.length, 1)) * 100);
+    } else {
+      score = Math.round((circledObjects.length / userCircles.length) * 100);
+    }
+
+    let feedback = '';
+    if (circledObjects.length === 0) {
+      feedback = 'Aucun objet détecté dans vos cercles. Essayez de dessiner des cercles plus précis autour des objets.';
+    } else if (score >= 80) {
+      feedback = `Excellent travail ! Vous avez correctement encerclé ${circledObjects.length} objet(s): ${circledObjects.join(', ')}.`;
+    } else if (score >= 60) {
+      feedback = `Bon travail ! Vous avez encerclé ${circledObjects.length} objet(s): ${circledObjects.join(', ')}. Vérifiez que ce sont bien les objets demandés.`;
+    } else {
+      feedback = `Vous avez encerclé ${circledObjects.length} objet(s): ${circledObjects.join(', ')}. Continuez vos efforts pour identifier les bons objets.`;
+    }
+
+    return {
+      score,
+      feedback,
+      circledObjects
+    };
   }
+
+
 
   private static evaluateMatchingTask(visionResult: VisionAnalysisResult, userDrawing: any[], correctAnswer: any): number {
     const lines = userDrawing.filter(item => item.points && item.points.length >= 4);

@@ -24,6 +24,9 @@ import {
   Square,
   Camera,
   Brain,
+  Plus,
+  Minus,
+  MousePointer,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -78,6 +81,33 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
 
   const [history, setHistory] = useState<any[]>([]);
   const [future, setFuture] = useState<any[]>([]);
+
+  const [isResizing, setIsResizing] = useState<'enlarge' | 'shrink' | false>(false);
+
+  const handleResize = (direction: 'enlarge' | 'shrink') => {
+    if (selectedIndex === null) return;
+    
+    pushToHistory();
+    const updated = [...circles];
+    const scaleBy = 1.1;
+
+    if (updated[selectedIndex].type === 'oval') {
+      if (direction === 'enlarge') {
+        updated[selectedIndex].radiusX = Math.min(200, updated[selectedIndex].radiusX * scaleBy);
+        updated[selectedIndex].radiusY = Math.min(200, updated[selectedIndex].radiusY * scaleBy);
+      } else {
+        updated[selectedIndex].radiusX = Math.max(5, updated[selectedIndex].radiusX / scaleBy);
+        updated[selectedIndex].radiusY = Math.max(5, updated[selectedIndex].radiusY / scaleBy);
+      }
+    } else {
+      updated[selectedIndex].radius = direction === 'enlarge'
+        ? Math.min(200, updated[selectedIndex].radius * scaleBy)
+        : Math.max(5, updated[selectedIndex].radius / scaleBy);
+    }
+
+    setCircles(updated);
+    onSelectionChange?.(updated);
+  };
 
   const [analysis, setAnalysis] = useState<{
     score?: number;
@@ -306,6 +336,23 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           </>
         )}
 
+        {mode === 'encircle' && tool === 'select' && selectedIndex !== null && (
+          <div className="flex gap-2">
+            <button 
+              onClick={() => handleResize('enlarge')} 
+              title="Agrandir"
+              className="p-2 rounded hover:bg-gray-200 transition-colors bg-green-100 text-green-800">
+              <Plus className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={() => handleResize('shrink')} 
+              title="Réduire"
+              className="p-2 rounded hover:bg-gray-200 transition-colors bg-red-100 text-red-800">
+              <Minus className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
         {mode === 'pattern' && (
           <>
             <button onClick={() => setShapeType('circle')} title="Cercle"
@@ -388,7 +435,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
                       radiusY={circle.radiusY}
                       stroke={selectedIndex === index ? "blue" : "red"}
                       strokeWidth={selectedIndex === index ? 3 : 2}
-                      draggable={tool === 'select'}
+                      draggable={tool === 'select' && !isResizing}
                       onClick={() => tool === 'select' && setSelectedIndex(index)}
                       onDragEnd={(e) => {
                         const updated = [...circles];
@@ -396,6 +443,34 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
                         updated[index].y = e.target.y();
                         setCircles(updated);
                         onSelectionChange?.(updated);
+                      }}
+                      onMouseEnter={() => {
+                        if (isResizing && selectedIndex === index) {
+                          stageRef.current.container().style.cursor = 'ns-resize';
+                        }
+                      }}
+                      onMouseLeave={() => {
+                        if (isResizing) {
+                          stageRef.current.container().style.cursor = 'default';
+                        }
+                      }}
+                      onWheel={(e) => {
+                        if (isResizing && selectedIndex === index) {
+                          e.evt.preventDefault();
+                          const scaleBy = 1.1;
+                          const updated = [...circles];
+                          
+                          if (isResizing === 'enlarge') {
+                            updated[index].radiusX = Math.min(200, updated[index].radiusX * scaleBy);
+                            updated[index].radiusY = Math.min(200, updated[index].radiusY * scaleBy);
+                          } else {
+                            updated[index].radiusX = Math.max(5, updated[index].radiusX / scaleBy);
+                            updated[index].radiusY = Math.max(5, updated[index].radiusY / scaleBy);
+                          }
+                          
+                          setCircles(updated);
+                          onSelectionChange?.(updated);
+                        }
                       }}
                     />
                   ) : (
@@ -405,7 +480,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
                       radius={circle.radius}
                       stroke={selectedIndex === index ? "blue" : "red"}
                       strokeWidth={selectedIndex === index ? 3 : 2}
-                      draggable={tool === 'select'}
+                      draggable={tool === 'select' && !isResizing}
                       onClick={() => tool === 'select' && setSelectedIndex(index)}
                       onDragEnd={(e) => {
                         const updated = [...circles];
@@ -413,6 +488,31 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
                         updated[index].y = e.target.y();
                         setCircles(updated);
                         onSelectionChange?.(updated);
+                      }}
+                      onMouseEnter={() => {
+                        if (isResizing && selectedIndex === index) {
+                          stageRef.current.container().style.cursor = 'ns-resize';
+                        }
+                      }}
+                      onMouseLeave={() => {
+                        if (isResizing) {
+                          stageRef.current.container().style.cursor = 'default';
+                        }
+                      }}
+                      onWheel={(e) => {
+                        if (isResizing && selectedIndex === index) {
+                          e.evt.preventDefault();
+                          const scaleBy = 1.1;
+                          const updated = [...circles];
+                          const newRadius = isResizing === 'enlarge' 
+                            ? updated[index].radius * scaleBy
+                            : updated[index].radius / scaleBy;
+                          
+                          // Limiter la taille min/max
+                          updated[index].radius = Math.max(5, Math.min(200, newRadius));
+                          setCircles(updated);
+                          onSelectionChange?.(updated);
+                        }
                       }}
                     />
                   )}
