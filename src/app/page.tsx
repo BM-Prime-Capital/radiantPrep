@@ -55,131 +55,129 @@ export default async function HomePage() {
       </section>
 
       {/* Features Section - How It Works */}
-<section className="container mx-auto px-6 max-w-7xl py-20">
-  <div className="text-center mb-20">
-    <span className="inline-block px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium mb-4 shadow-sm">
-      Our Learning Approach
-    </span>
-    <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
-      How <span className="text-blue-600">RadiantPrep</span> Works
-    </h2>
-    <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-      A structured program that makes learning engaging for students and insightful for educators
-    </p>
-  </div>
-
-  {/* Cards Section */}
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-28 relative">
-    <div className="hidden md:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-blue-100 via-purple-200 to-green-100 -translate-y-1/2 -z-10"></div>
-
-    {[
-      {
-        icon: <BookOpen className="w-8 h-8 text-white" />,
-        title: "Interactive Assessments",
-        description: "Engaging exercises with clear objectives",
-        gradient: "from-blue-400 via-blue-500 to-blue-600",
-        ring: "ring-blue-300/40"
-      },
-      {
-        icon: <BarChart3 className="w-8 h-8 text-white" />,
-        title: "Progress Tracking",
-        description: "Detailed dashboards show learning growth",
-        gradient: "from-purple-400 via-purple-500 to-purple-600",
-        ring: "ring-purple-300/40"
-      },
-      {
-        icon: <Users className="w-8 h-8 text-white" />,
-        title: "Practical Insights",
-        description: "Actionable recommendations for improvement",
-        gradient: "from-green-400 via-green-500 to-green-600",
-        ring: "ring-green-300/40"
-      }
-    ].map((step, index) => (
-      <div
-        key={index}
-        className={`relative p-8 rounded-3xl shadow-2xl bg-white hover:translate-y-[-4px] transition-transform duration-300 border border-gray-100`}
-      >
-        <div className="absolute -top-5 -right-5 w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center text-lg font-bold text-gray-600 z-10">
-          {index + 1}
+      <section className="container mx-auto px-6 max-w-7xl py-20">
+        <div className="text-center mb-20">
+          <span className="inline-block px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium mb-4 shadow-sm">
+            Our Learning Approach
+          </span>
+          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4">
+            How <span className="text-blue-600">RadiantPrep</span> Works
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            A structured program that makes learning engaging for students and insightful for educators
+          </p>
         </div>
 
-        <div className={`w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br ${step.gradient} shadow-lg flex items-center justify-center ring-4 ${step.ring} transition-transform group-hover:scale-110`}>
-          {step.icon}
-        </div>
+        {/* Cards Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-28 relative">
+          <div className="hidden md:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-blue-100 via-purple-200 to-green-100 -translate-y-1/2 -z-10"></div>
 
-        <h3 className="text-xl font-semibold text-center text-gray-800 mb-3">{step.title}</h3>
-        <p className="text-center text-gray-600">{step.description}</p>
+          {[
+            {
+              icon: <BookOpen className="w-8 h-8 text-white" />,
+              title: "Interactive Assessments",
+              description: "Engaging exercises with clear objectives",
+              gradient: "from-blue-400 via-blue-500 to-blue-600",
+              ring: "ring-blue-300/40"
+            },
+            {
+              icon: <BarChart3 className="w-8 h-8 text-white" />,
+              title: "Progress Tracking",
+              description: "Detailed dashboards show learning growth",
+              gradient: "from-purple-400 via-purple-500 to-purple-600",
+              ring: "ring-purple-300/40"
+            },
+            {
+              icon: <Users className="w-8 h-8 text-white" />,
+              title: "Practical Insights",
+              description: "Actionable recommendations for improvement",
+              gradient: "from-green-400 via-green-500 to-green-600",
+              ring: "ring-green-300/40"
+            }
+          ].map((step, index) => (
+            <div
+              key={index}
+              className={`relative p-8 rounded-3xl shadow-2xl bg-white hover:translate-y-[-4px] transition-transform duration-300 border border-gray-100`}
+            >
+              <div className="absolute -top-5 -right-5 w-12 h-12 rounded-full bg-white shadow-md flex items-center justify-center text-lg font-bold text-gray-600 z-10">
+                {index + 1}
+              </div>
 
-        <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex space-x-1">
-          {[...Array(3)].map((_, i) => (
-            <span
-              key={i}
-              className={`w-2 h-2 rounded-full ${
-                i === index % 3 ? 'bg-blue-500' : 'bg-gray-300'
-              } opacity-70 transition-opacity`}
-            ></span>
+              <div className={`w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br ${step.gradient} shadow-lg flex items-center justify-center ring-4 ${step.ring} transition-transform group-hover:scale-110`}>
+                {step.icon}
+              </div>
+
+              <h3 className="text-xl font-semibold text-center text-gray-800 mb-3">{step.title}</h3>
+              <p className="text-center text-gray-600">{step.description}</p>
+
+              <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex space-x-1">
+                {[...Array(3)].map((_, i) => (
+                  <span
+                    key={i}
+                    className={`w-2 h-2 rounded-full ${
+                      i === index % 3 ? 'bg-blue-500' : 'bg-gray-300'
+                    } opacity-70 transition-opacity`}
+                  ></span>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
-      </div>
-    ))}
-  </div>
 
-  {/* Dual Pathway Section */}
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-20">
-    {/* Student */}
-    <div className="group relative bg-gradient-to-br from-blue-50 to-white rounded-3xl border border-blue-100 shadow-2xl hover:shadow-3xl transition-all overflow-hidden">
-      <div className="absolute inset-0 opacity-30 group-hover:opacity-50 bg-gradient-to-br from-blue-100 to-blue-200 transition-opacity"></div>
-      <div className="relative z-10 p-8 flex flex-col md:flex-row items-center gap-6">
-        <div className="w-24 h-24 flex items-center justify-center bg-white rounded-full shadow-inner ring-4 ring-blue-300/30">
-          <Users className="w-10 h-10 text-blue-600" />
+        {/* Dual Pathway Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mt-20">
+          {/* Student */}
+          <div className="group relative bg-gradient-to-br from-blue-50 to-white rounded-3xl border border-blue-100 shadow-2xl hover:shadow-3xl transition-all overflow-hidden">
+            <div className="absolute inset-0 opacity-30 group-hover:opacity-50 bg-gradient-to-br from-blue-100 to-blue-200 transition-opacity"></div>
+            <div className="relative z-10 p-8 flex flex-col md:flex-row items-center gap-6">
+              <div className="w-24 h-24 flex items-center justify-center bg-white rounded-full shadow-inner ring-4 ring-blue-300/30">
+                <Users className="w-10 h-10 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">For Students</h3>
+                <p className="text-gray-700 mb-3">Enjoy gamified lessons, instant feedback, and clear goals to guide your learning.</p>
+                <ul className="list-disc text-sm text-gray-600 pl-5 space-y-1">
+                  <li>Interactive assessments</li>
+                  <li>Personalized progress tracking</li>
+                  <li>Skill mastery challenges</li>
+                </ul>
+                <Button
+                  asChild
+                  className="mt-6 bg-blue-600 hover:bg-blue-700 text-white shadow-md group-hover:-translate-y-1 transition"
+                >
+                  <Link href="/auth/login">Access Student Dashboard</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Parent */}
+          <div className="group relative bg-gradient-to-br from-purple-50 to-white rounded-3xl border border-purple-100 shadow-2xl hover:shadow-3xl transition-all overflow-hidden">
+            <div className="absolute inset-0 opacity-30 group-hover:opacity-50 bg-gradient-to-br from-purple-100 to-purple-200 transition-opacity"></div>
+            <div className="relative z-10 p-8 flex flex-col md:flex-row items-center gap-6">
+              <div className="w-24 h-24 flex items-center justify-center bg-white rounded-full shadow-inner ring-4 ring-purple-300/30">
+                <Edit3 className="w-10 h-10 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">For Parents</h3>
+                <p className="text-gray-700 mb-3">Track your child’s academic journey with real-time data and meaningful insights.</p>
+                <ul className="list-disc text-sm text-gray-600 pl-5 space-y-1">
+                  <li>Daily performance updates</li>
+                  <li>Actionable learning reports</li>
+                  <li>Parental engagement tools</li>
+                </ul>
+                <Button
+                  asChild
+                  className="mt-6 bg-purple-600 hover:bg-purple-700 text-white shadow-md group-hover:-translate-y-1 transition"
+                >
+                  <Link href="/auth/register">Enroll Your Child</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">For Students</h3>
-          <p className="text-gray-700 mb-3">Enjoy gamified lessons, instant feedback, and clear goals to guide your learning.</p>
-          <ul className="list-disc text-sm text-gray-600 pl-5 space-y-1">
-            <li>Interactive assessments</li>
-            <li>Personalized progress tracking</li>
-            <li>Skill mastery challenges</li>
-          </ul>
-          <Button
-            asChild
-            className="mt-6 bg-blue-600 hover:bg-blue-700 text-white shadow-md group-hover:-translate-y-1 transition"
-          >
-            <Link href="/auth/login">Access Student Dashboard</Link>
-          </Button>
-        </div>
-      </div>
-    </div>
-
-    {/* Parent */}
-    <div className="group relative bg-gradient-to-br from-purple-50 to-white rounded-3xl border border-purple-100 shadow-2xl hover:shadow-3xl transition-all overflow-hidden">
-      <div className="absolute inset-0 opacity-30 group-hover:opacity-50 bg-gradient-to-br from-purple-100 to-purple-200 transition-opacity"></div>
-      <div className="relative z-10 p-8 flex flex-col md:flex-row items-center gap-6">
-        <div className="w-24 h-24 flex items-center justify-center bg-white rounded-full shadow-inner ring-4 ring-purple-300/30">
-          <Edit3 className="w-10 h-10 text-purple-600" />
-        </div>
-        <div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">For Parents</h3>
-          <p className="text-gray-700 mb-3">Track your child’s academic journey with real-time data and meaningful insights.</p>
-          <ul className="list-disc text-sm text-gray-600 pl-5 space-y-1">
-            <li>Daily performance updates</li>
-            <li>Actionable learning reports</li>
-            <li>Parental engagement tools</li>
-          </ul>
-          <Button
-            asChild
-            className="mt-6 bg-purple-600 hover:bg-purple-700 text-white shadow-md group-hover:-translate-y-1 transition"
-          >
-            <Link href="/auth/register">Enroll Your Child</Link>
-          </Button>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-
+      </section>
+      
       {/* Final CTA */}
       <section className="py-16 md:py-24 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
         <div className="container mx-auto px-6 max-w-4xl text-center">

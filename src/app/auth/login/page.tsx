@@ -103,13 +103,10 @@ export default function LoginPage() {
         description: `Welcome back, ${childInfo.childName}.`,
       });
 
-      // Modification ici - Redirection vers la racine
-      if (typeof window !== 'undefined') {
-  setTimeout(() => {
-    window.location.href = '/';
-  }, 10);
-}
-    } else {
+      // ✅ Redirection directe vers le dashboard enfant
+      setTimeout(() => router.push('/child-dashboard'), 100);
+    }
+    else {
       throw new Error('Invalid user role');
     }
   } catch {

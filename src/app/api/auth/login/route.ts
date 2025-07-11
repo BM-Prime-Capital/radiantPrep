@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 // Helper function for consistent cookie settings
 const setSessionCookie = (response: NextResponse, sessionId: string) => {
   const isProduction = process.env.NODE_ENV === 'production';
-  const domain = isProduction ? '.votredomaine.com' : undefined;
+  const domain = isProduction ? '.radiant-prep.vercel.app' : undefined;
 
   response.cookies.set('session', sessionId, {
     httpOnly: true,
