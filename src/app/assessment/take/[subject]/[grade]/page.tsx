@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Question, Subject, Grade, AssessmentResult, ChildInformation, ParentUser } from '@/lib/types';
+import { type Question, type Subject, type Grade, type AssessmentResult, type ChildInformation, type ParentUser, QuestionType } from '@/lib/types';
 import { QuestionDisplay } from '@/components/assessment/QuestionDisplay';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -28,6 +28,8 @@ export default function AssessmentPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorLoadingQuestions, setErrorLoadingQuestions] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
    useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -140,9 +142,58 @@ export default function AssessmentPage() {
     }
   };
 
+// const isAnswerCorrect = (question: Question, userAnswer: string | string[] | undefined) => {
+//   if (question.type === 'DRAWING') {
+//     if (!userAnswer || !Array.isArray(userAnswer)) return false;
+
+//     try {
+//       const parsed = JSON.parse(question.correctAnswer as string);
+//       const correctCircles = parsed.circles ?? [];
+//       const tolerance = 20; // pixels
+
+//       if (correctCircles.length !== userAnswer.length) return false;
+
+//       return correctCircles.every((correctCircle: any, i: number) => {
+//         const userCircle = userAnswer[i] as any;
+//         return (
+//           Math.abs(correctCircle.x - userCircle.x) <= tolerance &&
+//           Math.abs(correctCircle.y - userCircle.y) <= tolerance &&
+//           Math.abs(correctCircle.radius - userCircle.radius) <= tolerance &&
+//           correctCircle.type === userCircle.type
+//         );
+//       });
+//     } catch (err) {
+//       console.error("Correct answer parse error:", err);
+//       return false;
+//     }
+//   }
+
+//   // Fallback for all other types
+//   if (userAnswer === undefined || question.correctAnswer === undefined) return false;
+
+//   const normalize = (value: string | string[]): string[] => {
+//     if (Array.isArray(value)) {
+//       return value.map(v => (v || '').toString().trim().toLowerCase());
+//     }
+//     return [(value || '').toString().trim().toLowerCase()];
+//   };
+
+//   const correctAnswers = normalize(question.correctAnswer);
+//   const userAnswers = normalize(userAnswer);
+
+//   if (correctAnswers.length !== userAnswers.length) return false;
+
+//   return correctAnswers.every((ca, i) => ca === userAnswers[i]);
+// };
+
+
 const isAnswerCorrect = (question: Question, userAnswer: string | string[] | undefined) => {
+  // Handle undefined cases
+  if (userAnswer === undefined || question.correctAnswer === undefined) return false;
+
+  // Special handling for DRAWING type questions
   if (question.type === 'DRAWING') {
-    if (!userAnswer || !Array.isArray(userAnswer)) return false;
+    if (!Array.isArray(userAnswer)) return false;
 
     try {
       const parsed = JSON.parse(question.correctAnswer as string);
@@ -166,9 +217,29 @@ const isAnswerCorrect = (question: Question, userAnswer: string | string[] | und
     }
   }
 
-  // Fallback for all other types
-  if (userAnswer === undefined || question.correctAnswer === undefined) return false;
+  // Special handling for FILL_IN_THE_BLANK questions
+  if (question.type === QuestionType.FILL_IN_THE_BLANK) {
+    // Ensure both are arrays
+    if (!Array.isArray(userAnswer)) {
+      // If userAnswer is a string, split it into array
+      const userAnswers = typeof userAnswer === 'string' 
+        ? userAnswer.split(',').map(a => a.trim())
+        : [userAnswer?.toString() || ''];
+      return isAnswerCorrect(question, userAnswers);
+    }
 
+    if (!Array.isArray(question.correctAnswer)) {
+      return false;
+    }
+
+    // Compare each answer positionally
+    return question.correctAnswer.every((correctAns, index) => {
+      const userAns = userAnswer[index] || '';
+      return correctAns.toString().trim().toLowerCase() === userAns.toString().trim().toLowerCase();
+    });
+  }
+
+  // Normalize answers for all other question types
   const normalize = (value: string | string[]): string[] => {
     if (Array.isArray(value)) {
       return value.map(v => (v || '').toString().trim().toLowerCase());
@@ -179,6 +250,12 @@ const isAnswerCorrect = (question: Question, userAnswer: string | string[] | und
   const correctAnswers = normalize(question.correctAnswer);
   const userAnswers = normalize(userAnswer);
 
+  // For non-array answers, compare directly
+  if (!Array.isArray(question.correctAnswer)) {
+    return correctAnswers[0] === userAnswers[0];
+  }
+
+  // For array answers, compare length and content
   if (correctAnswers.length !== userAnswers.length) return false;
 
   return correctAnswers.every((ca, i) => ca === userAnswers[i]);
@@ -186,7 +263,8 @@ const isAnswerCorrect = (question: Question, userAnswer: string | string[] | und
 
 
 const handleSubmitAssessment = async () => {
-  setSubmitError(null);
+    setIsSubmitting(true); // Add this line
+    setSubmitError(null);
   try {
     if (!user || !role) {
       throw new Error('User information not available');
@@ -276,7 +354,8 @@ const handleSubmitAssessment = async () => {
 
     setAssessmentResult(result);
     router.push('/assessment/results');
-  } catch (error: any) {
+  } 
+  catch (error: any) {
     setSubmitError(error.message || 'Failed to save assessment. Please try again.');
     console.error('Assessment submission error:', error);
     toast({
@@ -291,6 +370,8 @@ const handleSubmitAssessment = async () => {
       window.location.href = `/auth/login?returnUrl=${encodeURIComponent(window.location.pathname)}`;
       return;
     }
+  } finally {
+    setIsSubmitting(false); // Add this line
   }
 };
 
@@ -448,9 +529,22 @@ const handleSubmitAssessment = async () => {
                 <Button 
                   size="lg" 
                   className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white gap-2 min-w-[180px] shadow-lg"
+                  disabled={isSubmitting} // Add disabled state
                 >
-                  <CheckSquare className="h-5 w-5" />
-                  Submit Assessment
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <CheckSquare className="h-5 w-5" />
+                      Submit Assessment
+                    </>
+                  )}
                 </Button>
               </motion.div>
             </AlertDialogTrigger>
@@ -466,8 +560,19 @@ const handleSubmitAssessment = async () => {
                 <AlertDialogAction 
                   onClick={handleSubmitAssessment} 
                   className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                  disabled={isSubmitting} // Add disabled state
                 >
-                  Confirm Submission
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Submitting...
+                    </>
+                  ) : (
+                    'Confirm Submission'
+                  )}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

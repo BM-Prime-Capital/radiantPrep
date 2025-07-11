@@ -11,7 +11,6 @@ import { Pencil, MousePointer, Info, Target, Shuffle, Palette } from 'lucide-rea
 import { motion } from 'framer-motion';
 import { DrawingCanvas } from './DrawingCanvas';
 import { useToast } from '@/hooks/use-toast';
-import { Fragment } from 'react';
 
 interface QuestionDisplayProps {
   question: Question;
@@ -100,7 +99,7 @@ export function QuestionDisplay({ question, questionNumber, totalQuestions, onAn
             value={currentAnswer as string || ''}
             onChange={(e) => onAnswerChange(e.target.value.toLowerCase())}
             placeholder="Type your answer here"
-            className="text-base border-2 border-gray-300 bg-gray-50 focus:border-primary"
+            className="text-base"
           />
         );
       case QuestionType.WRITING:
@@ -113,59 +112,138 @@ export function QuestionDisplay({ question, questionNumber, totalQuestions, onAn
             className="text-base"
           />
         );
-
-case QuestionType.FILL_IN_THE_BLANK:
-  let runningIndex = 0;
-
-  return (
-    <div className="space-y-4">
-      {question.blanks?.map((blankLine, lineIndex) => {
-        if (typeof blankLine !== 'string') return null;
-
-        const segments = blankLine.split('___');
-        const inputs = [];
-
-        for (let i = 0; i < segments.length; i++) {
-          inputs.push(
-            <span key={`text-${lineIndex}-${i}`} className="whitespace-pre">
-              {segments[i]}
-            </span>
-          );
-
-          if (i < segments.length - 1) {
-            const inputIndex = runningIndex;
-
-            inputs.push(
-              <Input
-                key={`input-${lineIndex}-${i}`}
-                value={Array.isArray(currentAnswer)
-                  ? currentAnswer[inputIndex] || ''
-                  : ''}
-                onChange={(e) => {
-                  const newAnswers = [...(Array.isArray(currentAnswer)
-                    ? currentAnswer
-                    : Array(question.correctAnswer?.length || 0).fill(''))];
-
-                  newAnswers[inputIndex] = e.target.value;
-                  onAnswerChange(newAnswers);
-                }}
-                className="w-12 h-8 text-center border-b-2 border-gray-400"
-              />
-            );
-
-            runningIndex++;
-          }
-        }
-
+      case QuestionType.FILL_IN_THE_BLANK:
         return (
-          <div key={lineIndex} className="flex flex-wrap items-baseline gap-1">
-            {inputs}
+          <div className="space-y-4">
+            {question.blanks?.map((blankText, index) => (
+              <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <Label htmlFor={`${question.id}-blank-${index}`} className="text-base sm:min-w-[200px] whitespace-pre-wrap">
+                  {blankText.replace(/_+/, ' ______ ')} 
+                </Label>
+                <Input
+                  id={`${question.id}-blank-${index}`}
+                  type="text"
+                  value={Array.isArray(currentAnswer) ? currentAnswer[index] || '' : ''}
+                  onChange={(e) => {
+                    const newAnswers = Array.isArray(currentAnswer) ? [...currentAnswer] : new Array(question.blanks?.length || 0).fill('');
+                    newAnswers[index] = e.target.value.toLowerCase();
+                    onAnswerChange(newAnswers);
+                  }}
+                  className="text-base"
+                />
+              </div>
+            ))}
           </div>
         );
-      })}
-    </div>
-  );
+      // case QuestionType.DRAWING:
+      // case QuestionType.MATCHING:
+      // case QuestionType.PATTERN:
+      //   const drawingMode =
+      //     question.type === QuestionType.DRAWING ? "encircle" :
+      //     question.type === QuestionType.MATCHING ? "matching" :
+      //     question.type === QuestionType.PATTERN ? "pattern" :
+      //     "encircle";
 
+      //   const instructionColors = {
+      //     encircle: {
+      //       bg: "from-blue-50 to-indigo-50",
+      //       border: "border-blue-200",
+      //       icon: <Palette className="h-6 w-6 text-blue-600" />,
+      //       label: "Outils de Dessin Interactifs"
+      //     },
+      //     matching: {
+      //       bg: "from-purple-50 to-pink-50",
+      //       border: "border-purple-200",
+      //       icon: <Shuffle className="h-6 w-6 text-purple-600" />,
+      //       label: "Outils de Correspondance Interactifs"
+      //     },
+      //     pattern: {
+      //       bg: "from-green-50 to-emerald-50",
+      //       border: "border-green-200",
+      //       icon: <Target className="h-6 w-6 text-green-600" />,
+      //       label: "Reconnaissance de Motifs Interactifs"
+      //     }
+      //   };
+
+      //   const colors = instructionColors[drawingMode];
+
+      //   return (
+      //     <div className="space-y-6">
+      //       <motion.div 
+      //         initial={{ opacity: 0, y: 10 }}
+      //         animate={{ opacity: 1, y: 0 }}
+      //         className={`bg-gradient-to-r ${colors.bg} ${colors.border} rounded-lg p-6`}
+      //       >
+      //         <div className="flex items-start gap-4">
+      //           <div className={`${colors.border} p-2 rounded-lg bg-white`}>{colors.icon}</div>
+      //           <div className="flex-1">
+      //             <h4 className="font-semibold mb-2 flex items-center gap-2">
+      //               {colors.label}
+      //             </h4>
+      //             <div className="text-sm text-foreground/80 space-y-1 ml-2">
+      //               {drawingMode === "encircle" && (
+      //                 <>
+      //                   <p>• Cliquez pour ajouter un cercle ou une ovale sur l'image</p>
+      //                   <p>• Utilisez l'outil flèche pour déplacer ou redimensionner les formes</p>
+      //                   <p>• Utilisez les icônes du haut pour sélectionner, supprimer, annuler ou refaire</p>
+      //                 </>
+      //               )}
+      //               {drawingMode === "matching" && (
+      //                 <>
+      //                   <p>• Cliquez et glissez pour dessiner une flèche entre deux points</p>
+      //                   <p>• Utilisez différentes couleurs pour connecter les éléments liés</p>
+      //                   <p>• Utilisez les icônes du haut pour supprimer, annuler ou refaire les connexions</p>
+      //                 </>
+      //               )}
+      //               {drawingMode === "pattern" && (
+      //                 <>
+      //                   <p>• Cliquez pour placer une forme (cercle, triangle ou carré)</p>
+      //                   <p>• Utilisez les icônes du haut pour changer le type de forme</p>
+      //                   <p>• Glissez pour repositionner, ou utilisez les outils pour supprimer ou annuler</p>
+      //                 </>
+      //               )}
+      //             </div>
+      //           </div>
+      //         </div>
+      //       </motion.div>
+
+      //       {question.image ? (
+      //         <DrawingCanvas
+      //           imageUrl={question.image.startsWith('/') ? question.image : `/images/${question.image}`}
+      //           questionId={String(question.id)}
+      //           questionText={question.question} 
+      //           mode={drawingMode}
+      //           canvasSize={{ width: 800, height: 400 }}
+      //           onSelectionChange={handleSelectionChange}
+      //           onDrawingChange={handleDrawingChange}
+      //           onCaptureImage={handleImageCapture}
+      //           initialSelections={Array.isArray(currentAnswer) ? currentAnswer : []}
+      //           initialDrawing={Array.isArray(currentAnswer) ? currentAnswer : []}
+      //         />
+      //       ) : (
+      //         <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+      //           <Info className="h-8 w-8 text-gray-400 mx-auto mb-3" />
+      //           <p className="text-gray-600">Aucune image disponible pour cette question.</p>
+      //         </div>
+      //       )}
+
+      //       <div className={`rounded-lg p-4 ${colors.border} bg-opacity-20`}>
+      //         <div className="flex items-center gap-3">
+      //           <div className={`p-1.5 rounded-full ${colors.border} bg-white`}>
+      //             {colors.icon}
+      //           </div>
+      //           <div>
+      //             <p className="text-sm font-medium text-foreground">Mode actif : {drawingMode}</p>
+      //             <p className="text-xs text-muted-foreground">
+      //               {currentAnswer 
+      //                 ? 'Vos annotations sont sauvegardées.' 
+      //                 : 'Utilisez les outils ci-dessus pour interagir avec l\'image.'}
+      //             </p>
+      //           </div>
+      //         </div>
+      //       </div>
+      //     </div>
+      //   );
 
       case QuestionType.DRAWING:
       case QuestionType.MATCHING:
@@ -212,7 +290,7 @@ case QuestionType.FILL_IN_THE_BLANK:
               value={currentAnswer as string || ''}
               onChange={(e) => onAnswerChange(e.target.value)}
               placeholder="Tapez votre réponse pour cette question"
-              className="text-base border-2 border-gray-300 bg-gray-50 focus:border-primary mt-2"
+              className="text-base mt-2"
             />
           </div>
         );
