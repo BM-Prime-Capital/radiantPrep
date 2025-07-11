@@ -104,7 +104,11 @@ export default function LoginPage() {
       });
 
       // Modification ici - Redirection vers la racine
-      window.location.href = '/'; // Utilisez window.location pour un rechargement complet
+      if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    window.location.href = '/';
+  }, 10);
+}
     } else {
       throw new Error('Invalid user role');
     }

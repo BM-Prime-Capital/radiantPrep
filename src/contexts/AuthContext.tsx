@@ -102,8 +102,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // Redirection vers la page d'accueil
       if (typeof window !== 'undefined') {
-        window.location.href = '/';
-      }
+  // Déclencher en différé pour éviter les conflits d'import SSR
+  setTimeout(() => {
+    window.location.href = '/';
+  }, 50);
+}
     }
   }, []);
   

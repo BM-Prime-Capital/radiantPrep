@@ -5,13 +5,44 @@ import Link from "next/link";
 import { getServerSession } from '@/lib/session';
 import { redirect } from "next/navigation";
 import { Suspense } from 'react';
+import { PrismaClient } from '@prisma/client';
+
+export const dynamic = "force-dynamic";
+
+const prisma = new PrismaClient();
 
 export default async function ChildDashboard() {
   const session = await getServerSession();
-  
+
   if (!session?.user) {
     redirect('/auth/login');
   }
+
+  const totalAssessments = await prisma.assessment.count({
+    where: {
+      childUserId: session.user.id,
+    }
+  });
+
+  const completedAssessments = await prisma.assessment.aggregate({
+    where: {
+      childUserId: session.user.id,
+    },
+    _sum: {
+      score: true,
+      totalQuestions: true,
+    }
+  });
+
+  const score = completedAssessments._sum?.score || 0;
+  const total = completedAssessments._sum?.totalQuestions || 0;
+  const progress = total > 0 ? Math.round((score / total) * 100) : 0;
+
+  const recentActivities = await prisma.assessment.findMany({
+    where: { childUserId: session.user.id },
+    orderBy: { takenAt: 'desc' },
+    take: 5,
+  });
 
   return (
     <Suspense fallback={
@@ -93,10 +124,10 @@ export default async function ChildDashboard() {
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                   <div 
                     className="bg-gradient-to-r from-green-500 to-green-600 h-2.5 rounded-full" 
-                    style={{ width: '85%' }}
+                    style={{ width: `${progress}%` }}
                   ></div>
                 </div>
-                <span className="text-2xl font-bold text-gray-900">85%</span>
+                <span className="text-2xl font-bold text-gray-900">{progress}%</span>
               </div>
               <Button variant="link" className="p-0 text-green-600 hover:text-green-700 group">
                 View reports <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -160,10 +191,21 @@ export default async function ChildDashboard() {
           </h2>
           <Card className="border border-gray-200 rounded-xl bg-gray-50">
             <CardContent className="p-8">
-              <div className="flex flex-col items-center justify-center py-8 text-gray-400">
-                <BarChart2 className="h-10 w-10 mb-4" />
-                <p>Your recent activities will appear here</p>
-              </div>
+              {recentActivities.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+                  <BarChart2 className="h-10 w-10 mb-4" />
+                  <p>Your recent activities will appear here</p>
+                </div>
+              ) : (
+                <ul className="space-y-4">
+                  {recentActivities.map(activity => (
+                    <li key={activity.id} className="flex justify-between text-sm text-gray-700">
+                      <span>{activity.subjectName}</span>
+                      <span>{new Date(activity.takenAt).toLocaleDateString()}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </CardContent>
           </Card>
         </div>

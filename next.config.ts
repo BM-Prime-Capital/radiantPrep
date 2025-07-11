@@ -1,7 +1,6 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -20,7 +19,6 @@ const nextConfig: NextConfig = {
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
-      // Ne pas tenter de résoudre 'canvas' côté client
       config.resolve.fallback = {
         ...config.resolve.fallback,
         canvas: false,
@@ -29,9 +27,9 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
-  // Alternative: Désactiver complètement le SSR pour react-konva
+  // Désactive le SSR pour react-konva
   experimental: {
-    serverComponentsExternalPackages: ['react-konva', 'konva'],
+    // Add supported experimental options here if needed
   },
 };
 

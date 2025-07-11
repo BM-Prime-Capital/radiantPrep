@@ -6,7 +6,7 @@ import Link from "next/link";
 import { getServerSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import Image from "next/image";
-
+export const dynamic = 'force-dynamic';
 export default async function ParentDashboard() {
   const session = await getServerSession();
   
@@ -19,7 +19,7 @@ export default async function ParentDashboard() {
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center space-x-2">
           <Image 
-            src="/public/newlogo.png" 
+            src="/newlogo.png" 
             alt="Radiant Test Prep Logo"
             width={40}
             height={40}
