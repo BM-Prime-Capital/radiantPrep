@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
     ],
   },
   webpack: (config, { isServer }) => {
-    if (!isServer) {
+    if (isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         canvas: false,
@@ -27,9 +27,8 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
-  // Désactive le SSR pour react-konva
   experimental: {
-    // Add supported experimental options here if needed
+    // Future flags can go here
   },
 };
 
