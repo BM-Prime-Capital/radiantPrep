@@ -142,63 +142,38 @@ export default function AssessmentPage() {
     }
   };
 
-// const isAnswerCorrect = (question: Question, userAnswer: string | string[] | undefined) => {
-//   if (question.type === 'DRAWING') {
-//     if (!userAnswer || !Array.isArray(userAnswer)) return false;
+const isAnswerCorrect = (
+  question: Question,
+  userAnswer: string | string[] | undefined
+): boolean => {
+  if (!userAnswer || !question.correctAnswer) return false;
 
-//     try {
-//       const parsed = JSON.parse(question.correctAnswer as string);
-//       const correctCircles = parsed.circles ?? [];
-//       const tolerance = 20; // pixels
+  // 🔸 FILL_IN_THE_BLANK : comparer position par position
+  if (question.type === QuestionType.FILL_IN_THE_BLANK) {
+    const correctAnswers = Array.isArray(question.correctAnswer)
+      ? question.correctAnswer.map(v => v.trim().toLowerCase())
+      : [question.correctAnswer.toString().trim().toLowerCase()];
 
-//       if (correctCircles.length !== userAnswer.length) return false;
+    const normalizedUserAnswers = Array.isArray(userAnswer)
+      ? userAnswer.map(v => v.trim().toLowerCase())
+      : userAnswer
+          .split(/[,\/;]/) // split on , / ; for flexibility
+          .map(v => v.trim().toLowerCase())
+          .filter(Boolean); // remove empty
 
-//       return correctCircles.every((correctCircle: any, i: number) => {
-//         const userCircle = userAnswer[i] as any;
-//         return (
-//           Math.abs(correctCircle.x - userCircle.x) <= tolerance &&
-//           Math.abs(correctCircle.y - userCircle.y) <= tolerance &&
-//           Math.abs(correctCircle.radius - userCircle.radius) <= tolerance &&
-//           correctCircle.type === userCircle.type
-//         );
-//       });
-//     } catch (err) {
-//       console.error("Correct answer parse error:", err);
-//       return false;
-//     }
-//   }
+    if (normalizedUserAnswers.length !== correctAnswers.length) return false;
 
-//   // Fallback for all other types
-//   if (userAnswer === undefined || question.correctAnswer === undefined) return false;
+    return correctAnswers.every((expected, index) => expected === normalizedUserAnswers[index]);
+  }
 
-//   const normalize = (value: string | string[]): string[] => {
-//     if (Array.isArray(value)) {
-//       return value.map(v => (v || '').toString().trim().toLowerCase());
-//     }
-//     return [(value || '').toString().trim().toLowerCase()];
-//   };
-
-//   const correctAnswers = normalize(question.correctAnswer);
-//   const userAnswers = normalize(userAnswer);
-
-//   if (correctAnswers.length !== userAnswers.length) return false;
-
-//   return correctAnswers.every((ca, i) => ca === userAnswers[i]);
-// };
-
-
-const isAnswerCorrect = (question: Question, userAnswer: string | string[] | undefined) => {
-  // Handle undefined cases
-  if (userAnswer === undefined || question.correctAnswer === undefined) return false;
-
-  // Special handling for DRAWING type questions
+  // 🔸 DRAWING : JSON object with circles, handled separately
   if (question.type === 'DRAWING') {
     if (!Array.isArray(userAnswer)) return false;
 
     try {
       const parsed = JSON.parse(question.correctAnswer as string);
       const correctCircles = parsed.circles ?? [];
-      const tolerance = 20; // pixels
+      const tolerance = 20;
 
       if (correctCircles.length !== userAnswer.length) return false;
 
@@ -217,29 +192,7 @@ const isAnswerCorrect = (question: Question, userAnswer: string | string[] | und
     }
   }
 
-  // Special handling for FILL_IN_THE_BLANK questions
-  if (question.type === QuestionType.FILL_IN_THE_BLANK) {
-    // Ensure both are arrays
-    if (!Array.isArray(userAnswer)) {
-      // If userAnswer is a string, split it into array
-      const userAnswers = typeof userAnswer === 'string' 
-        ? userAnswer.split(',').map(a => a.trim())
-        : [userAnswer?.toString() || ''];
-      return isAnswerCorrect(question, userAnswers);
-    }
-
-    if (!Array.isArray(question.correctAnswer)) {
-      return false;
-    }
-
-    // Compare each answer positionally
-    return question.correctAnswer.every((correctAns, index) => {
-      const userAns = userAnswer[index] || '';
-      return correctAns.toString().trim().toLowerCase() === userAns.toString().trim().toLowerCase();
-    });
-  }
-
-  // Normalize answers for all other question types
+  // 🔸 Tous les autres types (QCM, texte, etc.)
   const normalize = (value: string | string[]): string[] => {
     if (Array.isArray(value)) {
       return value.map(v => (v || '').toString().trim().toLowerCase());
@@ -247,18 +200,12 @@ const isAnswerCorrect = (question: Question, userAnswer: string | string[] | und
     return [(value || '').toString().trim().toLowerCase()];
   };
 
-  const correctAnswers = normalize(question.correctAnswer);
-  const userAnswers = normalize(userAnswer);
+  const correct = normalize(question.correctAnswer);
+  const user = normalize(userAnswer);
 
-  // For non-array answers, compare directly
-  if (!Array.isArray(question.correctAnswer)) {
-    return correctAnswers[0] === userAnswers[0];
-  }
+  if (correct.length !== user.length) return false;
 
-  // For array answers, compare length and content
-  if (correctAnswers.length !== userAnswers.length) return false;
-
-  return correctAnswers.every((ca, i) => ca === userAnswers[i]);
+  return correct.every((ca, i) => ca === user[i]);
 };
 
 
