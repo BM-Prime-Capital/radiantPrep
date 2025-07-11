@@ -38,7 +38,9 @@ export async function getSession(request: Request) {
   }
 }
 
-// New version for Server Components
+// src/lib/session.ts
+import { PrismaClientInitializationError } from '@prisma/client/runtime/library';
+
 export async function getServerSession() {
   try {
     const cookieStore = cookies();
@@ -53,23 +55,27 @@ export async function getServerSession() {
 
     if (!session) return null;
 
-    // Add 5-minute buffer for clock skew
     const now = new Date();
     const expiresAt = new Date(session.expiresAt);
-    const bufferTime = 5 * 60 * 1000; // 5 minutes
-    
+    const bufferTime = 5 * 60 * 1000;
+
     if (now > new Date(expiresAt.getTime() + bufferTime)) {
-      // Auto-delete expired session
       await deleteSession(sessionId);
       return null;
     }
 
     return session;
+
   } catch (error) {
-    console.error('Session error:', error);
+    if (error instanceof PrismaClientInitializationError) {
+      console.error('❌ Prisma database connection failed:', error.message);
+    } else {
+      console.error('❌ Session error:', error);
+    }
     return null;
   }
 }
+
 
 export async function createSession(userId: string) {
   return prisma.session.create({

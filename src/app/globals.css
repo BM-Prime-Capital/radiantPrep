@@ -73,6 +73,65 @@ body {
   }
 }
 
+
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0) translateX(0);
+      }
+      50% {
+        transform: translateY(-20px) translateX(10px);
+      }
+    }
+    @keyframes floatReverse {
+      0%, 100% {
+        transform: translateY(0) translateX(0);
+      }
+      50% {
+        transform: translateY(20px) translateX(-10px);
+      }
+    }
+    @keyframes gridMove {
+      0% {
+        background-position: 0 0;
+      }
+      100% {
+        background-position: 70px 70px;
+      }
+    }
+    @keyframes timelineScroll {
+      0% {
+        transform: translateY(-100%);
+      }
+      100% {
+        transform: translateY(100%);
+      }
+    }
+    @keyframes timelineScrollHorizontal {
+      0% {
+        transform: translateX(-100%);
+      }
+      100% {
+        transform: translateX(100%);
+      }
+    }
+  
+
+
+
+
+
+
 /* Enhanced shadow effects */
 .shadow-soft {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);

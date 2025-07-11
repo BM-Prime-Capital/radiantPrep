@@ -167,7 +167,7 @@ export function NavbarAuthButtons({ isAuthenticated, isHomePage }: NavbarAuthBut
           }`}
         >
           <Link href="/auth/register" className="flex items-center gap-2">
-            <span>Parent Sign Up</span>
+            <span>Enroll Your Child</span>
             <ChevronDown className="h-4 w-4" />
           </Link>
         </Button>

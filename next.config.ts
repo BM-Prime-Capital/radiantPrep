@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
     return config;
   },
   experimental: {
-    // Future flags can go here
+
   },
 };
 
