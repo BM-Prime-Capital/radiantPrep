@@ -1,4 +1,4 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -17,6 +17,21 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Ne pas tenter de résoudre 'canvas' côté client
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        canvas: false,
+        encoding: false,
+      };
+    }
+    return config;
+  },
+  // Alternative: Désactiver complètement le SSR pour react-konva
+  experimental: {
+    serverComponentsExternalPackages: ['react-konva', 'konva'],
   },
 };
 
