@@ -8,19 +8,17 @@ import { QuestionType } from '@/lib/types';
 export const mathQuestionsByGrade: Record<number, Question[]> = {
   1: [
     {
-      id: 1,
-      type: QuestionType.MULTIPLE_CHOICE,
-      category: "Visual differentiation",
-      question: "Which object is different in each group (left and right)?",
-      image: "math-grade1-q1.png",
-      dataAihint: "objects shapes",
-      options: [
-        "Left: bag — Right: cow",
-        "Left: duck — Right: fuel gauge",
-        "Left: bag — Right: rabbit",
-        "Left: bag — Right: dog"
-      ],
-      correctAnswer: "Left: duck — Right: fuel gauge"
+    id: 1,
+    type: QuestionType.IMAGE_CHOICE, // Changé de MULTIPLE_CHOICE à IMAGE_CHOICE
+    category: "Visual differentiation",
+    question: "Which object is different in each group?",
+    options: [
+      { image: "diff-option1.png", text: "Option 1" },
+      { image: "diff-option2.png", text: "Option 2" },
+      { image: "diff-option3.png", text: "Option 3" },
+      { image: "diff-option4.png", text: "Option 4" }
+    ],
+    correctAnswer: 1 // Index de la bonne réponse
     },
     {
       id: 2,
@@ -34,18 +32,16 @@ export const mathQuestionsByGrade: Record<number, Question[]> = {
     },
     {
       id: 3,
-      type: QuestionType.MULTIPLE_CHOICE,
-      category: "Pattern recognition; shapes",
-      question: "What shape comes next in each line of the pattern?",
-      image: "math-grade1-q3.png",
-      dataAihint: "shapes pattern",
+      type: QuestionType.IMAGE_CHOICE,
+      category: "Pattern recognition",
+      question: "What shape comes next?",
       options: [
-        "Row 1: circle, Row 2: circle, Row 3: triangle",
-        "Row 1: triangle, Row 2: triangle, Row 3: circle",
-        "Row 1: circle, Row 2: triangle, Row 3: circle",
-        "Row 1: triangle, Row 2: circle, Row 3: circle"
+        { image: "pattern-option1.png", text: "Pattern A" },
+        { image: "pattern-option2.png", text: "Pattern B" },
+        { image: "pattern-option3.png", text: "Pattern C" },
+        { image: "pattern-option4.png", text: "Pattern D" }
       ],
-      correctAnswer: "Row 1: circle, Row 2: triangle, Row 3: circle"
+      correctAnswer: 2
     },
     {
       id: 4,
@@ -59,18 +55,30 @@ export const mathQuestionsByGrade: Record<number, Question[]> = {
     },
     {
       id: 5,
-      type: QuestionType.MULTIPLE_CHOICE,
+      type: QuestionType.IMAGE_CHOICE, // Changé de MULTIPLE_CHOICE à IMAGE_CHOICE
       category: "Quantity matching",
-      question: "Which number correctly matches each group of objects?",
-      image: "math-grade1-q5.png",
+      question: "Match each number to the correct group of objects",
+      image: "math-grade1-q5.png", // Image principale de la question
       dataAihint: "numbers objects match",
       options: [
-        "3 ↔ 5 money bags | 5 ↔ 1 globe | 1 ↔ 3 cans",
-        "3 ↔ 3 cans | 5 ↔ 5 money bags | 1 ↔ 1 globe",
-        "3 ↔ 1 globe | 5 ↔ 3 cans | 1 ↔ 5 money bags",
-        "3 ↔ 5 money bags | 5 ↔ 3 cans | 1 ↔ 1 globe"
+        { 
+          image: "match-option1.png", 
+          text: "3-cans | 5-money-bags | 1-globe" 
+        },
+        { 
+          image: "match-option2.png", 
+          text: "3-globe | 5-cans | 1-money-bags" 
+        },
+        { 
+          image: "match-option3.png", 
+          text: "3-money-bags | 5-globe | 1-cans" 
+        },
+        { 
+          image: "match-option4.png", 
+          text: "3-cans | 5-globe | 1-money-bags" 
+        }
       ],
-      correctAnswer: "3 ↔ 3 cans | 5 ↔ 5 money bags | 1 ↔ 1 globe"
+      correctAnswer: 0 // Index de la bonne réponse (première option)
     },
     {
       id: 6,

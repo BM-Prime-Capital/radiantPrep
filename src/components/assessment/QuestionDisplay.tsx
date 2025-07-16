@@ -41,7 +41,75 @@ export function QuestionDisplay({ question, questionNumber, totalQuestions, onAn
 
   const renderQuestionContent = () => {
     switch (question.type) {
-    case QuestionType.MULTIPLE_CHOICE:
+case QuestionType.MULTIPLE_CHOICE:
+  return (
+    <RadioGroup
+      value={currentAnswer as string || undefined}
+      onValueChange={(value) => onAnswerChange(value)}
+      className="space-y-3"
+    >
+      {question.options?.map((option, index) => {
+        const optionText = typeof option === 'string' ? option : option.text;
+        const optionValue = typeof option === 'string' ? option : index.toString();
+
+        return (
+          <motion.div 
+            key={index}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <RadioGroupItem 
+              value={optionValue} 
+              id={`${question.id}-option-${index}`}
+              className="h-5 w-5 border-2 text-primary"
+            />
+            <Label 
+              htmlFor={`${question.id}-option-${index}`} 
+              className="text-base cursor-pointer flex-grow"
+            >
+              {optionText}
+            </Label>
+          </motion.div>
+        );
+      })}
+    </RadioGroup>
+  );
+
+case QuestionType.COMPARISON:
+  return (
+    <div className="space-y-4">
+      {question.blanks?.map((blank, index) => (
+        <div key={index} className="flex items-center gap-2">
+          <span className="text-lg font-medium">{blank}</span>
+          <RadioGroup 
+            value={Array.isArray(currentAnswer) ? currentAnswer[index] : ''}
+            onValueChange={(value) => {
+              const newAnswers = Array.isArray(currentAnswer) 
+                ? [...currentAnswer] 
+                : Array(question.blanks?.length || 0).fill('');
+              newAnswers[index] = value;
+              onAnswerChange(newAnswers);
+            }}
+            className="flex gap-4"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value=">" id={`${question.id}-gt-${index}`} />
+              <Label htmlFor={`${question.id}-gt-${index}`}>{'>'}</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="<" id={`${question.id}-lt-${index}`} />
+              <Label htmlFor={`${question.id}-lt-${index}`}>{'<'}</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="=" id={`${question.id}-eq-${index}`} />
+              <Label htmlFor={`${question.id}-eq-${index}`}>=</Label>
+            </div>
+          </RadioGroup>
+        </div>
+      ))}
+    </div>
+  );
     case QuestionType.IMAGE_CHOICE:
       return (
         <RadioGroup
