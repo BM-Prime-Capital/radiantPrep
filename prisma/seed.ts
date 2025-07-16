@@ -162,16 +162,39 @@ async function createQuestion(questionData: any, subjectId: string, gradeId: str
   });
 
   // Create options if they exist
+  // if (questionData.options && Array.isArray(questionData.options)) {
+  //   await Promise.all(
+  //     questionData.options.map((option: string) =>
+  //       prisma.questionOption.create({
+  //         data: {
+  //           value: option,
+  //           questionId: question.id,
+  //         },
+  //       })
+  //     )
+  //   );
+  // }
+
   if (questionData.options && Array.isArray(questionData.options)) {
     await Promise.all(
-      questionData.options.map((option: string) =>
-        prisma.questionOption.create({
+      questionData.options.map((option) => {
+        let optionValue: string;
+        
+        if (typeof option === 'object' && 'image' in option) {
+          // Format objet {image, text}
+          optionValue = JSON.stringify(option);
+        } else {
+          // Format texte simple
+          optionValue = option.toString();
+        }
+        
+        return prisma.questionOption.create({
           data: {
-            value: option,
+            value: optionValue,
             questionId: question.id,
           },
-        })
-      )
+        });
+      })
     );
   }
 

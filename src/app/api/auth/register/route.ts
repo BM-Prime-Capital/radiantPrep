@@ -146,6 +146,7 @@ export async function POST(request: Request) {
       message: 'Registration successful and access code emailed',
       child: {
         name: childUser.childName,
+        accessCode,
         grade: childUser.grade,
         subject: childUser.currentSubject
       }

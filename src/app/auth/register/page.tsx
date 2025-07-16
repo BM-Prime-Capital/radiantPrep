@@ -68,6 +68,12 @@ export default function RegisterPage() {
         title: 'Registration successful!',
         description: `Access code generated for ${data.childName}.`,
       });
+
+      // Redirection après 3 secondes (temps pour voir le message)
+      setTimeout(() => {
+        router.push('/auth/login');
+      }, 3000);
+
     } catch (error) {
       toast({
         title: 'Registration failed',
@@ -89,8 +95,9 @@ export default function RegisterPage() {
   };
 
 return (
-  <div className="min-h-screen bg-gradient-to-b from-[#5299ff]/10 to-white flex items-center justify-center px-4 sm:px-6 relative">
-    <div className="absolute inset-0 z-0 opacity-5">
+  // <div className="min-h-screen bg-gradient-to-b from-[#5299ff]/10 to-white flex items-center justify-center px-4 sm:px-6 relative">
+  <div className="min-h-screen bg-gradient-to-b from-[#5299ff]/10 to-white flex items-center justify-center px-4 sm:px-6 relative" style={{ zIndex: 1 }}>
+    <div className="absolute inset-0 z-0 opacity-5 pointer-events-none"> {/* ← Ajoutez ceci */}
       <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
         <path d="M0,100 C150,200 350,0 500,100 C650,200 750,0 900,100 C1050,200 1150,0 1200,100 L1200,800 L0,800 Z" fill="#5299ff"/>
       </svg>

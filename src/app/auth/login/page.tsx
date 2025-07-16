@@ -109,7 +109,7 @@ export default function LoginPage() {
             <Input
               {...register('accessCode')}
               type="text"
-              placeholder="e.g. DEM0123"
+              placeholder="Your access code"
               className="h-12 text-center text-lg font-medium border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5299ff] focus:border-[#5299ff]"
             />
             {errors.accessCode && (

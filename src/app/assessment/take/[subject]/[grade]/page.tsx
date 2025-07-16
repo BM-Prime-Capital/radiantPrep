@@ -152,18 +152,27 @@ const handleSubmitAssessment = async () => {
       }
 
       const result = await response.json();
-      setAssessmentResult({
-        id: result.id,
-        score: result.score,
-        totalQuestions: questions.length,
-        answers: detailedAnswers.map((answer, index) => ({
-          ...answer,
-          correctAnswer: questions[index].correctAnswer || "N/A",
-        })),
-        subject,
-        grade,
-        takenAt: new Date().toISOString(),
-      });
+        setAssessmentResult({
+          id: result.id,
+          score: result.score,
+          totalQuestions: questions.length,
+          answers: detailedAnswers.map((answer, index) => {
+            const correctAnswer = questions[index].correctAnswer;
+            
+            // Conversion des nombres en string pour la cohérence
+            const formattedCorrectAnswer = typeof correctAnswer === 'number' 
+              ? correctAnswer.toString()
+              : correctAnswer || "N/A";
+
+            return {
+              ...answer,
+              correctAnswer: formattedCorrectAnswer,
+            };
+          }),
+          subject,
+          grade,
+          takenAt: new Date().toISOString(),
+        });
       
       router.push('/assessment/results');
     } catch (error: any) {
@@ -358,8 +367,13 @@ const handleSubmitAssessment = async () => {
   );
 
 
-  function isAnswerCorrect(question: Question, userAnswer: string | string[] | undefined): boolean {
+function isAnswerCorrect(question: Question, userAnswer: string | string[] | undefined): boolean {
   if (!userAnswer || !question.correctAnswer) return false;
+
+  // Gestion du cas où correctAnswer est un nombre (index)
+  if (typeof question.correctAnswer === 'number') {
+    return userAnswer === question.correctAnswer.toString();
+  }
 
   const isMultiBlankSequence = question.blanks?.some(blank => 
     typeof blank === 'string' && blank.includes(',') && blank.includes('___')

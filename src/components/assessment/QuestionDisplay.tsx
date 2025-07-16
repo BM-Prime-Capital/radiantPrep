@@ -41,15 +41,21 @@ export function QuestionDisplay({ question, questionNumber, totalQuestions, onAn
 
   const renderQuestionContent = () => {
     switch (question.type) {
-      case QuestionType.MULTIPLE_CHOICE:
-      case QuestionType.IMAGE_CHOICE:
-        return (
-          <RadioGroup
-            value={currentAnswer as string || undefined}
-            onValueChange={(value) => onAnswerChange(value)}
-            className="space-y-3"
-          >
-            {question.options?.map((option, index) => (
+    case QuestionType.MULTIPLE_CHOICE:
+    case QuestionType.IMAGE_CHOICE:
+      return (
+        <RadioGroup
+          value={currentAnswer as string || undefined}
+          onValueChange={(value) => onAnswerChange(value)}
+          className="space-y-3"
+        >
+          {question.options?.map((option, index) => {
+            // Gestion des deux formats d'options
+            const optionText = typeof option === 'string' ? option : option.text;
+            const optionValue = typeof option === 'string' ? option : index.toString();
+            const optionImage = typeof option === 'object' ? option.image : undefined;
+
+            return (
               <motion.div 
                 key={index}
                 whileHover={{ scale: 1.02 }}
@@ -57,7 +63,7 @@ export function QuestionDisplay({ question, questionNumber, totalQuestions, onAn
                 className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <RadioGroupItem 
-                  value={option} 
+                  value={optionValue} 
                   id={`${question.id}-option-${index}`}
                   className="h-5 w-5 border-2 text-primary"
                 />
@@ -65,13 +71,20 @@ export function QuestionDisplay({ question, questionNumber, totalQuestions, onAn
                   htmlFor={`${question.id}-option-${index}`} 
                   className="text-base cursor-pointer flex-grow"
                 >
-                  {option}
+                  {optionImage && (
+                    <img 
+                      src={`/images/${optionImage}`} 
+                      alt={optionText}
+                      className="w-12 h-12 object-contain mr-3"
+                    />
+                  )}
+                  {optionText}
                 </Label>
               </motion.div>
-            ))}
-          </RadioGroup>
-        );
-
+            );
+          })}
+        </RadioGroup>
+      );
       case QuestionType.TEXT:
       case QuestionType.GRAMMAR: 
         return (

@@ -20,6 +20,7 @@ export type Subject = "ELA" | "Math";
 export type Grade = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 export interface QuestionOption { // This type seems unused if options are string[] in Question
+  image?: string;
   text: string;
   isCorrect?: boolean; 
 }
@@ -28,22 +29,26 @@ export interface MatchingColumn {
   title: string;
   items: string[];
 }
-
 export interface Question {
-  id: number | string; // Changed to allow string for Prisma CUIDs, or number if mapped
-  id_prisma?: string; // Explicitly store Prisma's CUID if needed alongside a numeric ID
+  id: number | string;
+  id_prisma?: string;
   type: QuestionType;
   question: string;
   passage?: string;
-  image?: string; 
-  options?: string[]; 
-  correctAnswer?: string | string[]; 
-  category?: string; 
-  blanks?: string[]; 
-  columns?: MatchingColumn[]; 
-  isDrawing?: boolean; 
+  image?: string;
+  options?: (string | QuestionOption)[];
+  correctAnswer?: string | number | string[];
+  category?: string;
+  blanks?: string[];
+  columns?: MatchingColumn[];
+  isDrawing?: boolean;
   drawingQuestion?: boolean;
-  dataAihint?: string; // Added from static data, used in QuestionDisplay
+  dataAihint?: string;
+}
+
+// Avec un type guard pour vérifier le format
+export function isQuestionOptionObject(option: any): option is QuestionOption {
+  return typeof option === 'object' && 'text' in option;
 }
 
 export type AssessmentResult = {
@@ -55,6 +60,14 @@ export type AssessmentResult = {
   grade: Grade;
   takenAt?: string;
 };
+
+export interface AssessmentResultAnswer {
+  questionId: number | string;
+  userAnswer: string | string[];
+  correctAnswer: string | string[] | number | undefined; // Ajout de number
+  isCorrect: boolean;
+}
+
 
 export interface CanvasSize {
   width: number;
@@ -86,10 +99,5 @@ export interface AuthState {
   isLoading: boolean;
 }
 
-export interface AssessmentResultAnswer {
-  questionId: number | string; // Allow string for Prisma CUIDs
-  userAnswer: string | string[]; 
-  correctAnswer: string | string[] | undefined; // Made undefined possible as per usage
-  isCorrect: boolean;
-}
+
 
