@@ -10,8 +10,31 @@ body {
   flex-direction: column;
 }
 
+@layer components {
+  .bg-primary {
+    background-color: hsl(var(--primary));
+  }
+  .text-primary {
+    color: hsl(var(--primary));
+  }
+  .border-primary {
+    border-color: hsl(var(--primary));
+  }
+}
+
 @layer base {
   :root {
+
+        /* Couleurs bleues */
+    --primary: 212 100% 50% !important; /* Bleu vif */
+    --primary-foreground: 0 0% 100% !important; /* Texte blanc sur bleu */
+    --secondary: 212 80% 90%;       /* Bleu très clair */
+    --secondary-foreground: 212 71% 40%;
+    --muted: 212 20% 96%;
+    --muted-foreground: 212 15% 45%;
+    --accent: 212 80% 60%;          /* Bleu accent */
+    --accent-foreground: 212 71% 40%;
+    
     --background-page: 0 0% 98%;
     --foreground-page: 240 10% 20%;
     --background: 0 0% 100%;
@@ -20,26 +43,21 @@ body {
     --card-foreground: 240 10% 25%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 25%;
-   /*--primary: 142 71% 40%;  Vert principal */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 142 60% 96%;
-    --secondary-foreground: 142 71% 40%;
-    --muted: 142 20% 96%;
-    --muted-foreground: 142 15% 45%;
-    /*--accent: 142 60% 60%;*/
-    /*--accent-foreground: 142 71% 40%;*/
+    
+    /* Couleurs jaunes */
+
+      --success: 145 65% 50%;  
+  --warning: 45 100% 60%;  
+  --info: 198 100% 50%;     
+
+    
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 142 20% 85%;
+    --border: 45 20% 85%;          /* Bordure jaune claire */
     --input: 0 0% 100%;
-    --ring: 142 60% 60%;
+    --ring: 45 80% 60%;            /* Anneau jaune */
     --radius: 0.5rem;
-
-    --primary: 217 91% 60%; /* Bleu au lieu de vert */
-  --accent: 217 86% 70%; /* Bleu plus clair */
-  --accent-foreground: 217 91% 60%; /* Texte bleu */
   }
-
   .dark {
     --background-page: 240 10% 10%;
     --foreground-page: 0 0% 95%;
@@ -49,21 +67,22 @@ body {
     --card-foreground: 0 0% 95%;
     --popover: 240 10% 12%;
     --popover-foreground: 0 0% 95%;
-    --primary: 142 71% 55%;
+    --primary: 45 100% 60%;
     --primary-foreground: 240 10% 10%;
     --secondary: 240 10% 18%;
-    --secondary-foreground: 142 60% 65%;
+    --secondary-foreground: 45 80% 65%;
     --muted: 240 10% 20%;
-    --muted-foreground: 142 15% 65%;
-    --accent: 142 60% 65%;
+    --muted-foreground: 45 15% 65%;
+    --accent: 45 80% 65%;
     --accent-foreground: 240 10% 10%;
     --destructive: 0 70% 55%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 10% 22%;
     --input: 240 10% 16%;
-    --ring: 142 60% 70%;
+    --ring: 45 80% 70%;
   }
 }
+
 @layer base {
   * {
     @apply border-border;

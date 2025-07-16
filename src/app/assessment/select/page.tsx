@@ -7,54 +7,61 @@ import type { Subject, Grade, ChildInformation } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { BookOpen, Calculator, ChevronRight, Sparkles, Rocket, Trophy, Star, Gem, Award, Zap, BrainCircuit } from 'lucide-react';
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
-import Confetti from 'react-dom-confetti';
+import { BookOpen, Calculator, ChevronRight, CheckCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const subjects: Subject[] = ['ELA', 'Math'];
 
-const SubjectCard = ({ subject, selected, onClick }: { subject: Subject; selected: boolean; onClick: () => void }) => {
+const SubjectCard = ({ 
+  subject, 
+  selected, 
+  onClick 
+}: { 
+  subject: Subject; 
+  selected: boolean; 
+  onClick: () => void 
+}) => {
   const theme = subject === 'ELA' ? {
-    bg: 'from-blue-100 to-blue-50',
+    bg: 'bg-blue-50',
     border: 'border-blue-200',
-    icon: <BookOpen className="w-12 h-12 text-blue-600" />,
+    icon: <BookOpen className="w-10 h-10 text-blue-600" />,
     text: 'text-blue-800',
-    hover: 'hover:shadow-blue-200'
+    highlight: 'bg-blue-100'
   } : {
-    bg: 'from-green-100 to-green-50',
+    bg: 'bg-green-50',
     border: 'border-green-200',
-    icon: <Calculator className="w-12 h-12 text-green-600" />,
+    icon: <Calculator className="w-10 h-10 text-green-600" />,
     text: 'text-green-800',
-    hover: 'hover:shadow-green-200'
+    highlight: 'bg-green-100'
   };
 
   return (
     <motion.div
-      whileHover={{ y: -5 }}
-      whileTap={{ scale: 0.95 }}
-      className={`cursor-pointer ${selected ? 'ring-4 ring-yellow-400' : ''}`}
+      whileHover={{ y: -2 }}
+      className={`cursor-pointer transition-all ${selected ? 'ring-2 ring-blue-500' : ''}`}
       onClick={onClick}
     >
-      <Card className={`bg-gradient-to-br ${theme.bg} border ${theme.border} rounded-xl ${theme.hover} transition-all h-full`}>
-        <CardContent className="p-6 flex flex-col items-center justify-center">
-          <div className="mb-4 p-3 bg-white rounded-full shadow-sm">
+      <Card className={`${theme.bg} border ${theme.border} rounded-lg h-full transition-colors ${selected ? theme.highlight : ''}`}>
+        <CardContent className="p-6 flex flex-col items-center">
+          <div className="mb-4 p-3 bg-white rounded-lg border">
             {theme.icon}
           </div>
-          <h3 className={`text-xl font-bold text-center ${theme.text} mb-2`}>
-            {subject === 'ELA' ? 'ELA Diagnostic' : 'Math Diagnostic'}
+          <h3 className={`text-lg font-semibold text-center ${theme.text} mb-2`}>
+            {subject === 'ELA' ? 'English Language Arts' : 'Mathematics'}
           </h3>
           <p className="text-sm text-gray-600 text-center">
-            {subject === 'ELA' ? 'English Language Arts' : 'Mathematics'}
+            {subject === 'ELA' ? 'Reading & Writing Assessment' : 'Math Skills Evaluation'}
           </p>
           
           {selected && (
             <motion.div 
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="mt-4 flex items-center gap-2 bg-yellow-400/20 px-3 py-1 rounded-full border border-yellow-400/30"
+              className="mt-3 flex items-center gap-1 text-sm text-blue-600"
             >
-              <Zap className="w-4 h-4 text-yellow-500 animate-pulse" />
-              <span className="text-xs font-bold text-yellow-600">SELECTED</span>
+              <CheckCircle className="w-4 h-4" />
+              <span>Selected</span>
             </motion.div>
           )}
         </CardContent>
@@ -67,40 +74,25 @@ export default function SelectAssessmentPage() {
   const { isAuthenticated, user, role, isLoading: authLoading, updateChildInfo } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  const containerRef = useRef<HTMLDivElement>(null);
 
   const childUser = role === 'child' ? (user as ChildInformation) : null;
-  // const [selectedSubject, setSelectedSubject] = useState<Subject | undefined>(() => childUser?.subject);
   const [selectedSubject, setSelectedSubject] = useState<Subject | undefined>();
   const [selectedGrade, setSelectedGrade] = useState<Grade | undefined>(() => childUser?.grade);
-  const [isExploring, setIsExploring] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
     if (!isAuthenticated || role !== 'child') router.replace('/auth/login');
     if (childUser) {
-      // setSelectedSubject(childUser.subject);
-      setSelectedGrade(childUser.grade); // Mise à jour explicite du grade
+      setSelectedGrade(childUser.grade);
     }
   }, [isAuthenticated, authLoading, router, childUser, role]);
 
-  useEffect(() => {
-    if (selectedSubject) {
-      setShowConfetti(true);
-      const timer = setTimeout(() => setShowConfetti(false), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [selectedSubject]);
-
   const handleStartAssessment = () => {
-    console.log('Selected Subject:', selectedSubject);
-    console.log('Selected Grade:', selectedGrade);
-    
     if (!selectedSubject || !selectedGrade) {
       toast({
-        title: 'Path Not Chosen',
-        description: 'Please select a subject to begin your assessment!',
+        title: 'Selection Required',
+        description: 'Please select a subject to begin your assessment',
         variant: 'destructive',
       });
       return;
@@ -126,84 +118,53 @@ export default function SelectAssessmentPage() {
 
   if (authLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-6 bg-gradient-to-b from-blue-50 to-white">
-        <motion.div
-          animate={{ 
-            rotate: 360,
-            scale: [1, 1.1, 1],
-          }}
-          transition={{ 
-            repeat: Infinity,
-            duration: 1.5,
-            ease: "easeInOut" 
-          }}
-          className="relative w-24 h-24"
-        >
-          <BrainCircuit className="w-full h-full text-purple-600" />
-        </motion.div>
-        <motion.h3 
-          className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-blue-500"
-          animate={{ opacity: [0.6, 1, 0.6] }}
-          transition={{ repeat: Infinity, duration: 2 }}
-        >
-          Preparing Your Learning Portal...
-        </motion.h3>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <LoadingSpinner size="lg" />
+        <h3 className="text-xl font-semibold text-gray-700">
+          Loading Assessment Portal...
+        </h3>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
-      <div className="container mx-auto px-4 py-8 w-full">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12">
+      <div className="container mx-auto px-4 w-full max-w-3xl">
         {/* Header */}
-        <motion.header 
-          className="pb-8 text-center"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <motion.h1 
-            className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600"
-            whileHover={{ scale: 1.02 }}
-          >
-            Knowledge Adventure
-          </motion.h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Ready for an exciting challenge, <span className="font-semibold text-blue-600">{childUser?.childName}</span>?
+        <header className="pb-8 text-center">
+          <h1 className="text-3xl font-bold text-gray-800 mb-3">
+            Diagnostic Assessments
+          </h1>
+          <p className="text-gray-600">
+            Select a subject to begin your evaluation, {childUser?.childName}
           </p>
-        </motion.header>
+        </header>
 
         {/* Main Content */}
-        <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           {/* Subject Selection */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mb-12"
-          >
-            <div className="flex justify-center mb-8">
+          <div className="mb-8">
+            <div className="flex justify-center mb-6">
               <Button 
-                onClick={() => setIsExploring(!isExploring)}
-                size="lg"
-                className="px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl"
+                onClick={() => setIsExpanded(!isExpanded)}
+                variant="outline"
+                className="border-blue-300 text-blue-600 hover:bg-blue-50"
               >
-                <Sparkles className="mr-3 h-5 w-5 text-yellow-300" />
-                {isExploring ? 'Hide Options' : 'Choose Your Subject'}
-                <ChevronRight className={`ml-3 h-5 w-5 transition-transform ${isExploring ? 'rotate-90' : ''}`} />
+                {isExpanded ? 'Hide Subjects' : 'View Available Subjects'}
+                <ChevronRight className={`ml-2 h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
               </Button>
             </div>
 
             <AnimatePresence>
-              {isExploring && (
+              {isExpanded && (
                 <motion.div
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: 'auto', opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.4 }}
+                  transition={{ duration: 0.3 }}
                   className="overflow-hidden"
                 >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                     {subjects.map((subject) => (
                       <SubjectCard
                         key={subject}
@@ -214,43 +175,57 @@ export default function SelectAssessmentPage() {
                     ))}
                   </div>
 
-                  {/* Grade Display */}
-                  <Card className="mb-10 border border-gray-200 bg-white">
-                    <CardContent className="p-6 text-center">
-                      <div className="flex items-center justify-center gap-3 mb-4">
-                        <Trophy className="h-6 w-6 text-yellow-500" />
-                        <h3 className="text-xl font-medium text-gray-800">
-                          Your Current Level: Grade {selectedGrade}
-                        </h3>
-                      </div>
-                      <p className="text-gray-600">
-                        Perfectly tailored challenges for your skills
-                      </p>
-                    </CardContent>
-                  </Card>
+                  {/* Grade Information */}
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center justify-center gap-2 text-gray-700">
+                      <span className="font-medium">Grade Level:</span>
+                      <span className="font-semibold text-blue-600">
+                        {selectedGrade ? `Grade ${selectedGrade}` : 'Grade not specified'}
+                      </span>
+                    </div>
+                    <p className="text-center text-sm text-gray-500 mt-1">
+                      The assessment will adapt to your grade level
+                    </p>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
             {/* Start Button */}
             <div className="flex justify-center">
-              <div className="relative">
-                <Confetti active={showConfetti} config={{ elementCount: 100, spread: 70 }} />
-                <Button
-                  onClick={handleStartAssessment}
-                  disabled={!selectedSubject}
-                  size="lg"
-                  className={`px-12 py-6 text-lg ${selectedSubject ? 
-                    'bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-400 hover:to-yellow-500 text-gray-900 shadow-lg hover:shadow-yellow-400/40' : 
-                    'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
-                >
-                  <Rocket className="mr-3 h-5 w-5" />
-                  { 'Launch Assessment'}
-                  {/* {selectedSubject ? 'Launch Assessment' : 'Select a Subject'} */}
-                </Button>
-              </div>
+              <Button
+                onClick={handleStartAssessment}
+                disabled={!selectedSubject}
+                size="lg"
+                className={`px-8 ${selectedSubject ? 
+                  'bg-blue-600 hover:bg-blue-700 text-white' : 
+                  'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+              >
+                {selectedSubject ? 'Begin Assessment' : 'Select a Subject'}
+              </Button>
             </div>
-          </motion.div>
+          </div>
+
+          {/* Assessment Information */}
+          <div className="border-t border-gray-200 pt-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">
+              About These Assessments
+            </h3>
+            <ul className="space-y-3 text-gray-600">
+              <li className="flex items-start gap-2">
+                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                <span>Designed to evaluate your current skill level</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                <span>Helps personalize your learning path</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                <span>Typically takes 20-30 minutes per subject</span>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

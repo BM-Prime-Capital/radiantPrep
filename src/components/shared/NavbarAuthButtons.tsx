@@ -12,35 +12,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User, BookOpen, BarChart2, ChevronDown, Home, Trophy, Settings } from "lucide-react";
+import { LogOut, User, BookOpen, BarChart2, ChevronDown, Home } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface NavbarAuthButtonsProps {
-  isAuthenticated: boolean;
   isHomePage: boolean;
 }
 
-export function NavbarAuthButtons({ isAuthenticated, isHomePage }: NavbarAuthButtonsProps) {
+export function NavbarAuthButtons({ isHomePage }: NavbarAuthButtonsProps) {
   const { user, role, logout } = useAuth();
 
-  // Styles conditionnels
-  const buttonVariant = isHomePage ? 'outline' : 'ghost';
-  
+  const isAuthenticated = !!user;
+
   const getDisplayName = () => {
     if (!user) return 'User';
-    if (role === 'child' && 'childName' in user) {
-      return user.childName;
-    }
-    if (role === 'parent' && 'email' in user) {
-      return user.email.split('@')[0];
-    }
+    if (role === 'child' && 'childName' in user) return user.childName;
+    if (role === 'parent' && 'email' in user) return user.email.split('@')[0];
     return 'User';
   };
 
-  const getAvatarFallback = () => {
-    const name = getDisplayName();
-    return name.charAt(0).toUpperCase();
-  };
+  const getAvatarFallback = () => getDisplayName().charAt(0).toUpperCase();
 
   if (isAuthenticated) {
     return (
@@ -49,15 +40,11 @@ export function NavbarAuthButtons({ isAuthenticated, isHomePage }: NavbarAuthBut
           <motion.div whileHover={{ scale: 1.03 }}>
             <Button 
               asChild 
-              variant={isHomePage ? 'default' : 'secondary'}
-              className={`hidden md:flex gap-2 ${isHomePage ? 
-                'bg-gradient-to-r from-blue-600 to-indigo-600 text-white' : 
-                'bg-white text-blue-600 hover:bg-blue-50'}`}
+              className="hidden md:flex gap-2 bg-white text-[#5299ff] hover:bg-gray-50 border border-white/20"
             >
               <Link href="/child-dashboard">
                 <BookOpen className="h-4 w-4" />
-                <span>My Dashboard</span>
-                <Trophy className="h-4 w-4 ml-1 text-yellow-500" />
+                <span>Dashboard</span>
               </Link>
             </Button>
           </motion.div>
@@ -68,13 +55,11 @@ export function NavbarAuthButtons({ isAuthenticated, isHomePage }: NavbarAuthBut
             <motion.div whileHover={{ scale: 1.05 }}>
               <Button 
                 variant="ghost" 
-                className={`relative h-10 w-10 rounded-full ${isHomePage ? 
-                  'border border-gray-200' : 
-                  'hover:bg-white/20'}`}
+                className="relative h-10 w-10 rounded-full hover:bg-[#3d87ff]"
               >
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="/avatars/default.png" alt="User" />
-                  <AvatarFallback className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
+                  <AvatarFallback className="bg-white text-[#5299ff]">
                     {getAvatarFallback()}
                   </AvatarFallback>
                 </Avatar>
@@ -83,20 +68,15 @@ export function NavbarAuthButtons({ isAuthenticated, isHomePage }: NavbarAuthBut
           </DropdownMenuTrigger>
           
           <DropdownMenuContent 
-            className="w-56 p-2 rounded-xl shadow-lg border border-gray-100" 
-            align="end" 
-            forceMount
+            className="w-56 p-2 rounded-xl shadow-lg border border-gray-200 bg-white" 
+            align="end"
           >
             <DropdownMenuLabel className="p-2">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none flex items-center">
-                  <User className="h-4 w-4 mr-2 text-blue-500" />
+                <p className="text-sm font-medium text-gray-900">
                   {getDisplayName()}
                 </p>
-                <p className="text-xs leading-none text-muted-foreground flex items-center">
-                  <span className={`inline-block h-2 w-2 rounded-full mr-2 ${
-                    role === 'child' ? 'bg-green-500' : 'bg-purple-500'
-                  }`} />
+                <p className="text-xs text-gray-500">
                   {role === 'child' ? 'Student Account' : 'Parent Account'}
                 </p>
               </div>
@@ -104,25 +84,25 @@ export function NavbarAuthButtons({ isAuthenticated, isHomePage }: NavbarAuthBut
             
             <DropdownMenuSeparator className="bg-gray-100" />
             
-            <DropdownMenuItem className="p-2 rounded-md hover:bg-blue-50" asChild>
-              <Link href="/profile" className="flex items-center">
-                <User className="mr-2 h-4 w-4 text-blue-500" />
+            <DropdownMenuItem asChild className="p-2 rounded-md hover:bg-gray-100">
+              <Link href="/profile" className="flex items-center text-gray-700">
+                <User className="mr-2 h-4 w-4 text-[#5299ff]" />
                 <span>Profile Settings</span>
               </Link>
             </DropdownMenuItem>
             
             {role === 'child' && (
-              <DropdownMenuItem className="p-2 rounded-md hover:bg-blue-50" asChild>
-                <Link href="/child-dashboard" className="flex items-center">
-                  <BarChart2 className="mr-2 h-4 w-4 text-green-500" />
-                  <span>Learning Dashboard</span>
+              <DropdownMenuItem asChild className="p-2 rounded-md hover:bg-gray-100">
+                <Link href="/child-dashboard" className="flex items-center text-gray-700">
+                  <BarChart2 className="mr-2 h-4 w-4 text-[#5299ff]" />
+                  <span>Dashboard</span>
                 </Link>
               </DropdownMenuItem>
             )}
             
-            <DropdownMenuItem className="p-2 rounded-md hover:bg-blue-50" asChild>
-              <Link href="/" className="flex items-center">
-                <Home className="mr-2 h-4 w-4 text-orange-500" />
+            <DropdownMenuItem asChild className="p-2 rounded-md hover:bg-gray-100">
+              <Link href="/" className="flex items-center text-gray-700">
+                <Home className="mr-2 h-4 w-4 text-[#5299ff]" />
                 <span>Home</span>
               </Link>
             </DropdownMenuItem>
@@ -130,8 +110,8 @@ export function NavbarAuthButtons({ isAuthenticated, isHomePage }: NavbarAuthBut
             <DropdownMenuSeparator className="bg-gray-100" />
             
             <DropdownMenuItem 
-              className="p-2 rounded-md hover:bg-red-50 text-red-600 focus:text-red-600" 
               onClick={logout}
+              className="p-2 rounded-md hover:bg-red-50 text-red-600"
             >
               <LogOut className="mr-2 h-4 w-4" />
               <span>Sign Out</span>
@@ -147,14 +127,12 @@ export function NavbarAuthButtons({ isAuthenticated, isHomePage }: NavbarAuthBut
       <motion.div whileHover={{ scale: 1.03 }}>
         <Button 
           asChild 
-          variant={isHomePage ? 'outline' : 'ghost'}
-          className={`${isHomePage ? 
-            'border-blue-600 text-blue-600 hover:bg-blue-50' : 
-            'text-white hover:bg-white/20'}`}
+          variant="outline"
+          className="border-white text-white hover:bg-white/20 hover:text-white bg-transparent"
         >
           <Link href="/auth/login" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
-            <span>Student Login</span>
+            <span className="text-white">Login</span>
           </Link>
         </Button>
       </motion.div>
@@ -162,13 +140,10 @@ export function NavbarAuthButtons({ isAuthenticated, isHomePage }: NavbarAuthBut
       <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
         <Button 
           asChild 
-          className={`bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md ${
-            isHomePage ? '' : 'hover:shadow-lg'
-          }`}
+          className="bg-white text-[#5299ff] hover:bg-gray-100 shadow-md"
         >
           <Link href="/auth/register" className="flex items-center gap-2">
-            <span>Enroll Your Child</span>
-            <ChevronDown className="h-4 w-4" />
+            <span>Sign Up</span>
           </Link>
         </Button>
       </motion.div>

@@ -7,11 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Pencil, MousePointer, Info, Target, Shuffle, Palette } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { DrawingCanvas } from './DrawingCanvas';
 import { useToast } from '@/hooks/use-toast';
-import { Fragment } from 'react';
+import { motion } from "framer-motion";
+import { Check, ChevronRight, ImageIcon, Pencil, Type } from "lucide-react";
 
 interface QuestionDisplayProps {
   question: Question;
@@ -24,54 +22,21 @@ interface QuestionDisplayProps {
 export function QuestionDisplay({ question, questionNumber, totalQuestions, onAnswerChange, currentAnswer }: QuestionDisplayProps) {
   const { toast } = useToast();
 
-  const handleImageCapture = async (dataUrl: string) => {
-    try {
-      // Son de capture
-      const audio = new Audio('/sounds/capture.wav');
-      audio.play().catch(() => {
-        // Ignorer les erreurs audio
-      });
-
-      const response = await fetch('/api/save-capture', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          imageData: dataUrl, 
-          questionId: question.id 
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de la sauvegarde');
-      }
-
-      const result = await response.json();
-      console.log('Image sauvegardée :', result.path);
-      
-      toast({
-        title: "Image capturée !",
-        description: "Votre réponse a été sauvegardée avec succès.",
-        variant: "default"
-      });
-
-    } catch (error) {
-      console.error('Erreur lors de la capture :', error);
-      toast({
-        title: "Erreur",
-        description: "Impossible de sauvegarder l'image.",
-        variant: "destructive"
-      });
+  const getQuestionTypeIcon = () => {
+    switch(question.type) {
+      case QuestionType.MULTIPLE_CHOICE:
+      case QuestionType.IMAGE_CHOICE:
+        return <Check className="h-5 w-5" />;
+      case QuestionType.TEXT:
+      case QuestionType.GRAMMAR:
+        return <Type className="h-5 w-5" />;
+      case QuestionType.WRITING:
+        return <Pencil className="h-5 w-5" />;
+      case QuestionType.DRAWING:
+        return <ImageIcon className="h-5 w-5" />;
+      default:
+        return <ChevronRight className="h-5 w-5" />;
     }
-  };
-
-  const handleDrawingChange = (data: any) => {
-    console.log(`🎨 Drawing data for question ${question.id}:`, data);
-    onAnswerChange(data);
-  };
-
-  const handleSelectionChange = (data: any) => {
-    console.log(`🎯 Selection data for question ${question.id}:`, data);
-    onAnswerChange(data);
   };
 
   const renderQuestionContent = () => {
@@ -85,13 +50,28 @@ export function QuestionDisplay({ question, questionNumber, totalQuestions, onAn
             className="space-y-3"
           >
             {question.options?.map((option, index) => (
-              <div key={index} className="flex items-center space-x-3 p-3 border rounded-md hover:bg-muted transition-colors">
-                <RadioGroupItem value={option} id={`${question.id}-option-${index}`} />
-                <Label htmlFor={`${question.id}-option-${index}`} className="text-base cursor-pointer flex-grow">{option}</Label>
-              </div>
+              <motion.div 
+                key={index}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <RadioGroupItem 
+                  value={option} 
+                  id={`${question.id}-option-${index}`}
+                  className="h-5 w-5 border-2 text-primary"
+                />
+                <Label 
+                  htmlFor={`${question.id}-option-${index}`} 
+                  className="text-base cursor-pointer flex-grow"
+                >
+                  {option}
+                </Label>
+              </motion.div>
             ))}
           </RadioGroup>
         );
+
       case QuestionType.TEXT:
       case QuestionType.GRAMMAR: 
         return (
@@ -100,160 +80,180 @@ export function QuestionDisplay({ question, questionNumber, totalQuestions, onAn
             value={currentAnswer as string || ''}
             onChange={(e) => onAnswerChange(e.target.value.toLowerCase())}
             placeholder="Type your answer here"
-            className="text-base border-2 border-gray-300 bg-gray-50 focus:border-primary"
+            className="text-base h-12 border-2 border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
         );
+
       case QuestionType.WRITING:
         return (
-          <Textarea
-            value={currentAnswer as string || ''}
-            onChange={(e) => onAnswerChange(e.target.value)}
-            placeholder="Write your response here..."
-            rows={6}
-            className="text-base"
-          />
-        );
-
-case QuestionType.FILL_IN_THE_BLANK:
-  let runningIndex = 0;
-
-  return (
-    <div className="space-y-4">
-      {question.blanks?.map((blankLine, lineIndex) => {
-        if (typeof blankLine !== 'string') return null;
-
-        const segments = blankLine.split('___');
-        const inputs = [];
-
-        for (let i = 0; i < segments.length; i++) {
-          inputs.push(
-            <span key={`text-${lineIndex}-${i}`} className="whitespace-pre">
-              {segments[i]}
-            </span>
-          );
-
-          if (i < segments.length - 1) {
-            const inputIndex = runningIndex;
-
-            inputs.push(
-              <Input
-                key={`input-${lineIndex}-${i}`}
-                value={Array.isArray(currentAnswer)
-                  ? currentAnswer[inputIndex] || ''
-                  : ''}
-                onChange={(e) => {
-                  const newAnswers = [...(Array.isArray(currentAnswer)
-                    ? currentAnswer
-                    : Array(question.correctAnswer?.length || 0).fill(''))];
-
-                  newAnswers[inputIndex] = e.target.value;
-                  onAnswerChange(newAnswers);
-                }}
-                className="w-12 h-8 text-center border-b-2 border-gray-400"
-              />
-            );
-
-            runningIndex++;
-          }
-        }
-
-        return (
-          <div key={lineIndex} className="flex flex-wrap items-baseline gap-1">
-            {inputs}
-          </div>
-        );
-      })}
-    </div>
-  );
-
-
-      case QuestionType.DRAWING:
-      case QuestionType.MATCHING:
-      case QuestionType.PATTERN:
-        return (
-          <div className="space-y-4">
-            {question.image && (
-              <div className="flex justify-center">
-                <img 
-                  src={question.image.startsWith('/') ? question.image : `/images/${question.image}`}
-                  alt={`Illustration ${question.id}`} 
-                  className="rounded-md border max-w-full max-h-[300px] object-contain"
-                />
-              </div>
-            )}
-            <RadioGroup
-              value={currentAnswer as string || undefined}
-              onValueChange={(value) => onAnswerChange(value)}
-              className="space-y-3"
-            >
-              {question.options?.map((option, index) => (
-                <div key={index} className="flex items-center space-x-3 p-3 border rounded-md hover:bg-muted transition-colors">
-                  <RadioGroupItem value={option} id={`${question.id}-option-${index}`} />
-                  <Label htmlFor={`${question.id}-option-${index}`} className="text-base cursor-pointer flex-grow">{option}</Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-        );
-
-      case QuestionType.CLOCK:
-      case QuestionType.COMPARISON:
-      case QuestionType.WORD_SORT:
-      case QuestionType.FRACTION:
-        return (
-          <div className="p-4 border border-dashed rounded-md bg-muted">
-            <p className="text-muted-foreground text-center">
-              Type de question interactive ({question.type.replace("_", " ").toLowerCase()}) en cours de développement.
-              <br />
-              Veuillez utiliser la saisie de texte pour votre réponse si applicable.
-            </p>
-            <Input
-              type="text"
+          <div className="space-y-2">
+            <Textarea
               value={currentAnswer as string || ''}
               onChange={(e) => onAnswerChange(e.target.value)}
-              placeholder="Tapez votre réponse pour cette question"
-              className="text-base border-2 border-gray-300 bg-gray-50 focus:border-primary mt-2"
+              placeholder="Write your response here..."
+              rows={6}
+              className="text-base border-2 border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
+            <p className="text-sm text-gray-500">
+              Minimum 50 characters. Be as detailed as possible.
+            </p>
           </div>
         );
-      default:
-        return <p>Type de question non supporté.</p>;
-    }
-  };
+
+  case QuestionType.FILL_IN_THE_BLANK:
+    // Compter le nombre total de trous (___) dans toutes les lignes
+    const totalBlanks = question.blanks?.reduce((count, blank) => 
+      count + (typeof blank === 'string' ? blank.split('___').length - 1 : 0), 0) || 0;
+
+    // Créer un tableau d'index de réponses par ligne
+    const blankIndexes: number[][] = [];
+    let currentIndex = 0;
+    
+    question.blanks?.forEach(blank => {
+      if (typeof blank !== 'string') return;
+      const blanksInLine = blank.split('___').length - 1;
+      blankIndexes.push(Array.from({length: blanksInLine}, (_, i) => currentIndex + i));
+      currentIndex += blanksInLine;
+    });
+
+    return (
+      <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        {question.blanks?.map((blankLine, lineIndex) => {
+          if (typeof blankLine !== 'string') return null;
+          
+          const lineAnswerIndexes = blankIndexes[lineIndex] || [];
+          const segments = blankLine.split('___');
+          const inputs = [];
+
+          for (let i = 0; i < segments.length; i++) {
+            inputs.push(
+              <span key={`text-${lineIndex}-${i}`} className="whitespace-pre text-gray-700">
+                {segments[i]}
+              </span>
+            );
+
+            if (i < segments.length - 1) {
+              const answerIndex = lineAnswerIndexes[i];
+              inputs.push(
+                <Input
+                  key={`input-${lineIndex}-${i}`}
+                  type="number"
+                  value={
+                    Array.isArray(currentAnswer) && currentAnswer[answerIndex] !== undefined
+                      ? currentAnswer[answerIndex]
+                      : ''
+                  }
+                  onChange={(e) => {
+                    const newAnswers = Array.isArray(currentAnswer)
+                      ? [...currentAnswer]
+                      : Array(totalBlanks).fill('');
+                    
+                    newAnswers[answerIndex] = e.target.value;
+                    onAnswerChange(newAnswers);
+                  }}
+                  className="w-16 h-8 text-center border-b-2 border-primary mx-1"
+                  placeholder="?"
+                  min="0"
+                  max="100"
+                />
+              );
+            }
+          }
+
+          return (
+            <div key={lineIndex} className="flex flex-wrap items-baseline gap-1">
+              {inputs}
+            </div>
+          );
+        })}
+      </div>
+    );
+        default:
+          return (
+            <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+              <p className="text-center text-gray-500">
+                Interactive question type ({question.type.replace("_", " ").toLowerCase()}) coming soon.
+                <br />
+                Please use text input for your answer if applicable.
+              </p>
+              <Input
+                type="text"
+                value={currentAnswer as string || ''}
+                onChange={(e) => onAnswerChange(e.target.value)}
+                placeholder="Type your answer here"
+                className="mt-3 text-base h-12 border-2 border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+          );
+      }
+    };
 
   return (
-    <Card className="w-full shadow-lg">
-      <CardHeader>
-        <CardTitle className="text-2xl text-primary">Question {questionNumber} sur {totalQuestions}</CardTitle>
-        {question.category && <CardDescription className="text-accent">{question.category}</CardDescription>}
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {question.passage && (
-          <div className="p-4 bg-muted rounded-md border max-h-60 overflow-y-auto">
-            <h4 className="font-semibold mb-2 text-lg">Passage :</h4>
-            <p className="text-foreground/90 whitespace-pre-line text-sm">{question.passage}</p>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="w-full max-w-3xl mx-auto"
+    >
+      {/* Question Card avec bordure plus visible */}
+      <Card className="w-full shadow-sm border border-gray-300 bg-white rounded-lg">
+        <CardHeader className="pb-4 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+              {getQuestionTypeIcon()}
+            </div>
+            <div>
+              <CardTitle className="text-xl font-semibold text-gray-800">
+                {question.category || 'General Question'}
+              </CardTitle>
+              {question.passage && (
+                <CardDescription className="text-gray-500">
+                  Read the passage carefully
+                </CardDescription>
+              )}
+            </div>
           </div>
-        )}
-        
-        {/* Only show image for non-interactive question types */}
-        {question.image && 
-         question.type !== QuestionType.DRAWING && 
-         question.type !== QuestionType.MATCHING && 
-         question.type !== QuestionType.PATTERN && (
-          <div className="my-4 flex justify-center">
-            <img 
-              src={question.image.startsWith('/') ? question.image : `/images/${question.image}`}
-              alt={`Question ${question.id} image`} 
-              width={question.type === QuestionType.IMAGE_CHOICE || question.image.includes("clock") || question.image.includes("cube") || question.image.includes("circle") ? 250 : 400} 
-              height={question.type === QuestionType.IMAGE_CHOICE || question.image.includes("clock") || question.image.includes("cube") || question.image.includes("circle") ? 250 : 300}
-              className="rounded-md object-contain border"
-            />
-          </div>
-        )}
-        
-        <p className="text-xl font-medium text-foreground/90 whitespace-pre-wrap">{question.question}</p>
-        <div>{renderQuestionContent()}</div>
-      </CardContent>
-    </Card>
+        </CardHeader>
+
+        <CardContent className="p-6 space-y-6">
+          {question.passage && (
+            <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+              <h4 className="font-medium mb-2 text-gray-700">Reading Passage:</h4>
+              <p className="text-gray-600 whitespace-pre-line">{question.passage}</p>
+            </div>
+          )}
+
+          {/* Question Image */}
+          {question.image && (
+            <div className="flex justify-center my-4">
+              <img 
+                src={question.image.startsWith('/') ? question.image : `/images/${question.image}`}
+                alt={`Question ${question.id} visual`}
+                className="rounded-lg border border-gray-200 max-h-64 object-contain shadow-sm"
+              />
+            </div>
+          )}
+
+          {/* Question Text */}
+          <motion.p 
+            className="text-xl font-medium text-gray-800 whitespace-pre-wrap"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
+            {question.question}
+          </motion.p>
+
+          {/* Answer Input */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            {renderQuestionContent()}
+          </motion.div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }

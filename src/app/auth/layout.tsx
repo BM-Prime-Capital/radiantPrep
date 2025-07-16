@@ -12,8 +12,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Radiant Test Prep - Authentication',
-  description: 'Login or register to access Radiant Test Prep',
+  title: 'Radiant Prep\'s Testing Program - Authentication',
+  description: 'Login or register to access Radiant Prep\'s Testing Program',
 };
 
 export default function AuthLayout({

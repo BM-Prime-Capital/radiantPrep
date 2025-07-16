@@ -13,7 +13,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Radiant Test Prep',
+  title: 'Radiant Prep\'s Testing Program',
   description: 'Diagnostic Testing Program',
 };
 
