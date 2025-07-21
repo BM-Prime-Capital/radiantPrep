@@ -1,10 +1,10 @@
+// app/layout.tsx
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { PageLoadingIndicator } from '@/components/shared/PageLoadingIndicator';
-import { LayoutContent } from '@/components/layout/LayoutContent';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -27,7 +27,7 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased bg-background text-foreground`}>
         <AuthProvider>
           <PageLoadingIndicator />
-          <LayoutContent>{children}</LayoutContent>
+          {children}
           <Toaster />
         </AuthProvider>
       </body>

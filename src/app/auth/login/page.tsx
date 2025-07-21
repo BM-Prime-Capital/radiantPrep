@@ -1,71 +1,59 @@
 'use client';
 
 import { useState } from 'react';
-import { SubmitHandler, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { useRouter } from 'next/navigation';
+import { Eye, EyeOff, Key, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
-import { ChevronLeft, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { dbGradeToAppGrade } from '@/lib/gradeUtils';
 
-const loginSchema = z.object({
-  accessCode: z.string().min(6, { message: 'Access code must be at least 6 characters long.' }),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
-
 export default function LoginPage() {
-  const { toast } = useToast();
   const router = useRouter();
   const { loginChild } = useAuth();
+  const { toast } = useToast();
+
+  const [accessCode, setAccessCode] = useState('');
+  const [showCode, setShowCode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-  });
-
-  const onSubmit: SubmitHandler<LoginFormValues> = async (data) => {
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
+
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ accessCode: data.accessCode }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessCode }),
         credentials: 'include',
       });
 
-      if (!response.ok) throw new Error('Login failed.');
+      if (!response.ok) throw new Error('Login failed');
       const childInfo = await response.json();
 
-      if (childInfo.role === 'CHILD') {
-        loginChild({
-          id: childInfo.id,
-          childName: childInfo.childName,
-          grade: dbGradeToAppGrade(childInfo.grade),
-          subject: childInfo.currentSubject,
-          accessCode: childInfo.accessCode,
-        });
+      if (childInfo.role !== 'CHILD') throw new Error('Invalid role');
 
-        toast({
-          title: 'Login successful!',
-          description: `Welcome back, ${childInfo.childName}.`,
-        });
+      loginChild({
+        id: childInfo.id,
+        childName: childInfo.childName,
+        grade: dbGradeToAppGrade(childInfo.grade),
+        subject: childInfo.currentSubject,
+        accessCode: childInfo.accessCode,
+      });
 
-        setTimeout(() => router.push('/child-dashboard'), 100);
-      } else {
-        throw new Error('Invalid user role');
-      }
-    } catch {
+      toast({
+        title: 'Login successful!',
+        description: `Welcome back, ${childInfo.childName}`,
+      });
+
+      router.push('/child-dashboard');
+    } catch (error) {
       toast({
         title: 'Login failed',
-        description: 'Invalid access code. Please double-check and try again.',
+        description: 'Invalid access code. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -74,78 +62,101 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#5299ff]/10 to-white flex items-center justify-center px-4 relative">
-      <Button 
-        variant="ghost" 
-        onClick={() => router.push('/')} 
-        className="absolute top-4 left-4 text-[#5299ff] hover:bg-[#5299ff]/10"
-      >
-        <ChevronLeft className="h-4 w-4 mr-2" />
-        Back to Home
-      </Button>
-      
-      <div className="w-full max-w-md p-8 bg-white shadow-xl rounded-2xl border border-gray-100">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-24 h-24 mx-auto mb-4 bg-[#5299ff]/10 rounded-full flex items-center justify-center">
-            <Image
-              src="/newlogo.png"
-              alt="BrightPrep Logo"
-              width={60}
-              height={60}
-              className=""
-            />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
-          <p className="text-gray-600 mt-2">Enter your access code to continue</p>
-        </div>
+    <div className="min-h-screen bg-white">
+      {/* Background animated blobs */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-20 w-64 h-64 bg-blue-300/20 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-20 right-20 w-48 h-48 bg-purple-300/20 rounded-full blur-2xl animate-float delay-1000" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-200/20 rounded-full blur-3xl animate-float delay-2000" />
+      </div>
 
-        {/* Login Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Access Code
-            </label>
-            <Input
-              {...register('accessCode')}
-              type="text"
-              placeholder="Your access code"
-              className="h-12 text-center text-lg font-medium border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5299ff] focus:border-[#5299ff]"
-            />
-            {errors.accessCode && (
-              <p className="mt-2 text-sm text-red-600">
-                {errors.accessCode.message}
-              </p>
-            )}
+      {/* Content */}
+      <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
+        <div className="max-w-xl w-full space-y-10 bg-white border border-gray-200 rounded-xl shadow-xl p-10 animate-slideInUp">
+          {/* Header */}
+          <div className="text-center space-y-4 animate-slideInRight">
+            <div className="flex justify-center">
+              <div className="relative h-24 w-24 animate-float">
+                {/* Halo animé */}
+                <div className="absolute inset-0 rounded-full bg-blue-400/30 blur-2xl animate-pulse scale-[1.6] z-0" />
+
+                {/* Conteneur du logo */}
+                <div className="relative z-10 h-full w-full rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 shadow-lg p-2 hover:scale-105 transition-all duration-500">
+                  <div className="bg-white rounded-full h-full w-full flex items-center justify-center overflow-hidden">
+                    <Image
+                      src="/newlogo.png"
+                      alt="Radiant Prep Logo"
+                      width={56}
+                      height={56}
+                      className="object-contain"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h2 className="text-2xl font-semibold text-gray-900">Welcome back</h2>
+            <p className="text-sm text-gray-500">
+              Enter your access code to continue
+            </p>
+
           </div>
 
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="w-full h-12 text-base font-semibold bg-[#5299ff] hover:bg-[#3d87ff] text-white rounded-lg shadow-md transition"
-          >
-            {isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              'Log In'
-            )}
-          </Button>
-        </form>
+          {/* Form */}
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label className="block text-sm text-center font-medium text-gray-700 mb-2">
+                Access Code
+              </label>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  <Key className="h-5 w-5" />
+                </div>
+                <input
+                  type={showCode ? 'text' : 'password'}
+                  value={accessCode}
+                  onChange={(e) => setAccessCode(e.target.value)}
+                  className="w-full h-14 pl-10 pr-12 text-sm text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5299ff] focus:border-[#5299ff] transition-colors"
+                  placeholder="Your access code"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCode(!showCode)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showCode ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
 
-        {/* Help Section */}
-        <div className="mt-6 text-center text-sm text-gray-500">
-          Need help?{' '}
-          <a
-            href="/contact"
-            className="text-[#5299ff] hover:text-[#3d87ff] font-medium"
-          >
-            Contact support
-          </a>
-        </div>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-14 text-lg font-semibold text-white rounded-lg shadow-md bg-gradient-to-br from-blue-500 to-indigo-500 hover:brightness-110 transition-all duration-300"
+            >
+              {isLoading ? 'Logging in...' : 'Log In'}
+            </Button>
 
-        {/* Footer */}
-        <div className="mt-8 pt-6 border-t border-gray-100 text-center text-xs text-gray-400">
-          © {new Date().getFullYear()} BrightPrep. All rights reserved.
+          </form>
+
+          <div className="text-center text-sm text-gray-500 space-x-4">
+            <span>
+              Need help?{' '}
+              <a href="/contact" className="text-[#5299ff] font-medium hover:underline">
+                Contact support
+              </a>
+            </span>
+            <span>|</span>
+            <a href="/" className="text-[#5299ff] font-medium hover:underline">
+              Back to Home
+            </a>
+          </div>
+
+
+          <div className="pt-6 border-t border-gray-100 text-center text-xs text-gray-400">
+            © {new Date().getFullYear()} Radiant Prep. All rights reserved.
+          </div>
         </div>
       </div>
     </div>

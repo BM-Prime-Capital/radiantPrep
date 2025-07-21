@@ -11,77 +11,108 @@ body {
 }
 
 @layer components {
-  .bg-primary {
-    background-color: hsl(var(--primary));
-  }
   .text-primary {
     color: hsl(var(--primary));
   }
-  .border-primary {
-    border-color: hsl(var(--primary));
+  .text-primary-light {
+    color: hsl(var(--primary-light));
   }
+  .bg-secondary {
+    background-color: hsl(var(--secondary));
+  }
+  .bg-accent {
+    background-color: hsl(var(--accent));
+  }
+  .text-accent {
+    color: hsl(var(--accent));
+  }
+  .text-warning {
+    color: hsl(var(--warning));
+  }
+  .bg-warning\/10 {
+    background-color: hsl(var(--warning) / 0.1);
+  }
+
+  .text-primary-dark {
+    color: hsl(var(--primary-dark));
+  }
+  .bg-primary-dark {
+    background-color: hsl(var(--primary-dark));
+  }
+  .bg-footer {
+    background-color: hsl(var(--footer-bg));
+  }
+
 }
 
 @layer base {
   :root {
+    /* 🎓 Couleurs Radiant Prep */
+    --primary: 145 65% 40%; /* Vert Radiant (chapeau) */
+    --primary-foreground: 0 0% 100%; /* Texte blanc */
+    --primary-light: 145 60% 75%;
+    --primary-dark: 145 40% 20%;
+    --footer-bg: 212 60% 18%;
 
-        /* Couleurs bleues */
-    --primary: 212 100% 50% !important; /* Bleu vif */
-    --primary-foreground: 0 0% 100% !important; /* Texte blanc sur bleu */
-    --secondary: 212 80% 90%;       /* Bleu très clair */
-    --secondary-foreground: 212 71% 40%;
-    --muted: 212 20% 96%;
-    --muted-foreground: 212 15% 45%;
-    --accent: 212 80% 60%;          /* Bleu accent */
-    --accent-foreground: 212 71% 40%;
+
     
-    --background-page: 0 0% 98%;
+    --secondary: 145 50% 90%; /* Vert clair */
+    --secondary-foreground: 145 65% 25%;
+
+    --accent: 212 100% 55%; /* Bleu vif (symboles scientifiques) */
+    --accent-foreground: 0 0% 100%;
+
+    --background-page: 145 60% 97%; /* Fond blanc très légèrement teinté vert */
     --foreground-page: 240 10% 20%;
+
     --background: 0 0% 100%;
     --foreground: 240 10% 25%;
+
     --card: 0 0% 100%;
     --card-foreground: 240 10% 25%;
+
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 25%;
-    
-    /* Couleurs jaunes */
 
-      --success: 145 65% 50%;  
-  --warning: 45 100% 60%;  
-  --info: 198 100% 50%;     
+    --success: 145 65% 40%;
+    --warning: 40 100% 60%;
+    --info: 200 100% 55%;
 
-    
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 45 20% 85%;          /* Bordure jaune claire */
+
+    --border: 145 30% 85%;
     --input: 0 0% 100%;
-    --ring: 45 80% 60%;            /* Anneau jaune */
+    --ring: 145 65% 40%;
+
     --radius: 0.5rem;
   }
-  .dark {
-    --background-page: 240 10% 10%;
-    --foreground-page: 0 0% 95%;
-    --background: 240 10% 12%;
-    --foreground: 0 0% 95%;
-    --card: 240 10% 14%;
-    --card-foreground: 0 0% 95%;
-    --popover: 240 10% 12%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 45 100% 60%;
-    --primary-foreground: 240 10% 10%;
-    --secondary: 240 10% 18%;
-    --secondary-foreground: 45 80% 65%;
-    --muted: 240 10% 20%;
-    --muted-foreground: 45 15% 65%;
-    --accent: 45 80% 65%;
-    --accent-foreground: 240 10% 10%;
-    --destructive: 0 70% 55%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 10% 22%;
-    --input: 240 10% 16%;
-    --ring: 45 80% 70%;
-  }
 }
+
+
+.dark {
+  --primary: 145 65% 45%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 145 30% 25%;
+  --secondary-foreground: 145 60% 70%;
+  --accent: 212 100% 60%;
+  --accent-foreground: 0 0% 100%;
+
+  --background-page: 240 10% 10%;
+  --foreground-page: 0 0% 95%;
+  --background: 240 10% 12%;
+  --foreground: 0 0% 95%;
+  --card: 240 10% 14%;
+  --card-foreground: 0 0% 95%;
+  --popover: 240 10% 12%;
+  --popover-foreground: 0 0% 95%;
+
+  --border: 145 15% 25%;
+  --ring: 145 65% 40%;
+}
+
+
+/* Le reste de votre fichier CSS reste inchangé */
 
 @layer base {
   * {
@@ -92,64 +123,83 @@ body {
   }
 }
 
-
-
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    @keyframes float {
-      0%, 100% {
-        transform: translateY(0) translateX(0);
-      }
-      50% {
-        transform: translateY(-20px) translateX(10px);
-      }
-    }
-    @keyframes floatReverse {
-      0%, 100% {
-        transform: translateY(0) translateX(0);
-      }
-      50% {
-        transform: translateY(20px) translateX(-10px);
-      }
-    }
-    @keyframes gridMove {
-      0% {
-        background-position: 0 0;
-      }
-      100% {
-        background-position: 70px 70px;
-      }
-    }
-    @keyframes timelineScroll {
-      0% {
-        transform: translateY(-100%);
-      }
-      100% {
-        transform: translateY(100%);
-      }
-    }
-    @keyframes timelineScrollHorizontal {
-      0% {
-        transform: translateX(-100%);
-      }
-      100% {
-        transform: translateX(100%);
-      }
-    }
-  
+/* Animations générales */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 
 
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
 
+@keyframes floatReverse {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(12px);
+  }
+}
 
+@keyframes gridMove {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 70px 70px;
+  }
+}
+
+/* Animations spécifiques pour ProgramHighlightSection */
+@keyframes stepPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+.animate-step {
+  animation: stepPulse 6s ease-in-out infinite;
+}
+
+.animate-step-delay-1 {
+  animation: stepPulse 6s ease-in-out 1s infinite;
+}
+
+.animate-step-delay-2 {
+  animation: stepPulse 6s ease-in-out 2s infinite;
+}
+
+/* Pattern backgrounds */
+.bg-pattern-wave {
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h60v60H0z' fill='none'/%3E%3Cpath d='M30 10c6 0 10 4 10 10s-4 10-10 10-10-4-10-10 4-10 10-10m0-5c8.3 0 15 6.7 15 15s-6.7 15-15 15S15 23.3 15 15 21.7 5 30 5z' opacity='.05' fill='%23000'/%3E%3C/svg%3E");
+}
+
+.bg-pattern-dots {
+  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='10' cy='10' r='1' fill='%23000' fill-opacity='0.05'/%3E%3C/svg%3E");
+}
+
+.bg-pattern-grid {
+  background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0z' fill='none'/%3E%3Cpath d='M20 0v40M0 20h40' stroke='%23000' stroke-opacity='0.05'/%3E%3C/svg%3E");
+}
 
 /* Enhanced shadow effects */
 .shadow-soft {
@@ -170,38 +220,15 @@ body {
   animation: gradient 8s ease infinite;
 }
 
-
 /* Animation personnalisée pour le texte */
 .text-fade-up {
   animation: fadeUp 0.8s ease-out forwards;
-}
-
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 /* Effet de vague pour le fond */
 .bg-wave {
   background: url('/images/wave-pattern.svg') repeat-x;
   animation: wave 60s linear infinite;
-}
-
-@keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .animate-fade-up {
@@ -220,14 +247,27 @@ body {
   animation-delay: 0.3s;
 }
 
+/* Keyframes */
 @keyframes wave {
   0% { background-position: 0 0; }
   100% { background-position: 1000px 0; }
 }
+
 @keyframes gradient {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Logo styles */
@@ -270,4 +310,26 @@ body {
 .card-hover-effect:hover {
   transform: translateY(-4px);
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Nouveaux styles pour la timeline */
+.timeline-connector {
+  @apply hidden md:block absolute left-1/2 h-full w-0.5 bg-gray-200 -translate-x-1/2;
+}
+
+.step-indicator {
+  @apply w-4 h-4 rounded-full bg-blue-600 border-4 border-white;
+}
+
+/* Styles pour les patterns SVG inline */
+.pattern-wave {
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h60v60H0z' fill='none'/%3E%3Cpath d='M30 10c6 0 10 4 10 10s-4 10-10 10-10-4-10-10 4-10 10-10m0-5c8.3 0 15 6.7 15 15s-6.7 15-15 15S15 23.3 15 15 21.7 5 30 5z' opacity='.05' fill='%23000'/%3E%3C/svg%3E");
+}
+
+.pattern-dots {
+  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='10' cy='10' r='1' fill='%23000' fill-opacity='0.05'/%3E%3C/svg%3E");
+}
+
+.pattern-grid {
+  background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0z' fill='none'/%3E%3Cpath d='M20 0v40M0 20h40' stroke='%23000' stroke-opacity='0.05'/%3E%3C/svg%3E");
 }

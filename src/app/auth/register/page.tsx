@@ -8,12 +8,18 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader2, Copy, ChevronLeft } from 'lucide-react';
+import { Loader2, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 import type { Grade, Subject } from '@/lib/types';
 import Image from 'next/image';
+
 const grades: Grade[] = [1, 2, 3, 4, 5, 6, 7, 8];
 const subjects: Subject[] = ['ELA', 'Math'];
 
@@ -32,13 +38,14 @@ export default function RegisterPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
+  const [gradeOpen, setGradeOpen] = useState(false);
+  const [subjectOpen, setSubjectOpen] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     setValue,
-    control,
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -46,6 +53,9 @@ export default function RegisterPage() {
       childSubject: 'ELA',
     },
   });
+
+  const [success, setSuccess] = useState(false);
+
 
   const onSubmit: SubmitHandler<RegisterFormValues> = async (data) => {
     setIsLoading(true);
@@ -69,11 +79,12 @@ export default function RegisterPage() {
         description: `Access code generated for ${data.childName}.`,
       });
 
-      // Redirection après 3 secondes (temps pour voir le message)
+      // ✅ Manquant : indique le succès au bouton
+      setSuccess(true);
+
       setTimeout(() => {
         router.push('/auth/login');
       }, 3000);
-
     } catch (error) {
       toast({
         title: 'Registration failed',
@@ -85,207 +96,117 @@ export default function RegisterPage() {
     }
   };
 
-  const copyToClipboard = () => {
-    if (!generatedCode) return;
-    navigator.clipboard.writeText(generatedCode).then(() => {
-      toast({ title: 'Code copied!', description: 'Access code copied to clipboard.' });
-    }).catch(() => {
-      toast({ title: 'Copy failed', description: 'Unable to copy the code.', variant: 'destructive' });
-    });
-  };
 
-return (
-  // <div className="min-h-screen bg-gradient-to-b from-[#5299ff]/10 to-white flex items-center justify-center px-4 sm:px-6 relative">
-  <div className="min-h-screen bg-gradient-to-b from-[#5299ff]/10 to-white flex items-center justify-center px-4 sm:px-6 relative" style={{ zIndex: 1 }}>
-    <div className="absolute inset-0 z-0 opacity-5 pointer-events-none"> {/* ← Ajoutez ceci */}
-      <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
-        <path d="M0,100 C150,200 350,0 500,100 C650,200 750,0 900,100 C1050,200 1150,0 1200,100 L1200,800 L0,800 Z" fill="#5299ff"/>
-      </svg>
-    </div>
-    <Button 
-      variant="ghost" 
-      onClick={() => router.push('/')} 
-      className="absolute top-4 left-4 text-[#5299ff] hover:bg-[#5299ff]/10"
-    >
-      <ChevronLeft className="h-4 w-4 mr-2" />
-      Back to Home
-    </Button>
-    
-    {/* Conteneur principal très large */}
-    <div className="w-full max-w-5xl p-8 bg-white shadow-xl rounded-2xl border border-gray-100">
-      {generatedCode ? (
-        <div className="space-y-6">
-          <Button
-            variant="ghost"
-            onClick={() => setGeneratedCode(null)}
-            className="flex items-center gap-1 text-sm text-gray-500"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Return to Registration
-          </Button>
+  return (
+    <div className="min-h-screen bg-white relative">
+      {/* Background animated blobs */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-20 w-64 h-64 bg-blue-300/20 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-20 right-20 w-48 h-48 bg-purple-300/20 rounded-full blur-2xl animate-float delay-1000" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-indigo-200/20 rounded-full blur-3xl animate-float delay-2000" />
+      </div>
 
-          <div className="text-center space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Access Code Generated</h2>
-              <p className="text-gray-600">
-                Provide this code to <span className="font-semibold text-[#5299ff]">{(registerSchema.parse(control._formValues)).childName}</span> to sign in.
-              </p>
-            </div>
-
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col items-center">
-              <p className="text-2xl font-mono tracking-wider text-[#5299ff] font-bold mb-2">
-                {generatedCode}
-              </p>
-              <Button 
-                variant="outline" 
-                onClick={copyToClipboard} 
-                className="flex items-center gap-2 border-[#5299ff] text-[#5299ff] hover:bg-[#5299ff]/10"
-              >
-                <Copy className="h-4 w-4" />
-                Copy Code
-              </Button>
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <Button 
-                onClick={() => router.push('/auth/login')} 
-                className="w-full bg-[#5299ff] hover:bg-[#3d87ff]"
-              >
-                Continue to Student Login
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => setGeneratedCode(null)} 
-                className="w-full border-[#5299ff] text-[#5299ff] hover:bg-[#5299ff]/10"
-              >
-                Register Another Student
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-3 bg-[#5299ff]/10 rounded-full flex items-center justify-center">
-              <Image
-                src="/newlogo.png"
-                alt="Logo"
-                width={40}
-                height={40}
-                className="object-contain"
-              />
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">Register Your Child</h1>
-            <p className="text-gray-600 mt-2">Fill out the form to create an account</p>
-          </div>
-
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mx-auto w-4/5">
-            <div>
-              <Label htmlFor="parentEmail" className="text-gray-700">
-                Email Address
-              </Label>
-              <Input
-                id="parentEmail"
-                type="email"
-                {...register('parentEmail')}
-                placeholder="example@domain.com"
-                className="mt-1 w-full border-gray-300 focus:ring-[#5299ff] focus:border-[#5299ff]"
-              />
-              {errors.parentEmail && <p className="text-sm text-red-600 mt-1">{errors.parentEmail.message}</p>}
-            </div>
-
-            <div>
-              <Label htmlFor="parentPassword" className="text-gray-700">
-                Password
-              </Label>
-              <Input
-                id="parentPassword"
-                type="password"
-                {...register('parentPassword')}
-                placeholder="At least 6 characters"
-                className="mt-1 w-full border-gray-300 focus:ring-[#5299ff] focus:border-[#5299ff]"
-              />
-              {errors.parentPassword && <p className="text-sm text-red-600 mt-1">{errors.parentPassword.message}</p>}
-            </div>
-
-            <div>
-              <Label htmlFor="childName" className="text-gray-700">
-                Student's Name
-              </Label>
-              <Input
-                id="childName"
-                {...register('childName')}
-                placeholder="e.g. Emily Smith"
-                className="mt-1 w-full border-gray-300 focus:ring-[#5299ff] focus:border-[#5299ff]"
-              />
-              {errors.childName && <p className="text-sm text-red-600 mt-1">{errors.childName.message}</p>}
-            </div>
-
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <Label htmlFor="childGrade" className="text-gray-700">
-                  Grade Level
-                </Label>
-                <Select
-                  onValueChange={(value) => setValue('childGrade', parseInt(value) as Grade)}
-                  defaultValue="1"
-                >
-                  <SelectTrigger className="w-full border-gray-300 focus:ring-[#5299ff]">
-                    <SelectValue placeholder="Select grade" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {grades.map((grade) => (
-                      <SelectItem key={grade} value={String(grade)}>
-                        Grade {grade}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="childSubject" className="text-gray-700">
-                  Subject
-                </Label>
-                <Select
-                  onValueChange={(value) => setValue('childSubject', value as Subject)}
-                  defaultValue="ELA"
-                >
-                  <SelectTrigger className="w-full border-gray-300 focus:ring-[#5299ff]">
-                    <SelectValue placeholder="Select subject" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subjects.map((subject) => (
-                      <SelectItem key={subject} value={subject}>
-                        {subject}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+      <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
+        <div className="max-w-xl w-full space-y-10 bg-white border border-gray-200 rounded-xl shadow-xl p-10 animate-slideInUp">
+          <div className="text-center space-y-4 animate-slideInRight">
+            <div className="flex justify-center">
+              <div className="relative h-24 w-24 animate-float">
+                <div className="absolute inset-0 rounded-full bg-blue-400/30 blur-2xl animate-pulse scale-[1.6] z-0" />
+                <div className="relative z-10 h-full w-full rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 shadow-lg p-2 hover:scale-105 transition-all duration-500">
+                  <div className="bg-white rounded-full h-full w-full flex items-center justify-center overflow-hidden">
+                    <Image src="/newlogo.png" alt="Logo" width={56} height={56} className="object-contain" />
+                  </div>
+                </div>
               </div>
             </div>
+            <h2 className="text-2xl font-semibold text-gray-900">Register Your Child</h2>
+            <p className="text-sm text-gray-500">Fill out the form to create an account</p>
+          </div>
 
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <div>
+              <Input type="email" className="w-full h-14 pl-10 pr-12 text-sm text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5299ff] focus:border-[#5299ff] transition-colors" placeholder="Parent Email" {...register('parentEmail')} />
+              {errors.parentEmail && <p className="text-xs text-red-500 mt-1">{errors.parentEmail.message}</p>}
+            </div>
+            <div>
+              <Input type="password" className="w-full h-14 pl-10 pr-12 text-sm text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5299ff] focus:border-[#5299ff] transition-colors" placeholder="Parent Password" {...register('parentPassword')} />
+              {errors.parentPassword && <p className="text-xs text-red-500 mt-1">{errors.parentPassword.message}</p>}
+            </div>
+            <div>
+              <Input type="text" className="w-full h-14 pl-10 pr-12 text-sm text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5299ff] focus:border-[#5299ff] transition-colors" placeholder="Child Name" {...register('childName')} />
+              {errors.childName && <p className="text-xs text-red-500 mt-1">{errors.childName.message}</p>}
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Select
+                onValueChange={(v) => setValue('childGrade', parseInt(v) as Grade)}
+                defaultValue="1"
+                open={gradeOpen}
+                onOpenChange={setGradeOpen}
+              >
+                <SelectTrigger className="h-14 border border-gray-300 rounded-lg text-sm px-4 flex justify-between items-center focus:ring-2 focus:ring-[#5299ff] focus:border-[#5299ff] transition-colors">
+                  <SelectValue placeholder="Grade" />
+                  <ChevronDown className={`w-4 h-4 opacity-50 transform transition-transform duration-200 ${gradeOpen ? 'rotate-180' : ''}`} />
+                </SelectTrigger>
+                <SelectContent className="animate-in fade-in slide-in-from-top-1 duration-150">
+                  {grades.map((g) => (
+                    <SelectItem key={g} value={String(g)} className="text-sm py-3 text-center hover:bg-blue-50 cursor-pointer">
+                      Grade {g}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                onValueChange={(v) => setValue('childSubject', v as Subject)}
+                defaultValue="ELA"
+                open={subjectOpen}
+                onOpenChange={setSubjectOpen}
+              >
+                <SelectTrigger className="h-14 border border-gray-300 rounded-lg text-sm px-4 flex justify-between items-center focus:ring-2 focus:ring-[#5299ff] focus:border-[#5299ff] transition-colors">
+                  <SelectValue placeholder="Subject" />
+                  <ChevronDown className={`w-4 h-4 opacity-50 transform transition-transform duration-200 ${subjectOpen ? 'rotate-180' : ''}`} />
+                </SelectTrigger>
+                <SelectContent className="animate-in fade-in slide-in-from-top-1 duration-150">
+                  {subjects.map((s) => (
+                    <SelectItem key={s} value={s} className="text-sm py-3 text-center hover:bg-blue-50 cursor-pointer">
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-6 bg-[#5299ff] hover:bg-[#3d87ff]"
+              className="w-full h-14 text-lg font-semibold text-white rounded-lg shadow-md bg-gradient-to-br from-blue-500 to-indigo-500 hover:brightness-110 active:scale-95 transition-all duration-300 ease-out"
             >
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Register'}
+              {isLoading ? (
+                <Loader2 className="animate-spin h-5 w-5" />
+              ) : success ? (
+                <span className="flex items-center gap-2">
+                  <span className="text-xl">✔</span> Success
+                </span>
+              ) : (
+                'Register'
+              )}
             </Button>
+
           </form>
 
-          <div className="mt-6 pt-4 border-t border-gray-200 text-center text-sm text-gray-600">
-            Already have an account?{' '}
-            <a 
-              href="/auth/login" 
-              className="font-medium text-[#5299ff] hover:underline"
-            >
-              Sign in here
-            </a>
+          <div className="text-center text-sm text-gray-500 space-x-4">
+            <span>
+              Already have an account?{' '}
+              <a href="/auth/login" className="text-[#5299ff] font-medium hover:underline">Login</a>
+            </span>
+            <span>|</span>
+            <a href="/" className="text-[#5299ff] font-medium hover:underline">Back to Home</a>
           </div>
-        </>
-      )}
+
+          <div className="pt-6 border-t border-gray-100 text-center text-xs text-gray-400">
+            © {new Date().getFullYear()} Radiant Prep. All rights reserved.
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
 }
