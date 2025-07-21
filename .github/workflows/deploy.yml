@@ -13,15 +13,15 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: Setup Node.js on GitHub runner
         uses: actions/setup-node@v3
         with:
           node-version: 20
 
-      - name: Install dependencies
+      - name: Install dependencies (build only)
         run: npm install
 
-      - name: Build project
+      - name: Build project (local test)
         run: npm run build
 
       - name: Add SSH Key
@@ -33,11 +33,26 @@ jobs:
 
       - name: Deploy on EC2 via SSH
         run: |
-          ssh root@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no root@${{ secrets.EC2_HOST }} << 'EOF'
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
             cd /var/www/radiantprep
-            git pull origin main
+
+            echo "🔄 Pulling latest code from GitHub..."
+            git pull origin master
+
+            echo "📦 Installing dependencies..."
             npm install
+
+            echo "⚙️ Generating Prisma client..."
             npx prisma generate
+
+            echo "🛠️ Building Next.js app..."
             npm run build
+
+            echo "🚀 Restarting with PM2..."
             pm2 restart radiantprep || pm2 start npm --name radiantprep -- run start
+
+            echo "✅ Deployment complete!"
           EOF
