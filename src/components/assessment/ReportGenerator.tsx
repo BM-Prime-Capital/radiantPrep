@@ -26,27 +26,36 @@ export function ReportGenerator({ assessmentResult, studentName, questions }: Re
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: [200, 260] // Custom format: width, height in mm
+        format: 'a4' // Format standard A4
       });
 
-      // Temporarily make the report visible for rendering
+      // Ajustez la largeur de rendu pour correspondre au format A4
       const originalStyle = reportRef.current.style.cssText;
-      reportRef.current.style.cssText = 'position: absolute; left: 0; top: 0; width: 794px;';
+      reportRef.current.style.cssText = 'position: absolute; left: 0; top: 0; width: 210mm;';
 
       const canvas = await html2canvas(reportRef.current, {
+        scale: 2, // Augmentez la qualité avec un scale de 2
         logging: true,
         useCORS: true,
-        background: '#FFFFFF',
+        backgroundColor: '#FFFFFF',
       });
 
-      // Restore original style
       reportRef.current.style.cssText = originalStyle;
 
       const imgData = canvas.toDataURL('image/png');
-      const imgWidth = 200; // Width in mm
+      const imgWidth = 210; // Largeur A4 en mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      // Vérifiez si la hauteur dépasse la page A4
+      if (imgHeight > 297) {
+        toast({
+          title: "Content Truncated",
+          description: "The report content is too long and may be truncated in the PDF.",
+          variant: "default",
+        });
+      }
+
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, Math.min(imgHeight, 297));
       pdf.save(`COMPLEMETRICS_Report_${studentName}_${assessmentResult.subject}_Grade${assessmentResult.grade}.pdf`);
 
       toast({

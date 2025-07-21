@@ -228,24 +228,26 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
       );
     };
 
-    return (
-      <div className="relative">
-        <div ref={ref} className="w-[794px] bg-white text-black font-sans leading-tight text-sm" style={{
-          height: '1122.52px', // Une seule page maintenant
-          position: 'relative'
-        }}>
-          {/* Header avec l'image */}
-          <div className="w-full" style={{ lineHeight: 0 }}>
-            <img
-              src="/radiant-head.jpg"
-              alt="Radiant Prep Header"
-              className="w-full h-auto"
-              style={{ display: 'block' }}
-            />
-          </div>
+return (
+  <div className="relative">
+    <div ref={ref} className="w-[210mm] bg-white text-black font-sans leading-tight text-xs flex flex-col" style={{
+height: '297mm',
+    }}>
+      
+      {/* Header avec l'image */}
+      <div className="w-full" style={{ lineHeight: 0 }}>
+        <img
+          src="/radiant-head.jpg"
+          alt="Radiant Prep Header"
+          className="w-full h-auto"
+          style={{ display: 'block' }}
+        />
+      </div>
 
-          {/* Scholar Info avec Grade - Espace réduit */}
-        <div className="px-6 mb-2 mt-5">
+      {/* Contenu principal */}
+      <div className="flex-grow px-6">
+        {/* Scholar Info et Grade */}
+        <div className="mb-2 mt-5">
           <div className="flex justify-between items-center">
             <div className="flex-1 flex items-center">
               <div style={{
@@ -255,9 +257,9 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
                 fontSize: '1.3rem',
                 fontWeight: 'bold',
                 display: 'inline-flex',
-                alignItems: 'flex-start', // Changé de flex-start à center
-                height: '32px', // Augmenté de 24px à 32px
-                lineHeight: '.9', // Changé de .75 à 1
+                alignItems: 'center',
+                height: '32px',
+                lineHeight: '.9',
                 boxSizing: 'border-box',
               }}>
                 SCHOLAR&nbsp;:
@@ -270,9 +272,9 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
                 fontSize: '1.3rem',
                 fontWeight: 'bold',
                 display: 'inline-flex',
-                alignItems: 'flex-start', // Changé de flex-start à center
-                height: '32px', // Augmenté de 24px à 32px
-                lineHeight: '.9', // Changé de .75 à 1
+                alignItems: 'center',
+                height: '32px',
+                lineHeight: '.9',
                 boxSizing: 'border-box',
               }}>
                 {studentName}
@@ -286,9 +288,9 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
                 fontSize: '1.3rem',
                 fontWeight: 'bold',
                 display: 'inline-flex',
-                alignItems: 'flex-start', // Changé de flex-start à center
-                height: '32px', // Augmenté de 24px à 32px
-                lineHeight: '.9', // Changé de .75 à 1
+                alignItems: 'center',
+                height: '32px',
+                lineHeight: '.9',
                 boxSizing: 'border-box',
               }}>
                 <span className="mr-2">Grade&nbsp;:</span>
@@ -301,8 +303,8 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
                 fontSize: '1.3rem',
                 fontWeight: 'bold',
                 display: 'inline-flex',
-                alignItems: 'flex-start', // Changé de flex-start à center
-                height: '32px', // Augmenté de 24px à 32px
+                alignItems: 'center',
+                height: '32px',
                 lineHeight: '.9',
                 boxSizing: 'border-box',
               }}>
@@ -317,108 +319,93 @@ export const ReportTemplate = React.forwardRef<HTMLDivElement, ReportTemplatePro
           </div>
         </div>
 
-          {/* Graphiques et score - Version compacte */}
-          <div className="px-6 mb-4">
-            <div className="flex justify-between items-start">
-              <div className="w-1/3">
-                <ScoreComparisonBarChart />
-              </div>
-
-              <div className="w-1/3 text-center px-2"> {/* Réduction du padding */}
-                <div className="mt-2"> {/* Réduction de la marge */}
-                  <div className="text-lg font-bold mb-1">SCORE:</div> {/* Réduction de la marge */}
-                  <div className="text-5xl font-bold">{percentage}%</div> {/* Taille réduite */}
-                  <div className="mt-2 text-xs space-y-0"> {/* Taille et espace réduits */}
-                    <div>Custom Scale: 1.9</div>
-                    <div>Set Scale: 3.4</div>
-                  </div>
+        {/* Graphiques et score */}
+        <div className="mb-4">
+          <div className="flex justify-between items-start">
+            <div className="w-1/3">
+              <ScoreComparisonBarChart />
+            </div>
+            <div className="w-1/3 text-center px-2">
+              <div className="mt-2">
+                <div className="text-lg font-bold mb-1">SCORE:</div>
+                <div className="text-5xl font-bold">{percentage}%</div>
+                <div className="mt-2 text-xs space-y-0">
+                  <div>Custom Scale: 1.9</div>
+                  <div>Set Scale: 3.4</div>
                 </div>
               </div>
-
-              <div className="w-1/3">
-                <div className="border border-gray-400 p-2 h-full flex flex-col"> {/* Réduction du padding */}
-                  <h3 className="font-bold text-base text-center mb-1 font-sans">Time Distribution</h3> {/* Taille réduite */}
-                  <div className="flex-1">
-                    <TimeDistributionPieChart />
-                  </div>
+            </div>
+            <div className="w-1/3">
+              <div className="border border-gray-400 p-2 h-full flex flex-col">
+                <h3 className="font-bold text-base text-center mb-1 font-sans">Time Distribution</h3>
+                <div className="flex-1">
+                  <TimeDistributionPieChart />
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Sections Correct/Incorrect */}
-    
-
-          <div className="px-6 mb-4 text-center font-calibri"> {/* Ajout de font-calibri */}
-            <div className="flex justify-center mb-4">
-              <img src="/Screenshot 2025-06-27 at 22.36.34.png" alt="Correct & Incorrect" />
-            </div>
-            {isAnalyzing ? (
-              <div className="flex justify-center items-center py-8">
-                <div className="text-gray-500">Analyzing skills with AI...</div>
-              </div>
-            ) : (
-              <div className="flex">
-                {/* Colonne Correct */}
-                <div className="w-1/2">
-                  <div className="space-y-0 text-sm ml-[60px] text-justify">
-                    {skillCategories.correct.map((skill, i) => (
-                      <div key={i} className="font-calibri">{skill}</div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Colonne Incorrect */}
-                <div className="w-1/2">
-                  <div className="space-y-0 text-sm pl-[100px] text-justify">
-                    {skillCategories.incorrect.map((skill, i) => (
-                      <div key={i} className="font-calibri">{skill}</div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            
+        {/* Sections Correct/Incorrect */}
+        <div className="mb-4">
+          <div className="flex justify-center mb-2">
+            <img 
+              src="/Screenshot 2025-06-27 at 22.36.34.png" 
+              alt="Correct & Incorrect" 
+            />
           </div>
-
-          <div className="px-6">
-            <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-black text-[#f7ff3c]">
-                    <th className="w-2/3 align-middle text-center border-r border-black">
-                      <span className="text-sm font-bold">
-                        GENERAL ANALYSIS / FOCUS AREAS:
-                      </span>
-                    </th>
-                    <th className="w-1/3 align-middle text-center">
-                      <span className="text-sm font-bold text-white">
-                        PROJECTED PREP LENGTH:
-                      </span>
-                    </th>
-                  </tr>
-                </thead>
-              <tbody>
-                <tr>
-                  <td className="p-2 text-sm border-r border-black">
-                    Our data indicates <span className="text-blue-600 font-semibold">{studentName}</span> requires critical intervention in <span className="text-blue-600 font-semibold">{assessmentResult.subject}</span>. His results is dramatically behind typical peer metrics. Sefket's does not yet have a foundation in literacy. An intensive and foundational approach is an appropriate start for helping Sefket.
-                  </td>
-                  <td className="p-2 text-sm">
-                    Varies based on service options
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            
-            {/* Footer */}
-            <div className="bg-black text-white text-center py-1 text-xs mt-2">
-              Copyright © by Radiant Prep, LLC. All Rights Reserved. CONFIDENTIAL - May NOT be reproduced in any form.
+          <div className="grid grid-cols-2 gap-x-8 px-8">
+            <div className="space-y-1">
+              {skillCategories.correct.map((skill, i) => (
+                <div key={i} className="flex items-start">
+                  <span className="inline-block w-6 text-right pr-1">{i+1}.</span>
+                  <span className="flex-1">{skill}</span>
+                </div>
+              ))}
+            </div>
+            <div className="space-y-1">
+              {skillCategories.incorrect.map((skill, i) => (
+                <div key={i} className="flex items-start">
+                  <span className="inline-block w-6 text-right pr-1">{i+1}.</span>
+                  <span className="flex-1">{skill}</span>
+                </div>
+              ))}
             </div>
           </div>
-
         </div>
       </div>
-    );
+
+      {/* Footer fixe en bas */}
+      <div className="px-6 w-full">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-black text-[#f7ff3c]">
+              <th className="w-2/3 p-2 border-r border-black font-bold">
+                GENERAL ANALYSIS / FOCUS AREAS:
+              </th>
+              <th className="w-1/3 p-2 font-bold text-white">
+                PROJECTED PREP LENGTH:
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td className="p-2 border-r border-black">
+                Our data indicates <span className="text-blue-600 font-semibold">{studentName}</span> requires intervention in <span className="text-blue-600 font-semibold">{assessmentResult.subject}</span>.
+              </td>
+              <td className="p-2">
+                Varies based on service options
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div className="bg-black text-white text-center py-1 text-xs">
+          Copyright © by Radiant Prep, LLC. All Rights Reserved. CONFIDENTIAL - May NOT be reproduced in any form.
+        </div>
+      </div>
+    </div>
+  </div>
+);
   }
 );
 
