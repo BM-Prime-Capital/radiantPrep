@@ -8,19 +8,20 @@ const prisma = new PrismaClient();
 // Helper function for consistent cookie settings
 const setSessionCookie = (response: NextResponse, sessionId: string) => {
   const isProduction = process.env.NODE_ENV === 'production';
-  const domain = isProduction ? '.radiant-prep.vercel.app' : undefined;
+  const domain = isProduction ? '.radiantprep-app.com' : undefined;
 
   response.cookies.set('session', sessionId, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'lax', // Consistent across environments
-    maxAge: 60 * 60 * 24 * 7, // 1 week
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7,
     path: '/',
     domain: domain,
   });
 
   return response;
 };
+
 
 export async function POST(request: Request) {
   try {
