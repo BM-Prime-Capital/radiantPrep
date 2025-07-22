@@ -52,6 +52,7 @@ model User {
   email        String?   @unique
   passwordHash String?
   role         UserRole
+  avatarUrl   String?
   childName    String?
   accessCode   String?   @unique
   createdAt    DateTime  @default(now())
@@ -67,6 +68,7 @@ model User {
 
   parentAssessments Assessment[] @relation("ParentAssessments")
   childAssessments  Assessment[] @relation("ChildAssessments")
+  achievements Achievement[]
 }
 
 
@@ -163,3 +165,19 @@ model Session {
   @@index([userId])
 }
 
+model AchievementType {
+  id          String      @id @default(cuid())
+  name        String
+  description String
+  icon        String
+  achievements Achievement[]
+}
+
+model Achievement {
+  id               String         @id @default(cuid())
+  userId           String
+  user             User           @relation(fields: [userId], references: [id])
+  achievementTypeId String
+  achievementType  AchievementType @relation(fields: [achievementTypeId], references: [id])
+  unlockedAt       DateTime       @default(now())
+}

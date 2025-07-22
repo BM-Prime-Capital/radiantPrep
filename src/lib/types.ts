@@ -82,12 +82,13 @@ export interface ChildInformation {
   accessCode: string;
   id: string;
   currentSubject?: Subject;
+  avatarUrl?: string;
 }
 
 export interface ParentUser {
   email: string;
   id: string;
-  // other parent details if needed
+  avatarUrl?: string; 
 }
 
 export type UserRole = 'parent' | 'child' | null;
@@ -125,3 +126,6 @@ export interface AssessmentStats {
   currentStreak: number;
   lastAssessmentDate: string | null;
 }
+
+
+

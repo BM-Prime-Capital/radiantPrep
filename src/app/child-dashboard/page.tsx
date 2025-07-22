@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
-import { Assessment, isChild } from '@/lib/types';
+import { Assessment, ChildInformation, isChild, ParentUser } from '@/lib/types';
 import { ChevronLeft, LucideIcon } from 'lucide-react';
 import {
   BookOpen,
@@ -44,10 +44,16 @@ const ChildDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentSubject, setCurrentSubject] = useState<string | null>(null);
   const [currentGrade, setCurrentGrade] = useState<string | null>(null);
-  // const [stats, setStats] = useState<any[]>([]);
-  // const [recentAssessments, setRecentAssessments] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [assessmentsPerPage] = useState(5);
+
+  const getAvatarUrl = (user: ParentUser | ChildInformation | null) => {
+    if (!user) return '/default-avatar.png';
+    return user.avatarUrl || (isChild(user) ? '/child-avatar.png' : '/parent-avatar.png');
+  };
+
+
+
 
   const [recentAssessments, setRecentAssessments] = useState<Assessment[]>([]);
   const [stats, setStats] = useState<{
@@ -57,6 +63,18 @@ const ChildDashboard = () => {
     color: string;
     bgColor: string;
   }[]>([]);
+
+  const [progress, setProgress] = useState<{
+    subjectProgress: number;
+    overallProgress: number;
+  }>({ subjectProgress: 0, overallProgress: 0 });
+
+  const [achievements, setAchievements] = useState<Array<{
+    title: string;
+    description: string;
+    icon: string;
+    count?: number;
+  }>>([]); 
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -71,59 +89,84 @@ const ChildDashboard = () => {
     }
   }, [user]);
 
-useEffect(() => {
-  async function fetchDashboardData() {
-    try {
-      // Récupère les évaluations et les stats
-      const [assessmentsRes, statsRes] = await Promise.all([
-        fetch('/api/assessments'),
-        fetch('/api/assessments/stats')
-      ]);
+  useEffect(() => {
+    async function fetchDashboardData() {
+      try {
+        const [assessmentsRes, statsRes, progressRes, achievementsRes] = await Promise.all([
+          fetch('/api/assessments'),
+          fetch('/api/assessments/stats'),
+          fetch('/api/progress'),
+          fetch('/api/achievements')
+        ]);
 
-      if (!assessmentsRes.ok || !statsRes.ok) {
-        throw new Error('Failed to fetch data');
+        const [assessments, statsData, progressData, achievementsData] = await Promise.all([
+          assessmentsRes.json(),
+          statsRes.json(),
+          progressRes.json(),
+          achievementsRes.json()
+        ]);
+        console.log('Received stats data:', statsData); // Debugging
+
+        setRecentAssessments(assessments);
+        // Formatage des statistiques
+        // setStats([
+        //   {
+        //     title: 'Total Assessments',
+        //     value: statsData.totalAssessments,
+        //     icon: FileText,
+        //     color: 'text-blue-600',
+        //     bgColor: 'bg-blue-100',
+        //   },
+        //   {
+        //     title: 'Avg Score',
+        //     value: `${statsData.averageScore}%`,
+        //     icon: Award,
+        //     color: 'text-green-600',
+        //     bgColor: 'bg-green-100',
+        //   },
+        //   {
+        //     title: 'Current Streak',
+        //     value: `${statsData.currentStreak} days`,
+        //     icon: Clock,
+        //     color: 'text-purple-600',
+        //     bgColor: 'bg-purple-100',
+        //   },
+        // ]);
+        setStats([
+  {
+    title: 'Total Assessments',
+    value: statsData.totalAssessments || 0, // Notez le double "s" ici
+    icon: FileText,
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-100',
+  },
+  {
+    title: 'Avg Score',
+    value: `${statsData.averageScore || 0}%`,
+    icon: Award,
+    color: 'text-green-600',
+    bgColor: 'bg-green-100',
+  },
+  {
+    title: 'Current Streak',
+    value: `${statsData.currentStreak || 0} days`,
+    icon: Clock,
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-100',
+  },
+]);
+
+        // Nouvelles données
+        setProgress(progressData);
+        setAchievements(achievementsData);
+
+      } catch (err) {
+        console.error('Error fetching dashboard data:', err);
       }
-
-      const [assessments, statsData] = await Promise.all([
-        assessmentsRes.json(),
-        statsRes.json()
-      ]);
-
-      setRecentAssessments(assessments);
-
-      // Formatage des statistiques
-      setStats([
-        {
-          title: 'Total Assessments',
-          value: statsData.totalAssessments,
-          icon: FileText,
-          color: 'text-blue-600',
-          bgColor: 'bg-blue-100',
-        },
-        {
-          title: 'Avg Score',
-          value: `${statsData.averageScore}%`,
-          icon: Award,
-          color: 'text-green-600',
-          bgColor: 'bg-green-100',
-        },
-        {
-          title: 'Current Streak',
-          value: `${statsData.currentStreak} days`,
-          icon: Clock,
-          color: 'text-purple-600',
-          bgColor: 'bg-purple-100',
-        },
-      ]);
-
-    } catch (err) {
-      console.error('Error fetching dashboard data:', err);
-      // Vous pourriez ajouter un état pour gérer les erreurs ici
     }
-  }
 
-  fetchDashboardData();
-}, []);
+    fetchDashboardData();
+  }, []);
 
   // Calculate current assessments for pagination
   const indexOfLastAssessment = currentPage * assessmentsPerPage;
@@ -294,9 +337,9 @@ useEffect(() => {
                     className="rounded-full p-0 w-9 h-9 hover:bg-gray-100"
                   >
                     <Avatar className="h-8 w-8 border border-gray-200">
-                      <AvatarImage src={user?.avatarUrl || ''} />
+                      <AvatarImage src={getAvatarUrl(user)} />
                       <AvatarFallback className="bg-primary text-white">
-                        {user?.childName?.[0]?.toUpperCase() || 'U'}
+                        {isChild(user) ? user.childName?.[0]?.toUpperCase() : 'U'}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -305,7 +348,7 @@ useEffect(() => {
                 <DropdownMenuContent align="end" className="w-56 rounded-md shadow-lg border border-gray-200">
                   <DropdownMenuLabel className="font-normal py-2">
                     <div className="flex flex-col">
-                      <span className="font-medium">{user?.childName || 'Student'}</span>
+                      <span className="font-medium">{isChild(user) ? user.childName : 'Student'}</span>
                       <span className="text-xs text-gray-500">Student Account</span>
                     </div>
                   </DropdownMenuLabel>
@@ -343,7 +386,9 @@ useEffect(() => {
                 <div className="bg-gradient-to-r from-primary to-accent rounded-xl p-6 text-white mb-8">
                   <div className="flex flex-col md:flex-row items-center justify-between">
                     <div>
-                      <h2 className="text-2xl font-bold mb-2">Hello, {user.childName || 'Student'}!</h2>
+                      <h2 className="text-2xl font-bold mb-2">
+                      Hello, {isChild(user) ? user.childName : 'Student'}!
+                      </h2>
                       <p className="opacity-90">
                         Ready to learn something new today? Let's make progress together!
                       </p>
@@ -435,10 +480,10 @@ useEffect(() => {
                       </div>
                       <div className="mt-4">
                         <p className="text-sm text-gray-500 mb-2">Progress</p>
-                        <Progress value={75} className="h-2" />
+                        <Progress value={progress.subjectProgress} className="h-2" />
                         <div className="flex justify-between text-xs text-gray-500 mt-1">
                           <span>0%</span>
-                          <span>75%</span>
+                          <span>{progress.subjectProgress}%</span>
                           <span>100%</span>
                         </div>
                       </div>
@@ -453,28 +498,24 @@ useEffect(() => {
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-yellow-100 rounded-full">
-                            <Award className="h-5 w-5 text-yellow-600" />
+                        {achievements.slice(0, 2).map((achievement, index) => (
+                          <div key={index} className="flex items-center space-x-3">
+                            <div className={`p-2 ${achievement.icon === 'math' 
+                              ? 'bg-yellow-100 text-yellow-600' 
+                              : 'bg-blue-100 text-blue-600'} rounded-full`}>
+                              <Award className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <p className="font-medium">{achievement.title}</p>
+                              <p className="text-sm text-gray-500">
+                                {achievement.description}
+                                {achievement.count && (
+                                  <span className="text-primary"> ({achievement.count}x)</span>
+                                )}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium">Math Master</p>
-                            <p className="text-sm text-gray-500">
-                              Scored 90%+ on 3 math assessments
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-blue-100 rounded-full">
-                            <CheckCircle className="h-5 w-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <p className="font-medium">Perfect Score</p>
-                            <p className="text-sm text-gray-500">
-                              100% on ELA assessment
-                            </p>
-                          </div>
-                        </div>
+                        ))}
                       </div>
                       <Button
                         variant="link"

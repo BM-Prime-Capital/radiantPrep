@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
     "target": "es2018",
+    "types": [
+      "@prisma/client"
+    ],
     "lib": [
       "dom",
       "dom.iterable",
