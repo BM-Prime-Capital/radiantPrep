@@ -299,3 +299,53 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function GET(request: Request) {
+  try {
+    const session = await getSession(request);
+    if (!session?.userId) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    // Récupérer l'utilisateur courant
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { role: true, id: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    let whereClause: any = {};
+    if (user.role === 'CHILD') {
+      whereClause.childUserId = user.id;
+    } else if (user.role === 'PARENT') {
+      whereClause.parentUserId = user.id;
+    } else {
+      return NextResponse.json({ error: 'Invalid user role' }, { status: 400 });
+    }
+
+    const assessments = await prisma.assessment.findMany({
+      where: whereClause,
+      orderBy: {
+        takenAt: 'desc',
+      },
+      take: 10,
+      include: {
+        childUser: {
+          select: {
+            childName: true,
+            grade: true,
+            currentSubject: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(assessments);
+  } catch (error: any) {
+    console.error('Erreur lors du chargement des évaluations:', error);
+    return NextResponse.json({ error: 'Failed to load assessments' }, { status: 500 });
+  }
+}

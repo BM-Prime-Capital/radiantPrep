@@ -100,4 +100,28 @@ export interface AuthState {
 }
 
 
+export function isChild(user: ParentUser | ChildInformation | null): user is ChildInformation {
+  return !!user && 'childName' in user && 'grade' in user && 'subject' in user;
+}
 
+
+export interface Assessment {
+  id: string;
+  subjectName: string;
+  gradeLevel: string;
+  score: number;
+  totalQuestions: number;
+  takenAt: string;
+  childUser?: {
+    childName: string;
+    grade: string;
+    currentSubject?: string;
+  };
+}
+
+export interface AssessmentStats {
+  totalAssessments: number;
+  averageScore: number;
+  currentStreak: number;
+  lastAssessmentDate: string | null;
+}

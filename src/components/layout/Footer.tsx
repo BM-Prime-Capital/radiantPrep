@@ -10,7 +10,11 @@ import {
   MapPin,
 } from "lucide-react";
 
-export const Footer = () => {
+interface FooterProps {
+  isAuthenticated?: boolean;
+}
+
+export const Footer = ({ isAuthenticated }: FooterProps) => {
   const currentYear = new Date().getFullYear();
 
   const socialLinks = [
