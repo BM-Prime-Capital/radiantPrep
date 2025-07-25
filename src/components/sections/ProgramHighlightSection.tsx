@@ -27,14 +27,14 @@ const highlights = [
   },
   {
     icon: Award,
-    title: "Progress Dashboard",
+    title: "Insightful Score Reports",
     desc: "Track improvement over time",
     iconClass: "text-accent",
     bgClass: "bg-accent/10",
   },
   {
     icon: Users,
-    title: "Parent Resources",
+    title: "Learning Roadmap",
     desc: "Tools to support your child's learning",
     iconClass: "text-primary-light",
     bgClass: "bg-secondary",
@@ -42,7 +42,7 @@ const highlights = [
 ];
 
 const outcome = {
-  title: "100% Free Educational Platform",
+  title: "100% Free for Radiant Prep Clients",
   description: "Register your child and receive their unique access code via email",
   cta: "Create Free Account",
 };
@@ -53,7 +53,7 @@ export const ProgramHighlightSection = () => {
       {/* Titre */}
       <div className="text-center mb-16">
         <span className="inline-block px-4 py-1.5 bg-secondary text-primary font-medium rounded-full text-sm mb-2">
-          Free Learning Platform
+          Effective evaluation platform
         </span>
         <h2 className="text-3xl font-bold text-foreground">
           A <span className="text-primary">Smarter</span> Way to Learn

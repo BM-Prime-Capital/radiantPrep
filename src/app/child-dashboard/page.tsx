@@ -220,7 +220,7 @@ const ChildDashboard = () => {
         <div className="flex items-center space-x-3">
           <div className="w-9 h-6 bg-gray-50 rounded-lg flex items-center justify-center">
             <img 
-              src="/newlogo.png" 
+              src="/logo-complemetrics.png" 
               alt="Logo" 
               className="w-5 h-5 object-contain"
             />

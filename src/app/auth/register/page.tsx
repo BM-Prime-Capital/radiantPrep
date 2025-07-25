@@ -110,7 +110,7 @@ export default function RegisterPage() {
                 <div className="absolute inset-0 rounded-full bg-green-400/30 blur-2xl animate-pulse scale-[1.6] z-0" />
                 <div className="relative z-10 h-full w-full rounded-full bg-gradient-to-br from-green-600 to-green-700 shadow-lg p-2 hover:scale-105 transition-all duration-500">
                   <div className="bg-white rounded-full h-full w-full flex items-center justify-center overflow-hidden">
-                    <Image src="/newlogo.png" alt="Logo" width={56} height={56} className="object-contain" />
+                    <Image src="/logo-complemetrics.png" alt="Logo" width={56} height={56} className="object-contain" />
                   </div>
                 </div>
               </div>

@@ -30,9 +30,9 @@ export const Footer = ({ isAuthenticated }: FooterProps) => {
         {/* Logo */}
         <div className="flex flex-col items-center space-y-2">
         <img
-            src="/newlogo.png"
+            src="/logo-complemetrics.png"
             alt="Radiant Prep Logo"
-            className="h-16 w-auto drop-shadow-sm"
+            className="h-8 w-auto drop-shadow-sm"
         />
         <span className="text-2xl font-bold text-white">Radiant Prep</span>
         </div>

@@ -84,7 +84,7 @@ export default function LoginPage() {
                 <div className="relative z-10 h-full w-full rounded-full bg-gradient-to-br from-green-600 to-green-700 shadow-lg p-2 hover:scale-105 transition-all duration-500">
                   <div className="bg-white rounded-full h-full w-full flex items-center justify-center overflow-hidden">
                     <Image
-                      src="/newlogo.png"
+                      src="/logo-complemetrics.png"
                       alt="Radiant Prep Logo"
                       width={56}
                       height={56}

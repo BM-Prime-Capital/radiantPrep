@@ -19,7 +19,7 @@ export default async function ParentDashboard() {
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center space-x-2">
           <Image 
-            src="/newlogo.png" 
+            src="/logo-complemetrics.png" 
             alt="Radiant Prep's Testing Program Logo"
             width={40}
             height={40}

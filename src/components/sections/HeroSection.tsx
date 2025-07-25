@@ -35,23 +35,23 @@ const HeroSection = () => {
         {/* Titre */}
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight max-w-3xl mx-auto">
             <span className="text-white drop-shadow-md">
-            Transform Your
+            The Leading Academic 
             </span>
-            <span className="block mt-3 text-primary drop-shadow-md">Test Scores</span>
+            <span className="block mt-3 text-primary drop-shadow-md">Diagnostics Program</span>
         </h1>
 
         {/* Description */}
-        <p className="mt-6 text-xl text-white/90 leading-relaxed max-w-2xl mx-auto">
+        {/* <p className="mt-6 text-xl text-white/90 leading-relaxed max-w-2xl mx-auto">
           Get <span className="font-semibold text-white">personalized</span> prep with our
           <span className="text-warning font-medium"> proven methodology</span> and
           <span className="text-white font-semibold drop-shadow-sm"> expert tutors</span>.
-        </p>
+        </p> */}
 
         {/* Bouton principal */}
         <div className="mt-10 flex justify-center">
           <Button
             size="xl"
-            className="bg-primary text-primary-foreground hover:bg-secondary hover:text-secondary-foreground shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 px-8 py-6 text-lg font-bold border-2 border-white"
+            className="bg-[#cc00d5] text-white hover:bg-[#a800b3] shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 px-8 py-6 text-lg font-bold border-2 border-white"
             asChild
           >
             <Link href="/auth/register" className="flex items-center gap-2">

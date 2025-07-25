@@ -20,7 +20,7 @@ export function Sidebar({ mobile = false, setSidebarOpen }: { mobile?: boolean; 
       <div className="flex items-center justify-between p-5 bg-white border-b border-gray-100">
         <div className="flex items-center space-x-3">
           <div className="w-9 h-6 bg-gray-50 rounded-lg flex items-center justify-center">
-            <img src="/newlogo.png" alt="Logo" className="w-5 h-5 object-contain" />
+            <img src="/logo-complemetrics.png" alt="Logo" className="w-5 h-5 object-contain" />
           </div>
           <h2 className="text-lg font-semibold text-gray-800">Radiant Prep</h2>
         </div>

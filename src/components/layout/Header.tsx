@@ -16,11 +16,10 @@ export const Header = ({ isAuthenticated }: HeaderProps) => {
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-3">
               <img
-                src="/newlogo.png"
+                src="/logo-complemetrics.png"
                 alt="Radiant Prep Logo"
-                className="h-10 w-auto"
+                className="h-8 w-auto"
               />
-              <span className="text-xl font-bold text-primary">Radiant Prep</span>
             </Link>
           </div>
 
