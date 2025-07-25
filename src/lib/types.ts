@@ -91,7 +91,8 @@ export interface ParentUser {
   avatarUrl?: string; 
 }
 
-export type UserRole = 'parent' | 'child' | null;
+// export type UserRole = 'parent' | 'child' | null;
+export type UserRole = 'PARENT' | 'CHILD' | null; // Majuscules
 
 export interface AuthState {
   isAuthenticated: boolean;

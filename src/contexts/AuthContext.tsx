@@ -26,6 +26,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authState, setAuthState] = useState<AuthState>(initialState);
   const [assessmentResult, setAssessmentResultState] = useState<AssessmentResult | null>(null);
 
+
+  // Ajoutez ce useEffect juste après les autres useEffect existants
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      // Ne réagir qu'aux changements de authState
+      if (event.key === 'authState') {
+        try {
+          if (event.newValue) {
+            const newAuthState = JSON.parse(event.newValue) as AuthState;
+            setAuthState(newAuthState);
+          } else {
+            // Si authState a été supprimé, réinitialiser
+            setAuthState(initialState);
+          }
+        } catch (error) {
+          console.error("Failed to parse updated auth state", error);
+        }
+      }
+    };
+
+    // Écouter les changements de localStorage depuis d'autres onglets
+    window.addEventListener('storage', handleStorageChange);
+
+    // Nettoyer l'écouteur lors du démontage
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []); // Pas de dépendances pour que cela ne s'exécute qu'une fois
+
+
+
   useEffect(() => {
     try {
       const storedAuthState = localStorage.getItem('authState');
@@ -61,27 +92,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const newState: AuthState = {
       isAuthenticated: true,
       user: childInfo || user, // If childInfo is provided, it implies parent just registered child
-      role: childInfo ? 'child' : 'parent', // If childInfo, means code generated, simulate child login
+      role: childInfo ? 'CHILD' : 'PARENT', // If childInfo, means code generated, simulate child login
       isLoading: false,
     };
     setAuthState(newState);
     persistAuthState(newState);
   };
-
-  const loginChild = (childInfo: ChildInformation) => {
-    if (!childInfo.id) {
-      throw new Error('Child information must include an ID');
-    }
-    
-    const newState: AuthState = {
-      isAuthenticated: true,
-      user: childInfo,
-      role: 'child',
-      isLoading: false,
-    };
-    setAuthState(newState);
-    persistAuthState(newState);
+const loginChild = (childInfo: ChildInformation) => {
+  const newState: AuthState = {
+    isAuthenticated: true,
+    user: childInfo,
+    role: 'CHILD', // Doit être en MAJUSCULES
+    isLoading: false,
   };
+  
+  console.log('Setting auth state:', newState);
+  setAuthState(newState);
+  
+  // Persistez immédiatement et forcez le stockage
+  localStorage.setItem('authState', JSON.stringify(newState));
+  localStorage.setItem('lastLogin', Date.now().toString());
+};
 
   const logout = useCallback(async () => {
     try {
@@ -112,7 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   const updateChildInfo = (info: Partial<ChildInformation>) => {
     setAuthState(prevState => {
-      if (prevState.role === 'child' && prevState.user) {
+      if (prevState.role === 'CHILD' && prevState.user) {
         const updatedUser = { ...prevState.user, ...info } as ChildInformation;
         const newState = { ...prevState, user: updatedUser };
         persistAuthState(newState);

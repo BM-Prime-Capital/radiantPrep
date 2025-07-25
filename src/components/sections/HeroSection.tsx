@@ -28,8 +28,8 @@ const HeroSection = () => {
       <div className="relative z-10 container mx-auto px-6 text-center">
         {/* Badge */}
         <div className="inline-flex items-center px-5 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-6">
-          <BookOpen className="w-5 h-5 mr-2 text-white" />
-          <span className="text-white font-medium">#1 Test Prep Platform</span>
+          {/* <BookOpen className="w-5 h-5 mr-2 text-white" /> */}
+          <span className="text-white font-medium">Effective evaluation platform</span>
         </div>
 
         {/* Titre */}

@@ -76,11 +76,29 @@ const ChildDashboard = () => {
     count?: number;
   }>>([]); 
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+  // useEffect(() => {
+  //   if (!authLoading && !isAuthenticated) {
+  //     router.push('/auth/login');
+  //   }
+  // }, [isAuthenticated, authLoading, router]);
+
+//   useEffect(() => {
+//   console.log('Auth status:', { isAuthenticated, role, authLoading });
+//   if (!authLoading && (!isAuthenticated || role !== 'CHILD')) {
+//     console.log('Redirecting to login...');
+//     router.push('/auth/login');
+//   }
+// }, [isAuthenticated, authLoading, role, router]);
+
+useEffect(() => {
+  if (!authLoading) {
+    if (!isAuthenticated || role !== 'CHILD') {
       router.push('/auth/login');
+    } else {
+      console.log('Access granted to child dashboard');
     }
-  }, [isAuthenticated, authLoading, router]);
+  }
+}, [isAuthenticated, authLoading, role, router]);
 
   useEffect(() => {
     if (isChild(user)) {
@@ -222,11 +240,11 @@ const ChildDashboard = () => {
             <img 
               src="/logo-complemetrics.png" 
               alt="Logo" 
-              className="w-5 h-5 object-contain"
+              className="w-auto h-10 object-contain"
             />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-gray-800">Radiant Prep</h2>
+            {/* <h2 className="text-lg font-semibold text-gray-800">Radiant Prep</h2> */}
             {/* <p className="text-xs text-gray-500">Student Portal</p> */}
           </div>
         </div>

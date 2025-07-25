@@ -62,9 +62,11 @@ export async function POST(request: Request) {
 
     // Child login with access code
     if (accessCode) {
+        console.log('Searching for child with accessCode:', accessCode);
         const user = await prisma.user.findUnique({
             where: { accessCode, role: 'CHILD' }
         });
+        console.log('Found user:', user);
 
         if (!user) {
             return NextResponse.json(

@@ -19,47 +19,78 @@ export default function LoginPage() {
   const [showCode, setShowCode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
 
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessCode }),
-        credentials: 'include',
-      });
+  try {
+    // 1. Appel API de login
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accessCode: accessCode.trim() }), // Nettoyage du code
+      credentials: 'include',
+    });
 
-      if (!response.ok) throw new Error('Login failed');
-      const childInfo = await response.json();
-
-      if (childInfo.role !== 'CHILD') throw new Error('Invalid role');
-
-      loginChild({
-        id: childInfo.id,
-        childName: childInfo.childName,
-        grade: dbGradeToAppGrade(childInfo.grade),
-        subject: childInfo.currentSubject,
-        accessCode: childInfo.accessCode,
-      });
-
-      toast({
-        title: 'Login successful!',
-        description: `Welcome back, ${childInfo.childName}`,
-      });
-
-      router.push('/child-dashboard');
-    } catch (error) {
-      toast({
-        title: 'Login failed',
-        description: 'Invalid access code. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Login failed');
     }
-  };
+
+    const childInfo = await response.json();
+    console.log('Login API response:', childInfo);
+
+    // 2. Validation du rôle
+    if (childInfo.role !== 'CHILD') {
+      throw new Error('Invalid user role');
+    }
+
+    // 3. Mise à jour du state d'authentification
+    loginChild({
+      id: childInfo.id,
+      childName: childInfo.childName,
+      grade: dbGradeToAppGrade(childInfo.grade),
+      subject: childInfo.currentSubject,
+      accessCode: childInfo.accessCode,
+    });
+
+    // 4. Notification de succès
+    toast({
+      title: 'Login successful!',
+      description: `Welcome back, ${childInfo.childName}`,
+    });
+
+    // 5. Redirection avec plusieurs fallbacks
+    console.log('Attempting redirect...');
+    try {
+      // Essai 1: Redirection normale
+      await router.push('/child-dashboard');
+      console.log('Router push succeeded');
+      
+      // Essai 2: Rechargement après un délai si nécessaire
+      setTimeout(() => {
+        if (window.location.pathname !== '/child-dashboard') {
+          console.warn('Router push failed, forcing refresh');
+          window.location.href = '/child-dashboard';
+        }
+      }, 500);
+    } catch (error) {
+      console.error('Router push error:', error);
+      // Essai 3: Redirection immédiate si tout échoue
+      window.location.href = '/child-dashboard';
+    }
+
+  } catch (error) {
+    console.error('Login error:', error);
+    toast({
+      title: 'Login failed',
+      description: error instanceof Error ? error.message : 'Invalid access code',
+      variant: 'destructive',
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-white">
