@@ -55,7 +55,7 @@ export default function ResultsPage() {
 
   const { score, totalQuestions, subject, grade, answers, takenAt } = assessmentResult;
   const percentage = Math.round((score / totalQuestions) * 100);
-  const studentName = role === 'child' ? (user as any)?.childName : "Student";
+  const studentName = role === 'CHILD' ? (user as any)?.childName : "Student";
   const takenDate = assessmentResult.takenAt ? new Date(assessmentResult.takenAt) : new Date();
   const subjectIcon = subject === 'ELA' ? <BookOpen className="h-5 w-5" /> : <Calculator className="h-5 w-5" />;
 

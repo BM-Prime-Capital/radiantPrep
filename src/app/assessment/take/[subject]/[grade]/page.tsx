@@ -342,8 +342,8 @@ export default function AssessmentPage() {
           score: detailedAnswers.filter((a) => a.isCorrect).length,
           totalQuestions: questions.length,
           answers: detailedAnswers,
-          childUserId: role === 'child' ? (user as ChildInformation).id : undefined,
-          parentUserId: role === 'parent' ? (user as ParentUser).id : undefined,
+          childUserId: role === 'CHILD' ? (user as ChildInformation).id : undefined,
+          parentUserId: role === 'PARENT' ? (user as ParentUser).id : undefined,
         }),
       });
 
@@ -412,7 +412,7 @@ export default function AssessmentPage() {
   }
 
   // const currentQuestion = questions[currentQuestionIndex];
-  const childName = role === 'child' ? (user as ChildInformation)?.childName : undefined;
+  const childName = role === 'CHILD' ? (user as ChildInformation)?.childName : undefined;
 
   return (
     <ChildLayout>

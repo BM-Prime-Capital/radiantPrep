@@ -57,7 +57,7 @@ export default function ProfilePage() {
                 </CardTitle>
                 <div className="flex justify-center">
                   <Badge variant="secondary" className="flex items-center gap-1 py-1.5 px-3 bg-white/15 hover:bg-white/25 backdrop-blur-sm">
-                    {role === 'child' ? (
+                    {role === 'CHILD' ? (
                       <>
                         <GraduationCap className="h-4 w-4" />
                         <span className="font-medium text-yellow-500">Student</span>
@@ -135,7 +135,7 @@ export default function ProfilePage() {
                 Personal Information
               </CardTitle>
               <CardDescription className="text-indigo-600/90">
-                {role === 'child' ? 'Student details' : 'Parent account information'}
+                {role === 'CHILD' ? 'Student details' : 'Parent account information'}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -184,7 +184,7 @@ export default function ProfilePage() {
             <CardHeader>
               <CardTitle className="text-lg text-indigo-800 font-semibold">Quick Actions</CardTitle>
               <CardDescription className="text-indigo-600/90">
-                {role === 'child' ? 'Learning shortcuts' : 'Manage your family accounts'}
+                {role === 'CHILD' ? 'Learning shortcuts' : 'Manage your family accounts'}
               </CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">

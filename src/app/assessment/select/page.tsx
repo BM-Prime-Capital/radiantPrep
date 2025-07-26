@@ -88,7 +88,7 @@ export default function AssessmentSelectPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const childUser = role === 'child' ? (user as ChildInformation) : null;
+  const childUser = role === 'CHILD' ? (user as ChildInformation) : null;
   const [selectedSubject, setSelectedSubject] = useState<Subject>();
   const [selectedGrade, setSelectedGrade] = useState<Grade | undefined>(
     childUser?.grade

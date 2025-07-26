@@ -47,7 +47,7 @@ export default function EditProfilePage() {
             <div>
               <CardTitle className="text-lg font-semibold text-indigo-800">Edit Profile</CardTitle>
               <CardDescription className="text-indigo-600">
-                {role === 'child' ? 'Update student information' : 'Update account details'}
+                {role === 'CHILD' ? 'Update student information' : 'Update account details'}
               </CardDescription>
             </div>
           </div>

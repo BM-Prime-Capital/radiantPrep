@@ -109,7 +109,7 @@ export function AIAgent({
   const [activeTab, setActiveTab] = useState<'chat' | 'recommendations' | 'progress' | 'resources'>('chat');
   const [activeLearningSession, setActiveLearningSession] = useState<LearningSession | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const childUser = role === 'child' ? (user as ChildInformation) : null;
+  const childUser = role === 'CHILD' ? (user as ChildInformation) : null;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

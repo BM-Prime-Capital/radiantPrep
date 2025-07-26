@@ -26,8 +26,8 @@ export function NavbarAuthButtons({ isHomePage }: NavbarAuthButtonsProps) {
 
   const getDisplayName = () => {
     if (!user) return 'User';
-    if (role === 'child' && 'childName' in user) return user.childName;
-    if (role === 'parent' && 'email' in user) return user.email.split('@')[0];
+    if (role === 'CHILD' && 'childName' in user) return user.childName;
+    if (role === 'PARENT' && 'email' in user) return user.email.split('@')[0];
     return 'User';
   };
 
@@ -36,7 +36,7 @@ export function NavbarAuthButtons({ isHomePage }: NavbarAuthButtonsProps) {
   if (isAuthenticated) {
     return (
       <div className="flex items-center gap-4">
-        {role === 'child' && (
+        {role === 'CHILD' && (
           <motion.div whileHover={{ scale: 1.03 }}>
             <Button 
               asChild 
@@ -77,7 +77,7 @@ export function NavbarAuthButtons({ isHomePage }: NavbarAuthButtonsProps) {
                   {getDisplayName()}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {role === 'child' ? 'Student Account' : 'Parent Account'}
+                  {role === 'CHILD' ? 'Student Account' : 'Parent Account'}
                 </p>
               </div>
             </DropdownMenuLabel>
@@ -91,7 +91,7 @@ export function NavbarAuthButtons({ isHomePage }: NavbarAuthButtonsProps) {
               </Link>
             </DropdownMenuItem>
             
-            {role === 'child' && (
+            {role === 'CHILD' && (
               <DropdownMenuItem asChild className="p-2 rounded-md hover:bg-gray-100">
                 <Link href="/child-dashboard" className="flex items-center text-gray-700">
                   <BarChart2 className="mr-2 h-4 w-4 text-[#5299ff]" />
