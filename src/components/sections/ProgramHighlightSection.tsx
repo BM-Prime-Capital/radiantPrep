@@ -90,7 +90,7 @@ export const ProgramHighlightSection = () => {
           <p className="text-muted-foreground mb-6">{outcome.description}</p>
           <Button
             size="lg"
-            className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
+            className="bg-[#cc00d5] text-primary-foreground hover:bg-primary/90 shadow-lg"
             asChild
           >
             <Link href="/auth/register">

@@ -19,117 +19,110 @@ export default function LoginPage() {
   const [showCode, setShowCode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setIsLoading(true);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-  try {
-    // 1. Appel API de login
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accessCode: accessCode.trim() }), // Nettoyage du code
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Login failed');
-    }
-
-    const childInfo = await response.json();
-    console.log('Login API response:', childInfo);
-
-    // 2. Validation du rôle
-    if (childInfo.role !== 'CHILD') {
-      throw new Error('Invalid user role');
-    }
-
-    // 3. Mise à jour du state d'authentification
-    loginChild({
-      id: childInfo.id,
-      childName: childInfo.childName,
-      grade: dbGradeToAppGrade(childInfo.grade),
-      subject: childInfo.currentSubject,
-      accessCode: childInfo.accessCode,
-    });
-
-    // 4. Notification de succès
-    toast({
-      title: 'Login successful!',
-      description: `Welcome back, ${childInfo.childName}`,
-    });
-
-    // 5. Redirection avec plusieurs fallbacks
-    console.log('Attempting redirect...');
     try {
-      // Essai 1: Redirection normale
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessCode: accessCode.trim() }),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Login failed');
+      }
+
+      const childInfo = await response.json();
+
+      if (childInfo.role !== 'CHILD') {
+        throw new Error('Invalid user role');
+      }
+
+      loginChild({
+        id: childInfo.id,
+        childName: childInfo.childName,
+        grade: dbGradeToAppGrade(childInfo.grade),
+        subject: childInfo.currentSubject,
+        accessCode: childInfo.accessCode,
+      });
+
+      toast({
+        title: 'Login successful!',
+        description: `Welcome back, ${childInfo.childName}`,
+      });
+
       await router.push('/child-dashboard');
-      console.log('Router push succeeded');
-      
-      // Essai 2: Rechargement après un délai si nécessaire
+
       setTimeout(() => {
         if (window.location.pathname !== '/child-dashboard') {
-          console.warn('Router push failed, forcing refresh');
           window.location.href = '/child-dashboard';
         }
       }, 500);
-    } catch (error) {
-      console.error('Router push error:', error);
-      // Essai 3: Redirection immédiate si tout échoue
-      window.location.href = '/child-dashboard';
-    }
 
-  } catch (error) {
-    console.error('Login error:', error);
-    toast({
-      title: 'Login failed',
-      description: error instanceof Error ? error.message : 'Invalid access code',
-      variant: 'destructive',
-    });
-  } finally {
-    setIsLoading(false);
-  }
-};
+    } catch (error) {
+      toast({
+        title: 'Login failed',
+        description: error instanceof Error ? error.message : 'Invalid access code',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Background animated blobs */}
-      <div className="absolute inset-0">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-green-300/20 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-20 right-20 w-48 h-48 bg-green-200/20 rounded-full blur-2xl animate-float delay-1000" />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-100/20 rounded-full blur-3xl animate-float delay-2000" />
+    <div className="min-h-screen bg-white relative overflow-hidden">
+      {/* Background blobs with animation */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 left-20 w-64 h-64 bg-green-300/20 rounded-full blur-3xl animate-blob float-delay-0" />
+        <div className="absolute bottom-20 right-20 w-48 h-48 bg-green-200/20 rounded-full blur-2xl animate-blob float-delay-1000" />
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-100/20 rounded-full blur-3xl animate-blob float-delay-2000" />
       </div>
 
       {/* Content */}
       <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
         <div className="max-w-xl w-full space-y-10 bg-white border border-gray-200 rounded-xl shadow-xl p-10 animate-slideInUp">
-          {/* Header */}
-          <div className="text-center space-y-4 animate-slideInRight">
-            <div className="flex justify-center">
-              <div className="relative h-24 w-24 animate-float">
-                {/* Halo animé */}
-                <div className="absolute inset-0 rounded-full bg-green-400/30 blur-2xl animate-pulse scale-[1.6] z-0" />
-
-                {/* Conteneur du logo */}
-                <div className="relative z-10 h-full w-full rounded-full bg-gradient-to-br from-green-600 to-green-700 shadow-lg p-2 hover:scale-105 transition-all duration-500">
-                  <div className="bg-white rounded-full h-full w-full flex items-center justify-center overflow-hidden">
-                    <Image
-                      src="/logo-complemetrics.png"
-                      alt="Radiant Prep Logo"
-                      width={56}
-                      height={56}
-                      className="object-contain"
-                    />
-                  </div>
-                </div>
+          
+          {/* Logo + by Radiant Prep */}
+          <div className="text-center space-y-4 animate-fadeInUp">
+            <div className="flex flex-col items-center space-y-2">
+              <Image
+                src="/logo-complemetrics.png"
+                alt="CompleMetrics Logo"
+                width={160}
+                height={80}
+                className="object-contain drop-shadow-lg brightness-110 transition-transform duration-700 ease-out scale-100 hover:scale-105"
+              />
+              <div className="flex flex-col sm:flex-row items-center sm:space-x-2 space-y-1 sm:space-y-0">
+                <span className="text-sm sm:text-base font-medium text-[#1E9B3B] tracking-wide drop-shadow-sm">
+                  by
+                </span>
+                <Image
+                  src="/newlogo.png"
+                  alt="Radiant Prep Logo"
+                  width={28}
+                  height={28}
+                  className="h-7 w-auto drop-shadow-md"
+                />
+                <span className="text-sm sm:text-base font-semibold text-[#1E9B3B] drop-shadow-sm">
+                  Radiant Prep
+                </span>
               </div>
             </div>
 
-            <h2 className="text-2xl font-semibold text-gray-900">Welcome back</h2>
-            <p className="text-sm text-gray-500">
-              Enter your access code to continue
-            </p>
+            {/* Welcome back improved */}
+            <div className="space-y-1 animate-fadeInUp">
+              <h2 className="text-3xl font-bold text-gray-900 tracking-tight drop-shadow-sm transition-all duration-500 hover:scale-[1.02]">
+                Welcome back
+              </h2>
+              <p className="text-sm text-gray-600">
+                Enter your access code to continue
+              </p>
+            </div>
           </div>
 
           {/* Form */}
@@ -183,7 +176,7 @@ const handleLogin = async (e: React.FormEvent) => {
             </a>
           </div>
 
-          {/* Footer copyright */}
+          {/* Copyright */}
           <div className="pt-6 border-t border-gray-100 text-center text-xs text-gray-400">
             © {new Date().getFullYear()} Radiant Prep. All rights reserved.
           </div>

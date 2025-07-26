@@ -43,15 +43,12 @@ const HeroSection = () => {
           <div className="flex flex-col">
             <span className="text-white drop-shadow-md">The Leading Academic</span>
             <div>
-              {/* <span className="inline mt-3 text-transparent bg-clip-text bg-gradient-to-r from-[#C000A0] to-[#008040] drop-shadow-md">Diagnostics</span> */}
               <span className="inline mt-3 text-[#C000A0] drop-shadow-md">Diagnostics</span>
               {/* <span className="text-[#0EA5E9]"> Program</span> */}
               <span className="inline bg-gradient-to-r from-[#0EA5E9] via-white to-[#0EA5E9] text-transparent bg-clip-text drop-shadow-md font-bold">
-  Program
-</span>
-{/* <span className="text-[#0EA5E9] font-extrabold drop-shadow-[0_2px_4px_rgba(14,165,233,0.5)]"> Program</span> */}
-
-
+                Program
+              </span>
+              {/* <span className="text-[#0EA5E9] font-extrabold drop-shadow-[0_2px_4px_rgba(14,165,233,0.5)]"> Program</span> */}
             </div>
           </div>
         </h1>

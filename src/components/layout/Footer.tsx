@@ -27,17 +27,11 @@ export const Footer = ({ isAuthenticated }: FooterProps) => {
     <footer className="bg-footer text-white">
       <div className="container mx-auto px-6 py-16 text-center flex flex-col items-center space-y-8">
         {/* Logo CompleMetrics */}
-        {/* <img
+        <img
           src="/logo-complemetrics.png"
           alt="CompleMetrics Logo"
-          className="h-12 w-auto drop-shadow-sm"
-        /> */}
-        <img
-  src="/logo-complemetrics.png"
-  alt="CompleMetrics Logo"
-  className="h-12 w-auto drop-shadow-lg brightness-110 hover:scale-105 transition-transform duration-300"
-/>
-
+          className="h-12 w-auto drop-shadow-lg brightness-110 hover:scale-105 transition-transform duration-300"
+        />
 
         {/* "by Radiant Prep" avec logo */}
         <div className="flex items-center space-x-2">
@@ -86,7 +80,7 @@ export const Footer = ({ isAuthenticated }: FooterProps) => {
 
         {/* Copyright */}
         <p className="text-xs text-white/50 pt-6 border-t border-white/10 w-full">
-          © {currentYear} Radiant Prep. All rights reserved.
+          © {currentYear} CompleMetrics by Radiant Prep. All rights reserved.
         </p>
       </div>
     </footer>

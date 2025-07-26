@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, ChevronDown } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Select,
@@ -100,7 +100,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-white relative">
-      {/* background blobs */}
+      {/* Background blobs */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-20 w-64 h-64 bg-green-300/20 rounded-full blur-3xl animate-float" />
         <div className="absolute bottom-20 right-20 w-48 h-48 bg-green-200/20 rounded-full blur-2xl animate-float delay-1000" />
@@ -109,31 +109,45 @@ export default function RegisterPage() {
 
       <div className="relative z-10 flex items-center justify-center min-h-screen px-4">
         <div className="max-w-xl w-full space-y-10 bg-white border border-gray-200 rounded-xl shadow-xl p-10 animate-slideInUp">
-          <div className="text-center space-y-4">
-            <div className="flex justify-center">
-              <div className="relative h-24 w-24 animate-float">
-                <div className="absolute inset-0 rounded-full bg-green-400/30 blur-2xl animate-pulse scale-[1.6] z-0" />
-                <div className="relative z-10 h-full w-full rounded-full bg-gradient-to-br from-green-600 to-green-700 shadow-lg p-2">
-                  <div className="bg-white rounded-full h-full w-full flex items-center justify-center overflow-hidden">
-                    <Image src="/logo-complemetrics.png" alt="Logo" width={56} height={56} className="object-contain" />
-                  </div>
-                </div>
+          
+          {/* Logo + by Radiant Prep */}
+          <div className="text-center space-y-4 animate-fadeInUp">
+            <div className="flex flex-col items-center space-y-2">
+              <Image
+                src="/logo-complemetrics.png"
+                alt="CompleMetrics Logo"
+                width={160}
+                height={80}
+                className="object-contain drop-shadow-lg brightness-110 transition-transform duration-700 ease-out scale-100 hover:scale-105"
+              />
+              <div className="flex flex-col sm:flex-row items-center sm:space-x-2 space-y-1 sm:space-y-0">
+                <span className="text-sm sm:text-base font-medium text-[#1E9B3B] tracking-wide drop-shadow-sm">
+                  by
+                </span>
+                <Image
+                  src="/newlogo.png"
+                  alt="Radiant Prep Logo"
+                  width={28}
+                  height={28}
+                  className="h-7 w-auto drop-shadow-md"
+                />
+                <span className="text-sm sm:text-base font-semibold text-[#1E9B3B] drop-shadow-sm">
+                  Radiant Prep
+                </span>
               </div>
             </div>
             <h2 className="text-2xl font-semibold text-gray-900">Register Your Child</h2>
             <p className="text-sm text-gray-500">Fill out the form to create an account</p>
           </div>
 
+          {/* Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Parent */}
             <div className="grid grid-cols-2 gap-4">
               <Input placeholder="Parent's First Name" {...register('parentFirstName')} className="w-full h-14 px-4 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E9B3B] focus:border-[#1E9B3B]" />
               <Input placeholder="Parent's Last Name" {...register('parentLastName')} className="w-full h-14 px-4 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E9B3B] focus:border-[#1E9B3B]" />
             </div>
             <Input placeholder="Parent's Email" type="email" {...register('parentEmail')} className="w-full h-14 px-4 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E9B3B] focus:border-[#1E9B3B]" />
             <Input placeholder="Password" type="password" {...register('parentPassword')} className="w-full h-14 px-4 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E9B3B] focus:border-[#1E9B3B]" />
-
-            {/* Student */}
             <div className="grid grid-cols-2 gap-4">
               <Input placeholder="Child's First Name" {...register('childFirstName')} className="w-full h-14 px-4 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E9B3B] focus:border-[#1E9B3B]" />
               <Input placeholder="Child's Last Name" {...register('childLastName')} className="w-full h-14 px-4 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1E9B3B] focus:border-[#1E9B3B]" />
@@ -155,7 +169,6 @@ export default function RegisterPage() {
                 ))}
               </SelectContent>
             </Select>
-
 
             <Button type="submit" disabled={isLoading} className="w-full h-14 text-white bg-green-600 hover:bg-green-700">
               {isLoading ? <Loader2 className="animate-spin h-5 w-5" /> : success ? 'Success' : 'Register'}
