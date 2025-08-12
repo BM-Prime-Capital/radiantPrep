@@ -5,15 +5,18 @@ import { Button } from '@/components/ui/button';
 
 interface HeaderProps {
   isAuthenticated?: boolean;
+  isLoading?: boolean;
 }
 
-export const Header = ({ isAuthenticated }: HeaderProps) => {
+export const Header = ({ isAuthenticated = false, isLoading = true }: HeaderProps) => {
+  const showDashboard = !isLoading && Boolean(isAuthenticated);
+  console.log('Header -> isAuthenticated:', isAuthenticated, 'isLoading:', isLoading);
+
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-neutral-200">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Use justify-between with absolute center element */}
         <div className="relative flex h-16 items-center justify-between">
-          {/* Left: Logo principal */}
+          {/* Logo principal */}
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-3">
               <img
@@ -24,8 +27,7 @@ export const Header = ({ isAuthenticated }: HeaderProps) => {
             </Link>
           </div>
 
-          {/* Center: by Radiant Prep avec logo */}
-
+          {/* Centre: by Radiant Prep */}
           <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-2">
             <span className="text-sm sm:text-base font-medium text-[#1E9B3B] drop-shadow-sm tracking-wide">
               by
@@ -40,9 +42,9 @@ export const Header = ({ isAuthenticated }: HeaderProps) => {
             </span>
           </div>
 
-          {/* Right: Auth buttons */}
+          {/* Boutons d'authentification */}
           <div className="flex items-center space-x-4">
-            {isAuthenticated ? (
+            {showDashboard ? (
               <Link
                 href="/dashboard"
                 className="text-sm font-medium hover:text-primary"

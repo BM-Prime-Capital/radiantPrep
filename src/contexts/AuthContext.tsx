@@ -2,7 +2,15 @@
 
 import type React from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { AuthState, ChildInformation, ParentUser, UserRole, Subject, Grade, AssessmentResult } from '@/lib/types';
+import type {
+  AuthState,
+  ChildInformation,
+  ParentUser,
+  UserRole,
+  Subject,
+  Grade,
+  AssessmentResult,
+} from '@/lib/types';
 
 interface AuthContextType extends AuthState {
   loginParent: (user: ParentUser, childInfo?: ChildInformation) => void;
@@ -26,123 +34,169 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authState, setAuthState] = useState<AuthState>(initialState);
   const [assessmentResult, setAssessmentResultState] = useState<AssessmentResult | null>(null);
 
-
-  // Ajoutez ce useEffect juste après les autres useEffect existants
+  // Synchronisation multi-onglets: réagir aux changements de localStorage.authState
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
-      // Ne réagir qu'aux changements de authState
       if (event.key === 'authState') {
         try {
           if (event.newValue) {
             const newAuthState = JSON.parse(event.newValue) as AuthState;
             setAuthState(newAuthState);
           } else {
-            // Si authState a été supprimé, réinitialiser
             setAuthState(initialState);
           }
         } catch (error) {
-          console.error("Failed to parse updated auth state", error);
+          console.error('Failed to parse updated auth state', error);
         }
       }
     };
 
-    // Écouter les changements de localStorage depuis d'autres onglets
     window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
-    // Nettoyer l'écouteur lors du démontage
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []); // Pas de dépendances pour que cela ne s'exécute qu'une fois
-
-
-
+  // Initialisation: vérifie la session serveur, puis fallback localStorage en cas d'erreur
   useEffect(() => {
-    try {
-      const storedAuthState = localStorage.getItem('authState');
-      if (storedAuthState) {
-        const parsedState: AuthState = JSON.parse(storedAuthState);
-        // Validate parsed state structure if necessary
-        if (parsedState.isAuthenticated && parsedState.user && parsedState.role) {
-            setAuthState({...parsedState, isLoading: false });
-        } else {
-            setAuthState({...initialState, isLoading: false });
+    let cancelled = false;
+
+    const bootstrap = async () => {
+      // rester en isLoading:true tant que la vérif n'est pas finie
+      setAuthState((s) => ({ ...s, isLoading: true }));
+
+      try {
+        const res = await fetch('/api/auth/check-session', {
+          credentials: 'include',
+          cache: 'no-store',
+        });
+        const data = await res.json();
+        if (cancelled) return;
+
+        if (!data?.valid) {
+          // Session invalide -> purge côté client
+          localStorage.removeItem('authState');
+          setAuthState({ ...initialState, isLoading: false });
+          return;
         }
-      } else {
-        setAuthState({...initialState, isLoading: false });
+
+        // Session valide -> source de vérité = serveur
+        const newState: AuthState = {
+          isAuthenticated: true,
+          user: data.user ?? null,
+          role: (data.role as UserRole) ?? null, // 'PARENT' | 'CHILD' | null
+          isLoading: false,
+        };
+        setAuthState(newState);
+        localStorage.setItem('authState', JSON.stringify(newState));
+      } catch (e) {
+        console.error('check-session failed', e);
+        // Fallback: tenter localStorage proprement
+        try {
+          const stored = localStorage.getItem('authState');
+          if (stored) {
+            const parsed: AuthState = JSON.parse(stored);
+            setAuthState({ ...parsed, isLoading: false });
+          } else {
+            setAuthState({ ...initialState, isLoading: false });
+          }
+        } catch {
+          localStorage.removeItem('authState');
+          setAuthState({ ...initialState, isLoading: false });
+        }
       }
-    } catch (error) {
-      console.error("Failed to parse auth state from localStorage", error);
-      setAuthState({...initialState, isLoading: false });
-      localStorage.removeItem('authState'); // Clear corrupted state
-    }
+    };
+
+    bootstrap();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const persistAuthState = useCallback((state: AuthState) => {
     try {
       localStorage.setItem('authState', JSON.stringify(state));
     } catch (error) {
-      console.error("Failed to persist auth state to localStorage", error);
+      console.error('Failed to persist auth state to localStorage', error);
     }
   }, []);
 
   const loginParent = (user: ParentUser, childInfo?: ChildInformation) => {
-    // In a real app, parent would be authenticated via Firebase.
-    // Child info might be linked or added here.
     const newState: AuthState = {
       isAuthenticated: true,
-      user: childInfo || user, // If childInfo is provided, it implies parent just registered child
-      role: childInfo ? 'CHILD' : 'PARENT', // If childInfo, means code generated, simulate child login
+      user: childInfo || user,
+      role: (childInfo ? 'CHILD' : 'PARENT') as UserRole,
       isLoading: false,
     };
     setAuthState(newState);
     persistAuthState(newState);
   };
-const loginChild = (childInfo: ChildInformation) => {
+
+  const loginChild = async (childInfo: ChildInformation) => {
+  // 1) créer la "session" côté serveur (cookie)
+  try {
+    await fetch('/api/auth/login-child', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(childInfo), // optionnel
+    });
+  } catch (e) {
+    console.error('Failed to create child session', e);
+  }
+
+  // 2) ensuite seulement, mettre l’état client
   const newState: AuthState = {
     isAuthenticated: true,
     user: childInfo,
-    role: 'CHILD', // Doit être en MAJUSCULES
+    role: 'CHILD',
     isLoading: false,
   };
-  
-  console.log('Setting auth state:', newState);
   setAuthState(newState);
-  
-  // Persistez immédiatement et forcez le stockage
   localStorage.setItem('authState', JSON.stringify(newState));
   localStorage.setItem('lastLogin', Date.now().toString());
 };
 
+
+  // const loginChild = (childInfo: ChildInformation) => {
+  //   const newState: AuthState = {
+  //     isAuthenticated: true,
+  //     user: childInfo,
+  //     role: 'CHILD',
+  //     isLoading: false,
+  //   };
+
+  //   console.log('Setting auth state:', newState);
+  //   setAuthState(newState);
+
+  //   // Persistance immédiate (garde lastLogin si tu t'en sers ailleurs)
+  //   localStorage.setItem('authState', JSON.stringify(newState));
+  //   localStorage.setItem('lastLogin', Date.now().toString());
+  // };
+
   const logout = useCallback(async () => {
     try {
-      // Appel à l'API de logout
       await fetch('/api/auth/logout', {
         method: 'POST',
-        credentials: 'same-origin',
+        credentials: 'same-origin', // ou 'include'
       });
     } catch (error) {
       console.error('Logout API call failed:', error);
     } finally {
-      // Nettoyage local quoi qu'il arrive
-      const newState: AuthState = {...initialState, isLoading: false};
+      const newState: AuthState = { ...initialState, isLoading: false };
       setAuthState(newState);
       setAssessmentResultState(null);
       localStorage.removeItem('authState');
       localStorage.removeItem('assessmentResult');
 
-      // Redirection vers la page d'accueil
       if (typeof window !== 'undefined') {
-  // Déclencher en différé pour éviter les conflits d'import SSR
-  setTimeout(() => {
-    window.location.href = '/';
-  }, 50);
-}
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 50);
+      }
     }
   }, []);
-  
+
   const updateChildInfo = (info: Partial<ChildInformation>) => {
-    setAuthState(prevState => {
+    setAuthState((prevState) => {
       if (prevState.role === 'CHILD' && prevState.user) {
         const updatedUser = { ...prevState.user, ...info } as ChildInformation;
         const newState = { ...prevState, user: updatedUser };
@@ -162,20 +216,30 @@ const loginChild = (childInfo: ChildInformation) => {
     }
   };
 
+  // Récupération initiale du dernier assessmentResult stocké
   useEffect(() => {
     const storedResult = localStorage.getItem('assessmentResult');
     if (storedResult) {
       try {
         setAssessmentResultState(JSON.parse(storedResult));
-      } catch (e) {
+      } catch {
         localStorage.removeItem('assessmentResult');
       }
     }
   }, []);
 
-
   return (
-    <AuthContext.Provider value={{ ...authState, loginParent, loginChild, logout, updateChildInfo, assessmentResult, setAssessmentResult }}>
+    <AuthContext.Provider
+      value={{
+        ...authState,
+        loginParent,
+        loginChild,
+        logout,
+        updateChildInfo,
+        assessmentResult,
+        setAssessmentResult,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

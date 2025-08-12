@@ -5,13 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Subject, Grade, ChildInformation } from '@/lib/types';
-import {
-  BookOpen,
-  Calculator,
-  ChevronRight,
-  CheckCircle,
-  Sparkles,
-} from 'lucide-react';
+import { BookOpen, Calculator, ChevronRight, CheckCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -50,9 +44,7 @@ const SubjectCard = ({
     <motion.div whileHover={{ y: -3 }} className="cursor-pointer" onClick={onClick}>
       <Card
         className={`transition-all h-full border ${theme.border} ${
-          selected
-            ? 'ring-2 ring-primary ' + theme.highlight
-            : theme.bg
+          selected ? 'ring-2 ring-primary ' + theme.highlight : theme.bg
         }`}
       >
         <CardContent className="p-6 flex flex-col items-center">
@@ -61,17 +53,10 @@ const SubjectCard = ({
             {subject === 'ELA' ? 'English Language Arts' : 'Mathematics'}
           </h3>
           <p className="text-sm text-gray-600 text-center">
-            {subject === 'ELA'
-              ? 'Reading & Writing Assessment'
-              : 'Math Skills Evaluation'}
+            {subject === 'ELA' ? 'Reading & Writing Assessment' : 'Math Skills Evaluation'}
           </p>
-
           {selected && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="mt-3 flex items-center gap-1 text-sm text-primary"
-            >
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="mt-3 flex items-center gap-1 text-sm text-primary">
               <CheckCircle className="w-4 h-4" />
               <span>Selected</span>
             </motion.div>
@@ -83,23 +68,27 @@ const SubjectCard = ({
 };
 
 export default function AssessmentSelectPage() {
-  const { isAuthenticated, user, role, isLoading: authLoading, updateChildInfo } =
-    useAuth();
+  const { isAuthenticated, user, role, isLoading: authLoading, updateChildInfo } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
   const childUser = role === 'CHILD' ? (user as ChildInformation) : null;
-  const [selectedSubject, setSelectedSubject] = useState<Subject>();
-  const [selectedGrade, setSelectedGrade] = useState<Grade | undefined>(
-    childUser?.grade
-  );
+
+  const [selectedSubject, setSelectedSubject] = useState<Subject | undefined>(childUser?.subject);
+  const [selectedGrade, setSelectedGrade] = useState<Grade | undefined>(childUser?.grade);
   const [isExpanded, setIsExpanded] = useState(true);
 
   useEffect(() => {
     if (authLoading) return;
-    if (!isAuthenticated || role !== 'child') router.replace('/auth/login');
-    if (childUser) setSelectedGrade(childUser.grade);
-  }, [isAuthenticated, authLoading, router, childUser, role]);
+    if (!isAuthenticated || role !== 'CHILD') {
+      router.replace('/auth/login');
+      return;
+    }
+    if (childUser) {
+      setSelectedGrade(childUser.grade);
+      if (!selectedSubject) setSelectedSubject(childUser.subject);
+    }
+  }, [isAuthenticated, authLoading, router, childUser, role, selectedSubject]);
 
   const handleStartAssessment = () => {
     if (!selectedSubject || !selectedGrade) {
@@ -112,20 +101,10 @@ export default function AssessmentSelectPage() {
     }
 
     if (childUser && childUser.subject !== selectedSubject) {
-      updateChildInfo({ subject: selectedSubject, grade: selectedGrade })
-        .then(() =>
-          router.push(`/assessment/take/${selectedSubject}/${selectedGrade}`)
-        )
-        .catch(() =>
-          toast({
-            title: 'Error',
-            description: 'Failed to update subject preference',
-            variant: 'destructive',
-          })
-        );
-    } else {
-      router.push(`/assessment/take/${selectedSubject}/${selectedGrade}`);
+      updateChildInfo({ subject: selectedSubject, currentSubject: selectedSubject, grade: selectedGrade });
     }
+
+    router.push(`/assessment/take/${selectedSubject}/${selectedGrade}`);
   };
 
   if (authLoading) {
@@ -133,9 +112,7 @@ export default function AssessmentSelectPage() {
       <ChildLayout>
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
           <LoadingSpinner size="lg" />
-          <h3 className="text-xl font-semibold text-gray-700">
-            Loading Assessment Portal...
-          </h3>
+          <h3 className="text-xl font-semibold text-gray-700">Loading Assessment Portal...</h3>
         </div>
       </ChildLayout>
     );
@@ -148,9 +125,7 @@ export default function AssessmentSelectPage() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold mb-1">Welcome, {childUser?.childName}!</h2>
-            <p className="text-sm opacity-90">
-              Choose a subject to start your diagnostic assessment.
-            </p>
+            <p className="text-sm opacity-90">Choose a subject to start your diagnostic assessment.</p>
           </div>
           <Sparkles className="h-10 w-10 text-white/80 hidden md:block" />
         </div>
@@ -159,30 +134,21 @@ export default function AssessmentSelectPage() {
       {/* Toggle Subjects */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-gray-800">Available Subjects</h3>
-        <Button
-          onClick={() => setIsExpanded(!isExpanded)}
-          variant="outline"
-          className="border-primary text-primary hover:bg-primary/10"
-        >
+        <Button onClick={() => setIsExpanded(!isExpanded)} variant="outline" className="border-primary text-primary hover:bg-primary/10">
           {isExpanded ? 'Hide Subjects' : 'Show Subjects'}
-          <ChevronRight
-            className={`ml-2 h-4 w-4 transition-transform ${
-              isExpanded ? 'rotate-90' : ''
-            }`}
-          />
+          <ChevronRight className={`ml-2 h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
         </Button>
       </div>
 
-      {/* Subject Cards + Info Grid */}
+      {/* Subject Cards + Grade Info (About section removed) */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
-            className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 mb-10"
+            className="grid grid-cols-1 gap-6 mb-10"
           >
-            {/* LEFT: Subjects */}
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {subjects.map((subject) => (
@@ -202,64 +168,12 @@ export default function AssessmentSelectPage() {
                     {selectedGrade ? `Grade ${selectedGrade}` : 'Not specified'}
                   </span>
                 </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  The assessment will adapt to your grade level.
-                </p>
+                <p className="text-sm text-gray-500 mt-1">The assessment will adapt to your grade level.</p>
               </div>
-            </div>
-
-            {/* RIGHT: About Section (desktop only) */}
-            <div className="hidden lg:block">
-              <Card className="h-full shadow-sm">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                    About These Assessments
-                  </h3>
-                  <ul className="space-y-3 text-gray-600 text-sm">
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                      <span>Evaluate your current skill level</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                      <span>Helps personalize your learning experience</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                      <span>Approximately 20–30 minutes per subject</span>
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* About section for mobile only */}
-      <div className="block lg:hidden mb-8">
-        <Card className="shadow-sm">
-          <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              About These Assessments
-            </h3>
-            <ul className="space-y-3 text-gray-600 text-sm">
-              <li className="flex items-start gap-2">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                <span>Evaluate your current skill level</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                <span>Helps personalize your learning experience</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                <span>Approximately 20–30 minutes per subject</span>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Start Button */}
       <div className="flex justify-center mb-8">
@@ -268,9 +182,7 @@ export default function AssessmentSelectPage() {
           disabled={!selectedSubject}
           size="lg"
           className={`px-8 text-white ${
-            selectedSubject
-              ? 'bg-primary hover:bg-primary/90'
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            selectedSubject ? 'bg-primary hover:bg-primary/90' : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
         >
           {selectedSubject ? 'Start Assessment' : 'Select a Subject'}

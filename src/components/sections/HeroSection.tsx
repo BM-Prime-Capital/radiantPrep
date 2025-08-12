@@ -5,16 +5,13 @@ import { Button, Section } from "@/components/ui";
 
 const HeroSection = () => {
   return (
-    // <Section
-    //   background="gradient"
-    //   padding="xl"
-    //   className="relative overflow-hidden min-h-[600px] flex items-center"
-    // >
-<Section
-  background="gradient"
-  padding="xl"
-  className="relative overflow-hidden min-h-[600px] flex items-center bg-gradient-to-r from-[#C000A0] via-[#6C4AB6] to-[#0EA5E9]"
->
+
+    <Section
+      background="gradient"
+      padding="xl"
+      className="relative overflow-hidden min-h-[600px] flex items-center bg-gradient-to-r from-[#C000A0] via-[#6C4AB6] to-[#0EA5E9]"
+    >
+      {/* Fond transparent */}
 
       {/* Background Image - Éducation moderne */}
       <div

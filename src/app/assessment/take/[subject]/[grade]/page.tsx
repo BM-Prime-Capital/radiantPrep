@@ -3,12 +3,37 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { type Question, type Subject, type Grade, type AssessmentResult, type ChildInformation, type ParentUser, QuestionType } from '@/lib/types';
+import {
+  type Question,
+  type Subject,
+  type Grade,
+  type ChildInformation,
+  type ParentUser,
+} from '@/lib/types';
 import { QuestionDisplay } from '@/components/assessment/QuestionDisplay';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { ChevronLeft, ChevronRight, CheckSquare, BookOpen, Calculator, Trophy, Clock, Loader2, Sparkles } from 'lucide-react';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CheckSquare,
+  BookOpen,
+  Calculator,
+  Trophy,
+  Loader2,
+  Sparkles,
+} from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -17,20 +42,18 @@ import { Card, CardContent } from '@/components/ui/card';
 
 const AssessmentHeader = ({
   subject,
-  grade,
-  childName
+  gradeNumber,
+  childName,
 }: {
   subject: Subject;
-  grade: Grade;
+  gradeNumber: number;
   childName?: string;
 }) => {
-  const theme = subject === 'ELA' ? 'blue' : 'green';
-  
   return (
     <div className="bg-gradient-to-r from-primary to-accent text-white rounded-xl p-6 mb-8 shadow-md">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className={`p-3 bg-white/20 rounded-lg`}>
+          <div className="p-3 bg-white/20 rounded-lg">
             {subject === 'ELA' ? (
               <BookOpen className="h-8 w-8 text-white" />
             ) : (
@@ -42,7 +65,7 @@ const AssessmentHeader = ({
             <div className="flex items-center gap-3 mt-2">
               <Badge variant="secondary" className="bg-white/10 hover:bg-white/20 border-0 text-white">
                 <Trophy className="h-4 w-4 mr-1" />
-                Grade {grade}
+                Grade {gradeNumber}
               </Badge>
               {childName && (
                 <Badge variant="outline" className="bg-white/5 text-white">
@@ -60,13 +83,12 @@ const AssessmentHeader = ({
 
 const ProgressTracker = ({
   currentQuestionIndex,
-  questionsLength
+  questionsLength,
 }: {
   currentQuestionIndex: number;
   questionsLength: number;
 }) => {
   const progressValue = ((currentQuestionIndex + 1) / questionsLength) * 100;
-  
   return (
     <Card className="mb-6 shadow-sm">
       <CardContent className="p-4">
@@ -75,14 +97,9 @@ const ProgressTracker = ({
             <span className="text-sm font-medium text-primary">
               Question {currentQuestionIndex + 1} of {questionsLength}
             </span>
-            <span className="text-sm text-muted-foreground">
-              {Math.round(progressValue)}% complete
-            </span>
+            <span className="text-sm text-muted-foreground">{Math.round(progressValue)}% complete</span>
           </div>
-          <Progress 
-            value={progressValue} 
-            className="h-2"
-          />
+          <Progress value={progressValue} className="h-2" />
         </div>
       </CardContent>
     </Card>
@@ -95,7 +112,7 @@ const NavigationControls = ({
   onPrevious,
   onNext,
   onSubmit,
-  isSubmitting
+  isSubmitting,
 }: {
   currentQuestionIndex: number;
   questionsLength: number;
@@ -120,50 +137,31 @@ const NavigationControls = ({
       {currentQuestionIndex === questionsLength - 1 ? (
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="bg-green-600 hover:bg-green-700 text-white gap-2 min-w-[180px] shadow-lg"
               disabled={isSubmitting}
             >
-              {isSubmitting ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <>
-                  <CheckSquare className="h-5 w-5" />
-                  Submit Assessment
-                </>
-              )}
+              {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : (<><CheckSquare className="h-5 w-5" />Submit Assessment</>)}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent className="rounded-lg max-w-sm">
             <AlertDialogHeader>
               <AlertDialogTitle className="text-xl">Ready to submit?</AlertDialogTitle>
               <AlertDialogDescription className="text-base">
-                You've answered {questionsLength} questions. Make sure you've reviewed all your answers.
+                You&apos;ve answered {questionsLength} questions. Make sure you&apos;ve reviewed all your answers.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="gap-3">
               <AlertDialogCancel className="mt-0">Review Answers</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={onSubmit} 
-                className="bg-green-600 hover:bg-green-700"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  'Confirm Submission'
-                )}
+              <AlertDialogAction onClick={onSubmit} className="bg-green-600 hover:bg-green-700" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Confirm Submission'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       ) : (
-        <Button 
-          onClick={onNext} 
-          size="lg" 
-          className="bg-primary hover:bg-primary/90 text-white gap-2 min-w-[150px] shadow-lg"
-        >
+        <Button onClick={onNext} size="lg" className="bg-primary hover:bg-primary/90 text-white gap-2 min-w-[150px] shadow-lg">
           Next
           <ChevronRight className="h-5 w-5" />
         </Button>
@@ -175,47 +173,44 @@ const NavigationControls = ({
 const LoadingState = () => (
   <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
     <Loader2 className="h-12 w-12 animate-spin text-primary" />
-    <h3 className="text-xl font-semibold text-gray-700">
-      Preparing your assessment...
-    </h3>
+    <h3 className="text-xl font-semibold text-gray-700">Preparing your assessment...</h3>
   </div>
 );
 
-const ErrorState = ({ error, onBack }: { error: string; onBack: () => void }) => (
-  <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-4">
-    <Card className="border-red-200 bg-red-50 max-w-md">
-      <CardContent className="p-6 flex flex-col items-center text-center">
-        <div className="bg-red-100 p-4 rounded-full mb-4">
-          <BookOpen className="h-10 w-10 text-red-600" />
-        </div>
-        <h3 className="text-xl font-bold text-gray-800 mb-2">Assessment Error</h3>
-        <p className="text-red-600 mb-4">{error}</p>
-        <Button onClick={onBack} variant="outline" className="gap-2">
-          <ChevronLeft className="h-4 w-4" />
-          Back to Selection
-        </Button>
-      </CardContent>
-    </Card>
-  </div>
-);
-
-const NoQuestionsState = ({ subject, grade, onBack }: { subject: Subject; grade: Grade; onBack: () => void }) => (
-  <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-4">
-    <Card className="border-blue-200 bg-blue-50 max-w-md">
-      <CardContent className="p-6 flex flex-col items-center text-center">
-        <div className="bg-blue-100 p-4 rounded-full mb-4">
-          <BookOpen className="h-10 w-10 text-blue-600" />
-        </div>
-        <h3 className="text-xl font-bold text-gray-800 mb-2">No Questions Available</h3>
-        <p className="text-gray-600 mb-4">
-          We couldn't find any questions for {subject} Grade {grade}.
-        </p>
-        <Button onClick={onBack} className="gap-2">
-          <ChevronLeft className="h-4 w-4" />
-          Choose Another Assessment
-        </Button>
-      </CardContent>
-    </Card>
+const NoQuestionsState = ({
+  subject,
+  gradeNumber,
+  onBack,
+}: {
+  subject: Subject;
+  gradeNumber: number;
+  onBack: () => void;
+}) => (
+  <div className="flex items-center justify-center min-h-[60vh] p-4">
+    <div className="w-full max-w-2xl">
+      <Card className="border-0 shadow-lg ring-1 ring-black/5">
+        <CardContent className="p-8">
+          <div className="flex flex-col items-center text-center gap-4">
+            <div className="p-4 rounded-full bg-blue-100">
+              <BookOpen className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900">No Questions Available</h3>
+            <p className="text-gray-600 max-w-md">
+              We couldn&apos;t find any questions for <span className="font-semibold">{subject}</span> •{' '}
+              <span className="font-semibold">Grade {gradeNumber}</span>. Try another subject or grade.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 mt-2">
+              <Button onClick={onBack} className="gap-2 bg-green-600 hover:bg-green-700 text-white">
+                <ChevronLeft className="h-4 w-4" /> Choose Another Assessment
+              </Button>
+              <Button variant="outline" onClick={() => (window.location.href = '/child-dashboard')}>
+                Back to Dashboard
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   </div>
 );
 
@@ -226,14 +221,18 @@ export default function AssessmentPage() {
   const { toast } = useToast();
 
   const subject = params.subject as Subject;
-  const grade = parseInt(params.grade as string) as Grade;
+
+  // ✅ Supporte /assessment/take/Math/GRADE_1 ou /assessment/take/Math/1
+  const rawGrade = String(params.grade);
+  const match = rawGrade.match(/\d+/);
+  const gradeNumber = match ? parseInt(match[0], 10) : parseInt(rawGrade || '0', 10);
+  const grade = gradeNumber as Grade; // pour les types internes
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<(string | string[] | undefined)[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorLoadingQuestions, setErrorLoadingQuestions] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -243,12 +242,15 @@ export default function AssessmentPage() {
     }
 
     async function fetchQuestions() {
-      if (subject && grade) {
+      if (subject && gradeNumber > 0) {
         try {
           setIsLoading(true);
           setErrorLoadingQuestions(null);
-          const response = await fetch(`/api/questions?subject=${subject}&grade=${grade}`, { credentials: 'include' });
 
+          // ✅ envoie le grade numérique
+          const response = await fetch(`/api/questions?subject=${subject}&grade=${gradeNumber}`, {
+            credentials: 'include',
+          });
           if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
           const dbQuestions = await response.json();
@@ -260,11 +262,12 @@ export default function AssessmentPage() {
             passage: dbQuestion.passage ?? undefined,
             image: dbQuestion.imageUrl ?? undefined,
             options: dbQuestion.options.map((opt: any) => opt.value),
-            correctAnswer: dbQuestion.correctAnswers.length > 0
-              ? dbQuestion.correctAnswers.length > 1 || dbQuestion.questionType === 'FILL_IN_THE_BLANK'
-                ? dbQuestion.correctAnswers.map((ca: any) => ca.answerValue)
-                : dbQuestion.correctAnswers[0].answerValue
-              : undefined,
+            correctAnswer:
+              dbQuestion.correctAnswers.length > 0
+                ? dbQuestion.correctAnswers.length > 1 || dbQuestion.questionType === 'FILL_IN_THE_BLANK'
+                  ? dbQuestion.correctAnswers.map((ca: any) => ca.answerValue)
+                  : dbQuestion.correctAnswers[0].answerValue
+                : undefined,
             category: dbQuestion.category ?? undefined,
             blanks: dbQuestion.blanksJson ? JSON.parse(dbQuestion.blanksJson) : undefined,
             columns: dbQuestion.columnsJson ? JSON.parse(dbQuestion.columnsJson) : undefined,
@@ -274,7 +277,11 @@ export default function AssessmentPage() {
           }));
 
           if (fetchedQuestions.length === 0) {
-            toast({ title: 'No Questions', description: 'No questions found for this subject/grade combination.', variant: 'default' });
+            toast({
+              title: 'No Questions',
+              description: 'No questions found for this subject/grade combination.',
+              variant: 'default',
+            });
             setQuestions([]);
           } else {
             setQuestions(fetchedQuestions);
@@ -282,7 +289,11 @@ export default function AssessmentPage() {
           }
         } catch (err) {
           console.error('Error fetching questions:', err);
-          toast({ title: 'Error Loading Assessment', description: 'Could not load questions. Please try again.', variant: 'destructive' });
+          toast({
+            title: 'Error Loading Assessment',
+            description: 'Could not load questions. Please try again.',
+            variant: 'destructive',
+          });
           setErrorLoadingQuestions('Failed to load questions.');
           setQuestions([]);
         } finally {
@@ -296,15 +307,18 @@ export default function AssessmentPage() {
     if (!authLoading && isAuthenticated) {
       fetchQuestions();
     }
-  }, [subject, grade, isAuthenticated, authLoading, router, toast, role]);
+  }, [subject, gradeNumber, isAuthenticated, authLoading, router, toast, role]);
 
-  const handleAnswerChange = useCallback((answer: string | string[]) => {
-    setAnswers((prev) => {
-      const newAnswers = [...prev];
-      newAnswers[currentQuestionIndex] = answer;
-      return newAnswers;
-    });
-  }, [currentQuestionIndex]);
+  const handleAnswerChange = useCallback(
+    (answer: string | string[]) => {
+      setAnswers((prev) => {
+        const next = [...prev];
+        next[currentQuestionIndex] = answer;
+        return next;
+      });
+    },
+    [currentQuestionIndex]
+  );
 
   const goToNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
@@ -313,24 +327,19 @@ export default function AssessmentPage() {
   };
 
   const goToPreviousQuestion = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex((prev) => prev - 1);
-    }
+    if (currentQuestionIndex > 0) setCurrentQuestionIndex((prev) => prev - 1);
   };
 
   const handleSubmitAssessment = async () => {
     setIsSubmitting(true);
-    setSubmitError(null);
     try {
       if (!user || !role) throw new Error('User information not available');
 
-      const detailedAnswers = questions.map((question, index) => {
-        return {
-          questionId: question.id_prisma || question.id,
-          userAnswer: Array.isArray(answers[index]) ? answers[index] : answers[index] || '',
-          isCorrect: isAnswerCorrect(question, answers[index]),
-        };
-      });
+      const detailedAnswers = questions.map((q, i) => ({
+        questionId: q.id_prisma || q.id,
+        userAnswer: Array.isArray(answers[i]) ? answers[i] : answers[i] || '',
+        isCorrect: isAnswerCorrect(q, answers[i]),
+      }));
 
       const response = await fetch('/api/assessments', {
         method: 'POST',
@@ -338,7 +347,7 @@ export default function AssessmentPage() {
         credentials: 'include',
         body: JSON.stringify({
           subject,
-          grade,
+          grade, // Grade numérique
           score: detailedAnswers.filter((a) => a.isCorrect).length,
           totalQuestions: questions.length,
           answers: detailedAnswers,
@@ -357,11 +366,12 @@ export default function AssessmentPage() {
         id: result.id,
         score: result.score,
         totalQuestions: questions.length,
-        answers: detailedAnswers.map((answer, index) => ({
-          ...answer,
-          correctAnswer: typeof questions[index].correctAnswer === 'number'
-            ? questions[index].correctAnswer.toString()
-            : questions[index].correctAnswer || 'N/A',
+        answers: detailedAnswers.map((a, i) => ({
+          ...a,
+          correctAnswer:
+            typeof questions[i].correctAnswer === 'number'
+              ? questions[i].correctAnswer.toString()
+              : questions[i].correctAnswer || 'N/A',
         })),
         subject,
         grade,
@@ -370,15 +380,19 @@ export default function AssessmentPage() {
 
       router.push('/assessment/results');
     } catch (error: any) {
-      setSubmitError(error.message || 'Failed to save assessment. Please try again.');
-      toast({ title: 'Error', description: error.message || 'Could not save assessment results.', variant: 'destructive' });
+      console.error(error);
+      useToast().toast?.({
+        title: 'Error',
+        description: error.message || 'Could not save assessment results.',
+        variant: 'destructive',
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const currentQuestion = questions[currentQuestionIndex];
-  const progressValue = ((currentQuestionIndex + 1) / questions.length) * 100;
+  const childName = role === 'CHILD' ? (user as ChildInformation)?.childName : undefined;
 
   if (isLoading || authLoading) {
     return (
@@ -391,44 +405,26 @@ export default function AssessmentPage() {
   if (errorLoadingQuestions) {
     return (
       <ChildLayout>
-        <ErrorState 
-          error={errorLoadingQuestions} 
-          onBack={() => router.push('/assessment/select')} 
-        />
-      </ChildLayout>
-    );
-  }
-  
-  if (questions.length === 0 && !isLoading) {
-    return (
-      <ChildLayout>
-        <NoQuestionsState 
-          subject={subject}
-          grade={grade}
-          onBack={() => router.push('/assessment/select')}
-        />
+        <NoQuestionsState subject={subject} gradeNumber={gradeNumber || 0} onBack={() => router.push('/assessment/select')} />
       </ChildLayout>
     );
   }
 
-  // const currentQuestion = questions[currentQuestionIndex];
-  const childName = role === 'CHILD' ? (user as ChildInformation)?.childName : undefined;
+  if (questions.length === 0 && !isLoading) {
+    return (
+      <ChildLayout>
+        <NoQuestionsState subject={subject} gradeNumber={gradeNumber || 0} onBack={() => router.push('/assessment/select')} />
+      </ChildLayout>
+    );
+  }
 
   return (
     <ChildLayout>
       <div className="px-4 py-6">
-        <AssessmentHeader
-          subject={subject}
-          grade={grade}
-          childName={childName}
-        />
+        <AssessmentHeader subject={subject} gradeNumber={gradeNumber} childName={childName} />
 
-        <ProgressTracker
-          currentQuestionIndex={currentQuestionIndex}
-          questionsLength={questions.length}
-        />
+        <ProgressTracker currentQuestionIndex={currentQuestionIndex} questionsLength={questions.length} />
 
-        {/* Question Display */}
         <Card className="shadow-sm mb-6">
           <CardContent className="p-6">
             <AnimatePresence mode="wait">
@@ -467,7 +463,7 @@ export default function AssessmentPage() {
 function isAnswerCorrect(question: Question, userAnswer: string | string[] | undefined): boolean {
   if (!userAnswer || !question.correctAnswer) return false;
   if (typeof question.correctAnswer === 'number') return userAnswer === question.correctAnswer.toString();
-  const normalize = (value: string | string[]) => Array.isArray(value) ? value.map((v) => v.trim()) : [value.toString().trim()];
+  const normalize = (v: string | string[]) => (Array.isArray(v) ? v.map((x) => x.trim()) : [v.toString().trim()]);
   const correct = normalize(question.correctAnswer);
   const user = normalize(userAnswer);
   if (correct.length !== user.length) return false;

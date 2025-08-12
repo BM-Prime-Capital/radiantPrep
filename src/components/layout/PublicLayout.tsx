@@ -6,19 +6,14 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 import { useAuth } from '@/contexts/AuthContext';
 
-interface PublicLayoutProps {
-  children: React.ReactNode;
-}
-
-export const PublicLayout = ({ children }: PublicLayoutProps) => {
+export const PublicLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const isAuthPage = pathname?.startsWith('/auth');
-  
 
   return (
     <div className="min-h-screen flex flex-col">
-      {!isAuthPage && <Header isAuthenticated={isAuthenticated} />}
+      {!isAuthPage && <Header isAuthenticated={isAuthenticated} isLoading={isLoading} />}
       <main className="flex-1">{children}</main>
       {!isAuthPage && <Footer isAuthenticated={isAuthenticated} />}
     </div>
